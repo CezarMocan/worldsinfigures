@@ -12,7 +12,7 @@ export default class Index extends React.Component {
         super(props)
         this.onImageLoad = this.onImageLoad.bind(this)
         this._canvasWidth = 500
-        this._canvasHeight = 250
+        this._canvasHeight = 400
         this.state = {
             scale: 100,
             rotateX: 10,
@@ -67,6 +67,7 @@ export default class Index extends React.Component {
     }
     updateProjection() {
         const { scale, rotateX, rotateY, rotateZ, translateX, translateY } = this.state
+        //d3GeoProjection.geoAiry()
         this.projection = d3GeoProjection.geoPierceQuincuncial() // N.B. geoPeirceQuincuncial in 1.1+
             .scale(scale)
             .translate([this._canvasWidth * (translateX - 50) / 50, this._canvasHeight * (translateY - 50) / 50])
