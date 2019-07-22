@@ -18,10 +18,16 @@ export default class Index extends React.Component {
             rotateX: 10,
             rotateY: 20,
             rotateZ: 25,
-            translateX: 50,
-            translateY: 50
+            translateX: 0,
+            translateY: 0
         }
     }
+    // getCachedInverseProjection(x, y) {
+    //     if (!this.cachedProj) this.cachedProj = {}
+    //     if (!this.cachedProj[x]) this.cachedProj[x] = {}
+    //     if (!this.cachedProj[x][y]) this.cachedProj[x][y] = this.projection.invert([x, y])
+    //     return this.cachedProj[x][y]
+    // }
     get canvasContext() {
         return this._canvas.getContext('2d')
     }
@@ -38,8 +44,8 @@ export default class Index extends React.Component {
             this.canvasContext.restore()
 
             this.sourceData = this.canvasContext.getImageData(0, 0, dx, dy).data
-            this.target = this.canvasContext.createImageData(this._canvasWidth, this._canvasHeight)
         }
+        this.target = this.canvasContext.createImageData(this._canvasWidth, this._canvasHeight)
         let targetData = this.target.data
 
         const t1 = new Date().getTime()
@@ -49,10 +55,19 @@ export default class Index extends React.Component {
               var p = this.projection.invert([x, y]), λ = p[0], φ = p[1];
               if (λ > 180 || λ < -180 || φ > 90 || φ < -90) { i += 4; continue; }
               var q = (((90 - φ) / 180 * dy | 0) * dx + ((180 + λ) / 360 * dx | 0) << 2)
-              targetData[++i] = this.sourceData[q];
-              targetData[++i] = this.sourceData[++q];
-              targetData[++i] = this.sourceData[++q];
-              targetData[++i] = 255;
+            //   const origX = 
+            //   const origY = 
+              if (x < 5 || y < 5 || x > this._canvasWidth - 5 || y > this._canvasHeight - 5) {
+                targetData[++i] = 0;
+                targetData[++i] = 0;
+                targetData[++i] = 255;
+                targetData[++i] = 255;  
+              } else {
+                targetData[++i] = this.sourceData[q];
+                targetData[++i] = this.sourceData[++q];
+                targetData[++i] = this.sourceData[++q];
+                targetData[++i] = 255;  
+              }
             }
           }        
 
@@ -68,12 +83,14 @@ export default class Index extends React.Component {
     updateProjection() {
         const { scale, rotateX, rotateY, rotateZ, translateX, translateY } = this.state
         //d3GeoProjection.geoAiry()
+        //d3GeoProjection.geoBonne().parallel(45)
+        //d3GeoProjection.geoEckert1() //
         this.projection = d3GeoProjection.geoPierceQuincuncial() // N.B. geoPeirceQuincuncial in 1.1+
             .scale(scale)
-            .translate([this._canvasWidth * (translateX - 50) / 50, this._canvasHeight * (translateY - 50) / 50])
+            .translate([this._canvasWidth / 2 + this._canvasWidth * (translateX - 50) / 50, this._canvasHeight / 2 + this._canvasHeight * (translateY - 50) / 50])
             .rotate([rotateX, rotateY, rotateZ])
-            .precision(0.1);
-        this.path = d3Geo.geoPath(this.projection)//.projection(this.projection)
+            .precision(1);
+        // this.path = d3Geo.geoPath(this.projection)//.projection(this.projection)
     }
     componentDidMount() {
         this.updateProjection()
