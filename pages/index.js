@@ -4,6 +4,7 @@ import Link from 'next/link'
 import classnames from 'classnames'
 import * as d3 from 'd3'
 import * as d3Geo from "d3-geo"
+import Dropzone from 'react-dropzone'
 import Slider from '@material-ui/core/Slider'
 import InputLabel from '@material-ui/core/InputLabel'
 import MenuItem from '@material-ui/core/MenuItem'
@@ -35,17 +36,15 @@ export default class Index extends React.Component {
     renderMap() {
         const dx = this._image.width
         const dy = this._image.height
-        console.log('Loaded image: ', dx, dy)
 
         if (!this.sourceData) {
+            this.canvasContext.clearRect(0, 0, this._canvasWidth, this._canvasHeight);
             this.canvasContext.save()
-            // this.canvasContext.scale(0.5, 0.5)
             this.canvasContext.drawImage(this._image, 0, 0, dx, dy, 0, 0, this._canvasWidth, this._canvasHeight)
-
             this.canvasContext.restore()
-
-            this.sourceData = this.canvasContext.getImageData(0, 0, dx, dy).data
+            this.sourceData = this.canvasContext.getImageData(0, 0, this._canvasWidth, this._canvasHeight).data
         }
+
         this.target = this.canvasContext.createImageData(this._canvasWidth, this._canvasHeight)
         let targetData = this.target.data
 
@@ -57,28 +56,20 @@ export default class Index extends React.Component {
 
         for (var y = 0, i = -1; y < this._canvasHeight; ++y) {
             for (var x = 0; x < this._canvasWidth; ++x) {
-                // var p = eqProj.invert([x, y])
-                // if (!p) continue
-
-                // const lambda = p[0], phi = p[1]
-                // if (lambda > 180 || lambda < -180 || phi > 90 || phi < -90) { i += 4; continue; }
-
-                // const q = this.projection([lambda, phi])
-                // if (q[0] > this._canvasWidth || q[1] > this._canvasHeight) { i += 4; continue; }
-                // const tdIndex = (q[1] - 1) * this._canvasWidth * 4 + (q[0] - 1) * 4
-
-                // targetData[tdIndex++] = this.sourceData[++i]
-                // targetData[tdIndex++] = this.sourceData[++i]
-                // targetData[tdIndex++] = this.sourceData[++i]
-                // targetData[tdIndex] = this.sourceData[++i]
-
               const _x = (x / this._canvasWidth - 0.5) * 3 * (360 / Math.PI)
               const _y = (y / this._canvasHeight - 0.5) * 3 * (360 / Math.PI)
               var p = this.projection.invert([_x, _y])
               if (!p) continue
               let λ = p[0], φ = p[1];
-            //   if (λ > 180 || λ < -180 || φ > 90 || φ < -90) { i += 4; continue; }
-              var q = (((90 - φ) / 180 * dy | 0) * dx + ((180 + λ) / 360 * dx | 0) << 2)
+              if (λ > 180 || λ < -180 || φ > 90 || φ < -90) { 
+                targetData[++i] = 128;
+                targetData[++i] = 128;
+                targetData[++i] = 128;
+                targetData[++i] = 255;  
+                continue
+                //   i += 4; continue; 
+              }
+              var q = (((90 - φ) / 180 * this._canvasHeight | 0) * this._canvasWidth + ((180 + λ) / 360 * this._canvasWidth | 0) << 2)
               if (x < 5 || y < 5 || x > this._canvasWidth - 5 || y > this._canvasHeight - 5) {
                 targetData[++i] = 0;
                 targetData[++i] = 0;
@@ -118,6 +109,7 @@ export default class Index extends React.Component {
         const t3 = new Date().getTime()
 
         console.log('1: ', t2 - t1, '2: ', t3 - t2)
+
     }
     updateProjection() {
         const { scale, rotateX, rotateY, rotateZ, translateX, translateY, projection } = this.state
@@ -138,6 +130,7 @@ export default class Index extends React.Component {
         this.updateProjection()
     }
     onImageLoad() {
+        this.sourceData = null
         this.renderMap()
     }
     onScaleSliderChange = (event, newValue) => {
@@ -175,10 +168,29 @@ export default class Index extends React.Component {
     onCanvasRef = (c) => {
         this._canvas = c
     }
+    onNewFile = (files) => {
+        const file = files[0]
+        const reader = new FileReader()
+        reader.addEventListener("load", () => {
+            this._image.src = reader.result
+        }, false)
+
+        if (file) reader.readAsDataURL(file)
+    }
     render() {
         const { scale, rotateX, rotateY, rotateZ, translateX, translateY, projection } = this.state
         return (
             <div>
+                <Dropzone onDrop={this.onNewFile}>
+                {({getRootProps, getInputProps}) => (
+                    <section>
+                    <div {...getRootProps()}>
+                        <input {...getInputProps()} />
+                        <p>Drag 'n' drop some files here, or click to select files</p>
+                    </div>
+                    </section>
+                )}
+                </Dropzone>
                 <img 
                     ref={this.onImageRef}
                     onLoad={this.onImageLoad}
