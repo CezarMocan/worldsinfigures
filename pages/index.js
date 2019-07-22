@@ -51,14 +51,33 @@ export default class Index extends React.Component {
 
         const t1 = new Date().getTime()
 
+        const eqProj = projectionsMap['geoEquirectangular'].fn()
+                        .scale(100)
+                        .translate([this._canvasWidth / 2, this._canvasHeight / 2])
+
         for (var y = 0, i = -1; y < this._canvasHeight; ++y) {
             for (var x = 0; x < this._canvasWidth; ++x) {
-              const _x = x / this._canvasWidth * (360 / Math.PI)
-              const _y = y / this._canvasHeight * (360 / Math.PI)
+                // var p = eqProj.invert([x, y])
+                // if (!p) continue
+
+                // const lambda = p[0], phi = p[1]
+                // if (lambda > 180 || lambda < -180 || phi > 90 || phi < -90) { i += 4; continue; }
+
+                // const q = this.projection([lambda, phi])
+                // if (q[0] > this._canvasWidth || q[1] > this._canvasHeight) { i += 4; continue; }
+                // const tdIndex = (q[1] - 1) * this._canvasWidth * 4 + (q[0] - 1) * 4
+
+                // targetData[tdIndex++] = this.sourceData[++i]
+                // targetData[tdIndex++] = this.sourceData[++i]
+                // targetData[tdIndex++] = this.sourceData[++i]
+                // targetData[tdIndex] = this.sourceData[++i]
+
+              const _x = (x / this._canvasWidth - 0.5) * 3 * (360 / Math.PI)
+              const _y = (y / this._canvasHeight - 0.5) * 3 * (360 / Math.PI)
               var p = this.projection.invert([_x, _y])
               if (!p) continue
               let λ = p[0], φ = p[1];
-              if (λ > 180 || λ < -180 || φ > 90 || φ < -90) { i += 4; continue; }
+            //   if (λ > 180 || λ < -180 || φ > 90 || φ < -90) { i += 4; continue; }
               var q = (((90 - φ) / 180 * dy | 0) * dx + ((180 + λ) / 360 * dx | 0) << 2)
               if (x < 5 || y < 5 || x > this._canvasWidth - 5 || y > this._canvasHeight - 5) {
                 targetData[++i] = 0;
@@ -91,9 +110,9 @@ export default class Index extends React.Component {
         this.canvasContext.strokeStyle = '#ccc';
         this.canvasContext.fillStyle = 'none';
         this.canvasContext.setLineDash([1,1]);
-        this.canvasContext.beginPath();
-        geoGenerator(geoGraticule());
-        this.canvasContext.stroke();      
+        // this.canvasContext.beginPath();
+        // geoGenerator(geoGraticule());
+        // this.canvasContext.stroke();      
 
 
         const t3 = new Date().getTime()
@@ -107,7 +126,7 @@ export default class Index extends React.Component {
         //d3GeoProjection.geoEckert1()
         //d3GeoProjection.geoPierceQuincuncial()
         const currentProjection = projectionsMap[projection]
-        console.log('Current projection is: ', currentProjection)
+        console.log('Current projection is: ', currentProjection, scale)
         this.projection = currentProjection.fn()
         if (this.projection.scale) this.projection = this.projection.scale(scale)
         if (this.projection.translate) this.projection = this.projection.translate([this._canvasWidth / 2 + this._canvasWidth * (translateX - 50) / 50, this._canvasHeight / 2 + this._canvasHeight * (translateY - 50) / 50])
