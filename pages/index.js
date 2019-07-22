@@ -20,7 +20,7 @@ export default class Index extends React.Component {
         this._canvasWidth = 500
         this._canvasHeight = 400
         this.state = {
-            scale: 50,
+            scale: 16,
             rotateX: 0,
             rotateY: 0,
             rotateZ: 0,
@@ -118,9 +118,9 @@ export default class Index extends React.Component {
         //d3GeoProjection.geoEckert1()
         //d3GeoProjection.geoPierceQuincuncial()
         const currentProjection = projectionsMap[projection]
-        console.log('Current projection is: ', currentProjection, scale)
+        // console.log('Current projection is: ', currentProjection, scale)
         this.projection = currentProjection.fn()
-        if (this.projection.scale) this.projection = this.projection.scale(scale)
+        if (this.projection.scale) this.projection = this.projection.scale(3 * scale)
         if (this.projection.translate) this.projection = this.projection.translate([this._canvasWidth / 2 + this._canvasWidth * (translateX - 50) / 50, this._canvasHeight / 2 + this._canvasHeight * (translateY - 50) / 50])
         if (this.projection.rotate) this.projection = this.projection.rotate([rotateX, rotateY, rotateZ])
         if (this.projection.precision) this.projection = this.projection.precision(1)
