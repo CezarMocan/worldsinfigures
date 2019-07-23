@@ -27,12 +27,12 @@ export default class Index extends React.PureComponent {
         super(props)
         this.onImageLoad = this.onImageLoad.bind(this)
         this.state = {
-            scale: 100,
+            scale: 55,
             rotateX: 0,
             rotateY: 0,
             rotateZ: 0,
-            translateX: 0,
-            translateY: 0,
+            translateX: 25,
+            translateY: 25,
             projection: 'geoEquirectangular',
             isCanvasResizing: RESIZING.NO,
         }
@@ -61,6 +61,12 @@ export default class Index extends React.PureComponent {
             this.canvasContext.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
             this.canvasContext.save()
             this.canvasContext.drawImage(this._image, 0, 0, dx, dy, 0, 0, this.canvasWidth, this.canvasHeight)
+            // Draw borders for the image
+            // this.canvasContext.fillStyle = "#ffffff"
+            // this.canvasContext.fillRect(0, 0, this.canvasWidth, 5)
+            // this.canvasContext.fillRect(0, this.canvasHeight - 4, this.canvasWidth, 5)
+            // this.canvasContext.fillRect(0, 0, 5, this.canvasHeight)
+            // this.canvasContext.fillRect(this.canvasWidth - 4, 0, 5, this.canvasHeight)
             this.canvasContext.restore()
             this.sourceData = this.canvasContext.getImageData(0, 0, this.canvasWidth, this.canvasHeight).data
         }
@@ -144,6 +150,7 @@ export default class Index extends React.PureComponent {
         this.setState({ projection })
     }
     createAndDownloadText(filename, text) {
+        console.log('createAndDownloadText')
         var element = document.createElement('a');
         element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
         element.setAttribute('download', filename);
@@ -156,6 +163,7 @@ export default class Index extends React.PureComponent {
         document.body.removeChild(element);
       }
     onDownloadClick = () => {
+        console.log('onDownloadClick')
         const uid = shortid()
         const projectionId = `${this.state.projection}-${uid}`        
         const dataURL = this._canvas.toDataURL('image/png')
@@ -312,7 +320,7 @@ export default class Index extends React.PureComponent {
                                 </canvas>
 
                                 <a href="#" ref={(r) => {this._downloadButton = r}} onClick={this.onDownloadClick} download="">
-                                    <Button onClick={this.onDownloadClick} variant="outlined">
+                                    <Button variant="outlined">
                                         Download
                                     </Button>
                                 </a>
