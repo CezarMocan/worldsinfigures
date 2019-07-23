@@ -77,7 +77,7 @@ export default function InputSlider(props) {
             onChange={handleInputChange}
             onBlur={handleBlur}
             inputProps={{
-              step: 5,
+              step: props.step || 5,
               min: props.min,
               max: props.max,
               type: 'number',
@@ -93,6 +93,7 @@ export default function InputSlider(props) {
 InputSlider.defaultProps = {
   min: 0,
   max: 100,
+  step: 5,
   onValueChange: () => {},
   initialValue: 30
 }

@@ -156,6 +156,11 @@ export default class Index extends React.Component {
         const projection = event.target.value
         this.setState({ projection })
     }
+    onDownloadClick = () => {
+        console.log('Clicked download!')
+        const dataURL = this._canvas.toDataURL('image/png')
+        this._downloadButton.href = dataURL
+    }
     componentDidUpdate() {
         setTimeout(() => {
             this.updateProjection()
@@ -215,13 +220,13 @@ export default class Index extends React.Component {
                 </div>
                 <div className="controls sliders">
                     <SliderWithInput label="Scale" min={3} max={500} initialValue={scale} onValueChange={this.onScaleSliderChange}/>
-                    <SliderWithInput label="X Rotation" min={0} max={360} initialValue={rotateX} onValueChange={this.onRotateXSliderChange}/>
-                    <SliderWithInput label="Y Rotation" min={0} max={360} initialValue={rotateY} onValueChange={this.onRotateYSliderChange}/>
-                    <SliderWithInput label="Z Rotation" min={0} max={360} initialValue={rotateZ} onValueChange={this.onRotateZSliderChange}/>
+                    <SliderWithInput label="X Rotation" min={0} max={360} step={2.5} initialValue={rotateX} onValueChange={this.onRotateXSliderChange}/>
+                    <SliderWithInput label="Y Rotation" min={0} max={360} step={2.5} initialValue={rotateY} onValueChange={this.onRotateYSliderChange}/>
+                    <SliderWithInput label="Z Rotation" min={0} max={360} step={2.5} initialValue={rotateZ} onValueChange={this.onRotateZSliderChange}/>
                     <SliderWithInput label="X Offset" min={0} max={200} initialValue={translateX} onValueChange={this.onTranslateXSliderChange}/>
                     <SliderWithInput label="Y Offset" min={0} max={200} initialValue={translateY} onValueChange={this.onTranslateYSliderChange}/>
-                    {/* <SliderWithInput label="Angle" min={0} max={360}/> */}
                 </div>
+                <a href="#" ref={(r) => {this._downloadButton = r}} onClick={this.onDownloadClick} className="button" id="btn-download" download="‹$%€›ﬁﬂ1‹€‹⁄0⁄€›.png">Download</a>
             </div>
         )
     }
