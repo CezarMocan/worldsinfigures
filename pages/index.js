@@ -16,37 +16,48 @@ import shortid from 'shortid'
 import { projectionsList, projectionsMap } from '../modules/Projections'
 import SliderWithInput from '../components/SliderWithInput'
 
-export default class Index extends React.Component {
+const RESIZING = {
+    NO: 0,
+    HORIZONTAL: 1,
+    VERTICAL: 2
+}
+
+export default class Index extends React.PureComponent {
     constructor(props) {
         super(props)
         this.onImageLoad = this.onImageLoad.bind(this)
         this.state = {
-            scale: 16,
+            scale: 100,
             rotateX: 0,
             rotateY: 0,
             rotateZ: 0,
             translateX: 0,
             translateY: 0,
-            // projection: 'geoPierceQuincuncial'
             projection: 'geoEquirectangular',
-            canvasWidth: 700,
-            canvasHeight: 400
+            isCanvasResizing: RESIZING.NO,
         }
+
+        this.lastWindowTouch = { x: 0, y: 0 }
+
+        this.isCanvasTouching = false
+        this.lastCanvasTouch = { x: 0, y: 0 }
+        this.canvasTranslate = { dx: 0, dy: 0 }
+        this.canvasTouchThrottleTime = 0
     }
     get canvasContext() {
         return this._canvas.getContext('2d')
     }
     get canvasWidth() {
-        return this.state.canvasWidth
+        return this._canvas.width
     }
     get canvasHeight() {
-        return this.state.canvasHeight
+        return this._canvas.height
     }
-    renderMap() {
+    renderMap(withCleanSurface = false) {
         const dx = this._image.width
         const dy = this._image.height
 
-        if (!this.sourceData) {
+        if (!this.sourceData || withCleanSurface) {
             this.canvasContext.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
             this.canvasContext.save()
             this.canvasContext.drawImage(this._image, 0, 0, dx, dy, 0, 0, this.canvasWidth, this.canvasHeight)
@@ -63,11 +74,11 @@ export default class Index extends React.Component {
             for (var x = 0; x < this.canvasWidth; x += 1) {
               const _x = (x / this.canvasWidth - 0.5) * 3 * (360 / Math.PI)
               const _y = (y / this.canvasHeight - 0.5) * 3 * (360 / Math.PI)
-              i = y * (this.canvasWidth) * 4 + x * 4 - 1
-
               var p = this.projection.invert([_x, _y])
               if (!p) continue
               let λ = p[0], φ = p[1];
+
+              i = y * (this.canvasWidth) * 4 + x * 4 - 1
               if (λ > 180 || λ < -180 || φ > 90 || φ < -90) { 
                 targetData[++i] = 128;
                 targetData[++i] = 128;
@@ -94,10 +105,12 @@ export default class Index extends React.Component {
 
     }
     updateProjection() {
-        const { scale, rotateX, rotateY, rotateZ, translateX, translateY, projection } = this.state
+        let { scale, rotateX, rotateY, rotateZ, translateX, translateY, projection } = this.state
+        translateX += (this.canvasTranslate.dx || 0)
+        translateY += (this.canvasTranslate.dy || 0)
         const currentProjection = projectionsMap[projection]
         this.projection = currentProjection.fn()
-        if (this.projection.scale) this.projection = this.projection.scale(3 * scale)
+        if (this.projection.scale) this.projection = this.projection.scale(scale)
         if (this.projection.translate) this.projection = this.projection.translate([this.canvasWidth / 2 + this.canvasWidth * (translateX - 50) / 50, this.canvasHeight / 2 + this.canvasHeight * (translateY - 50) / 50])
         if (this.projection.rotate) this.projection = this.projection.rotate([rotateX, rotateY, rotateZ])
         if (this.projection.precision) this.projection = this.projection.precision(1)
@@ -106,8 +119,7 @@ export default class Index extends React.Component {
         this.updateProjection()
     }
     onImageLoad() {
-        this.sourceData = null
-        this.renderMap()
+        this.renderMap(true)
     }
     onScaleSliderChange = (newValue) => {
         this.setState({ scale: newValue })
@@ -151,15 +163,27 @@ export default class Index extends React.Component {
         this._downloadButton.href = dataURL
         this.createAndDownloadText(`${projectionId}.txt`, JSON.stringify(this.state, null, 4))
     }
-    componentDidUpdate() {
-        setTimeout(() => {
-            this.updateProjection()
-            this.renderMap()    
-        }, 0)
+    componentDidUpdate(oldProps, oldState) {
+        console.log(new Date().getTime())
+        const { scale, rotateX, rotateY, rotateZ, translateX, translateY, isCanvasResizing, projection } = this.state
+        if (scale != oldState.scale ||
+            rotateX != oldState.rotateX ||
+            rotateY != oldState.rotateY ||
+            rotateZ != oldState.rotateZ ||
+            translateX != oldState.translateX ||
+            translateY != oldState.translateY ||
+            projection != oldState.projection ||
+            isCanvasResizing != oldState.isCanvasResizing && !isCanvasResizing) {
+                setTimeout(() => {
+                    this.updateProjection()
+                    const withCleanSurface = (isCanvasResizing != oldState.isCanvasResizing)
+                    this.renderMap(withCleanSurface)    
+                }, 0)        
+        }    
     }
     onImageRef = (i) => {
         this._image = i
-        this._image.src="/static/images/test_small.png" 
+        this._image.src="/static/images/test.png" 
     }
     onCanvasRef = (c) => {
         this._canvas = c
@@ -173,19 +197,99 @@ export default class Index extends React.Component {
 
         if (file) reader.readAsDataURL(file)
     }
-    onCanvasMouseDown = (evt) => {
 
-    } 
-    onCanvasMouseUp = (evt) => {
-
+    eventOnLeftRightBorder = (evt, el, thresh) => {
+        const br = el.getBoundingClientRect()
+        const { clientX, clientY } = evt
+        return (Math.abs(clientX - br.right) < thresh || Math.abs(clientX - br.left) < thresh)
     }
+
+    eventOnTopBottomBorder = (evt, el, thresh) => {
+        const br = el.getBoundingClientRect()
+        const { clientX, clientY } = evt
+        return (Math.abs(clientY - br.top) < thresh || Math.abs(clientY - br.bottom) < thresh)
+    }
+
+    onCanvasMouseDown = (evt) => {
+        if (this.eventOnLeftRightBorder(evt, this._canvas, 10)) return
+        if (this.eventOnTopBottomBorder(evt, this._canvas, 10)) return
+        this.isCanvasTouching = true
+        this.lastCanvasTouch = { x: evt.clientX, y: evt.clientY }
+        this.canvasTranslate = { dx: 0, dy: 0 }
+        this._canvas.style.cursor = 'grabbing'
+    }
+
     onCanvasMouseMove = (evt) => {
-        
+        if (!this.isCanvasTouching) return
+        const now = new Date().getTime()
+        if (now - this.canvasTouchThrottleTime < 100) return
+        this.canvasTouchThrottleTime = now
+
+        const dx = (evt.clientX - this.lastCanvasTouch.x) / this.canvasWidth * 35
+        const dy = (evt.clientY - this.lastCanvasTouch.y) / this.canvasHeight * 45
+        this.lastCanvasTouch = { x: evt.clientX, y: evt.clientY }
+        this.canvasTranslate.dx += dx
+        this.canvasTranslate.dy += dy
+        setTimeout(() => {
+            this.updateProjection()
+            this.renderMap()    
+        }, 0)
+        this._canvas.style.cursor = 'grabbing'
+    } 
+
+    onCanvasMouseUp = (evt) => {
+        this.isCanvasTouching = false
+        this.lastCanvasTouch = { x: evt.clientX, y: evt.clientY }
+        this.setState({
+            translateX: this.state.translateX + this.canvasTranslate.dx,
+            translateY: this.state.translateY + this.canvasTranslate.dy,
+        }, () => {
+            this._canvas.style.cursor = 'grab'
+            this.canvasTranslate = { dx: 0, dy: 0 }
+        })
+    }
+
+    onWindowMouseDown = (evt) => {
+        evt.stopPropagation()
+        this.lastWindowTouch = { x: evt.clientX, y: evt.clientY }
+        if (this.eventOnLeftRightBorder(evt, this._canvas, 10)) {
+            this.setState({ isCanvasResizing: RESIZING.HORIZONTAL })
+        } else if (this.eventOnTopBottomBorder(evt, this._canvas, 10)) {
+            this.setState({ isCanvasResizing: RESIZING.VERTICAL })
+        } else {
+        }
+    } 
+    onWindowMouseUp = (evt) => {
+        evt.stopPropagation()
+        this.setState({ isCanvasResizing: RESIZING.NO })
+    }
+    onWindowMouseMove = (evt) => {
+        evt.stopPropagation()
+        const { isCanvasResizing } = this.state
+        if (isCanvasResizing == RESIZING.HORIZONTAL) {
+            this._canvas.width += evt.clientX - this.lastWindowTouch.x
+            this.lastWindowTouch = { x: evt.clientX, y: evt.clientY }
+        } else if (isCanvasResizing == RESIZING.VERTICAL) {
+            this._canvas.height += evt.clientY - this.lastWindowTouch.y
+            this.lastWindowTouch = { x: evt.clientX, y: evt.clientY }
+        } else if (isCanvasResizing == RESIZING.NO) {
+            if (this.eventOnLeftRightBorder(evt, this._canvas, 10)) {
+                this._canvas.style.cursor = 'ew-resize'
+            } else if (this.eventOnTopBottomBorder(evt, this._canvas, 10)) {
+                this._canvas.style.cursor = 'ns-resize'
+            } else {
+                this._canvas.style.cursor = 'grab'
+            }    
+        }
     }
     render() {
         const { scale, rotateX, rotateY, rotateZ, translateX, translateY, projection } = this.state
         return (
-            <div>
+            <div
+                onMouseDown={this.onWindowMouseDown}
+                onMouseUp={this.onWindowMouseUp}
+                onMouseMove={this.onWindowMouseMove}
+            >
                 <Dropzone onDrop={this.onNewFile} multiple={false} noClick={true} noKeyboard={true}>
                     {({getRootProps, getInputProps}) => (
                         <section>
@@ -197,13 +301,13 @@ export default class Index extends React.Component {
                                     style={{display: 'none'}}
                                 />
                                 <canvas 
-                                    width={this.canvasWidth}
-                                    height={this.canvasHeight}
+                                    width={500}
+                                    height={400}
                                     ref={this.onCanvasRef}
+                                    className="main-canvas"
                                     onMouseDown={this.onCanvasMouseDown}
                                     onMouseUp={this.onCanvasMouseUp}
-                                    onMouseMove={this.onCanvasMouseMove}
-                                    className="main-canvas"
+                                    onMouseMove={this.onCanvasMouseMove}                    
                                 >
                                 </canvas>
 

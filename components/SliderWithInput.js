@@ -23,7 +23,6 @@ export default function InputSlider(props) {
 
   const percentToValue = (value) => {
     const { min, max } = props
-    console.log('****: ', min, max)
     return (value / 100) * (max - min) + min
   }
 
@@ -33,14 +32,12 @@ export default function InputSlider(props) {
   const handleSliderChange = (event, newValue) => {
     const { onValueChange } = props
     setValue(newValue);    
-    console.log('newValue is: ', newValue)
     if (onValueChange) onValueChange(percentToValue(newValue))
   };
 
   const handleInputChange = event => {
     const { onValueChange } = props
     const newValue = event.target.value === '' ? '' : valueToPercent(Number(event.target.value))
-    console.log('newValue #2 is: ', newValue, percentToValue(newValue))
     setValue(newValue);
     if (onValueChange) onValueChange(percentToValue(newValue))
   };
@@ -53,6 +50,11 @@ export default function InputSlider(props) {
       setValue(100);
     }
   };
+
+  React.useEffect(() => {
+    // action here
+    setValue(valueToPercent(props.initialValue))
+  }, [props.initialValue]);
 
   return (
     <div className={classes.root}>
