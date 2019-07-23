@@ -12,6 +12,7 @@ import FormHelperText from '@material-ui/core/FormHelperText'
 import FormControl from '@material-ui/core/FormControl'
 import Select from '@material-ui/core/Select'
 import { projectionsList, projectionsMap } from '../modules/Projections'
+import SliderWithInput from '../components/SliderWithInput'
 
 export default class Index extends React.Component {
     constructor(props) {
@@ -133,22 +134,22 @@ export default class Index extends React.Component {
         this.sourceData = null
         this.renderMap()
     }
-    onScaleSliderChange = (event, newValue) => {
+    onScaleSliderChange = (newValue) => {
         this.setState({ scale: newValue })
     }
-    onRotateXSliderChange = (event, newValue) => {
+    onRotateXSliderChange = (newValue) => {
         this.setState({ rotateX: newValue })
     }
-    onRotateYSliderChange = (event, newValue) => {
+    onRotateYSliderChange = (newValue) => {
         this.setState({ rotateY: newValue })
     }
-    onRotateZSliderChange = (event, newValue) => {
+    onRotateZSliderChange = (newValue) => {
         this.setState({ rotateZ: newValue })
     }
-    onTranslateXSliderChange = (event, newValue) => {
+    onTranslateXSliderChange = (newValue) => {
         this.setState({ translateX: newValue })
     }
-    onTranslateYSliderChange = (event, newValue) => {
+    onTranslateYSliderChange = (newValue) => {
         this.setState({ translateY: newValue })
     }
     onProjectionSelectChange = (event, newValue) => {
@@ -213,12 +214,13 @@ export default class Index extends React.Component {
                     </FormControl>
                 </div>
                 <div className="controls sliders">
-                    <Slider value={scale} onChange={this.onScaleSliderChange} aria-labelledby="continuous-slider" />
-                    <Slider value={rotateX} onChange={this.onRotateXSliderChange} aria-labelledby="continuous-slider" />
-                    <Slider value={rotateY} onChange={this.onRotateYSliderChange} aria-labelledby="continuous-slider" />
-                    <Slider value={rotateZ} onChange={this.onRotateZSliderChange} aria-labelledby="continuous-slider" />
-                    <Slider value={translateX} onChange={this.onTranslateXSliderChange} aria-labelledby="continuous-slider" />
-                    <Slider value={translateY} onChange={this.onTranslateYSliderChange} aria-labelledby="continuous-slider" />
+                    <SliderWithInput label="Scale" min={3} max={500} initialValue={scale} onValueChange={this.onScaleSliderChange}/>
+                    <SliderWithInput label="X Rotation" min={0} max={360} initialValue={rotateX} onValueChange={this.onRotateXSliderChange}/>
+                    <SliderWithInput label="Y Rotation" min={0} max={360} initialValue={rotateY} onValueChange={this.onRotateYSliderChange}/>
+                    <SliderWithInput label="Z Rotation" min={0} max={360} initialValue={rotateZ} onValueChange={this.onRotateZSliderChange}/>
+                    <SliderWithInput label="X Offset" min={0} max={200} initialValue={translateX} onValueChange={this.onTranslateXSliderChange}/>
+                    <SliderWithInput label="Y Offset" min={0} max={200} initialValue={translateY} onValueChange={this.onTranslateYSliderChange}/>
+                    {/* <SliderWithInput label="Angle" min={0} max={360}/> */}
                 </div>
             </div>
         )
