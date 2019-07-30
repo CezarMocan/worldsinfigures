@@ -5,6 +5,7 @@ import classnames from 'classnames'
 import * as d3 from 'd3'
 import * as d3Geo from "d3-geo"
 import Dropzone from 'react-dropzone'
+import * as topojson from 'topojson'
 import Slider from '@material-ui/core/Slider'
 import InputLabel from '@material-ui/core/InputLabel'
 import MenuItem from '@material-ui/core/MenuItem'
@@ -27,12 +28,12 @@ export default class Index extends React.PureComponent {
         super(props)
         this.onImageLoad = this.onImageLoad.bind(this)
         this.state = {
-            scale: 55,
+            scale: 100,
             rotateX: 0,
             rotateY: 0,
             rotateZ: 0,
-            translateX: 25,
-            translateY: 25,
+            translateX: 50,
+            translateY: 50,
             projection: 'geoEquirectangular',
             isCanvasResizing: RESIZING.NO,
         }
@@ -43,6 +44,15 @@ export default class Index extends React.PureComponent {
         this.lastCanvasTouch = { x: 0, y: 0 }
         this.canvasTranslate = { dx: 0, dy: 0 }
         this.canvasTouchThrottleTime = 0
+
+        this.loadGeoJson()
+    }
+    async loadGeoJson() {
+        console.log('Loading json...')
+        // this.geoJson = await d3.json('/static/misc/cable-geo.json')
+        const w50m = await d3.json('/static/misc/world-50m.json')
+        this.geoJson = topojson.feature(w50m, w50m.objects.countries)
+        console.log('Loaded!: ', this.geoJson)
     }
     get canvasContext() {
         return this._canvas.getContext('2d')
@@ -61,12 +71,6 @@ export default class Index extends React.PureComponent {
             this.canvasContext.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
             this.canvasContext.save()
             this.canvasContext.drawImage(this._image, 0, 0, dx, dy, 0, 0, this.canvasWidth, this.canvasHeight)
-            // Draw borders for the image
-            // this.canvasContext.fillStyle = "#ffffff"
-            // this.canvasContext.fillRect(0, 0, this.canvasWidth, 5)
-            // this.canvasContext.fillRect(0, this.canvasHeight - 4, this.canvasWidth, 5)
-            // this.canvasContext.fillRect(0, 0, 5, this.canvasHeight)
-            // this.canvasContext.fillRect(this.canvasWidth - 4, 0, 5, this.canvasHeight)
             this.canvasContext.restore()
             this.sourceData = this.canvasContext.getImageData(0, 0, this.canvasWidth, this.canvasHeight).data
         }
@@ -76,15 +80,16 @@ export default class Index extends React.PureComponent {
 
         const t1 = new Date().getTime()
 
-        for (var y = 0, i = -1; y < this.canvasHeight; y += 1) {
-            for (var x = 0; x < this.canvasWidth; x += 1) {
-              const _x = (x / this.canvasWidth - 0.5) * 3 * (360 / Math.PI)
-              const _y = (y / this.canvasHeight - 0.5) * 3 * (360 / Math.PI)
+        for (var y = 0, i = -1; y <= this.canvasHeight; y += 1) {
+            for (var x = 0; x <= this.canvasWidth; x += 1) {
+              const _x = x
+              const _y = y
               var p = this.projection.invert([_x, _y])
               if (!p) continue
               let λ = p[0], φ = p[1];
 
               i = y * (this.canvasWidth) * 4 + x * 4 - 1
+
               if (λ > 180 || λ < -180 || φ > 90 || φ < -90) { 
                 targetData[++i] = 128;
                 targetData[++i] = 128;
@@ -100,10 +105,45 @@ export default class Index extends React.PureComponent {
             }
           }        
 
-        const t2 = new Date().getTime()
-
         this.canvasContext.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
         this.canvasContext.putImageData(this.target, 0, 0);
+
+        const t2 = new Date().getTime()
+        var geoGenerator = d3.geoPath()
+            .projection(this.projection)
+            .context(this.canvasContext);
+    
+        // Graticule
+        this.canvasContext.save()
+        this.canvasContext.lineWidth = 1;
+        this.canvasContext.strokeStyle = '#ccc';
+        this.canvasContext.fillStyle = 'none';
+        this.canvasContext.setLineDash([2, 2]);
+        this.canvasContext.beginPath();
+        geoGenerator(d3.geoGraticule()());
+        this.canvasContext.stroke();
+
+        // Random circle
+        var circle = d3.geoCircle()
+        .center([0.1278, 51.5074])
+        .radius(50);
+        
+        this.canvasContext.beginPath();
+        geoGenerator(circle());
+        this.canvasContext.stroke();
+
+        this.canvasContext.restore()
+
+        // Cables map
+        this.canvasContext.save()
+        this.canvasContext.lineWidth = 0.5;
+        this.canvasContext.strokeStyle = '#f00';
+        this.canvasContext.fillStyle = 'none';
+        // this.canvasContext.setLineDash([1, 1]);
+        this.canvasContext.beginPath();
+        geoGenerator(this.geoJson);
+        this.canvasContext.stroke();
+        this.canvasContext.restore()
 
         const t3 = new Date().getTime()
 
@@ -309,8 +349,8 @@ export default class Index extends React.PureComponent {
                                     style={{display: 'none'}}
                                 />
                                 <canvas 
-                                    width={500}
-                                    height={400}
+                                    width={600}
+                                    height={300}
                                     ref={this.onCanvasRef}
                                     className="main-canvas"
                                     onMouseDown={this.onCanvasMouseDown}
