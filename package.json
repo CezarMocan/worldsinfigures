@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "next",
     "build": "next build",
-    "start": "next build && next start"
+    "start": "next build && next start",
+    "testsvg": "node testsvg.js"
   },
   "author": "",
   "license": "ISC",
@@ -17,8 +18,10 @@
     "d3": "^5.9.7",
     "d3-geo": "^1.11.6",
     "d3-geo-projection": "^2.7.0",
+    "imagetracerjs": "^1.2.5",
     "less": "^3.9.0",
     "next": "^9.0.2",
+    "png.js": "^0.2.1",
     "react": "^16.8.6",
     "react-dom": "^16.8.6",
     "react-dropzone": "^10.1.6",
