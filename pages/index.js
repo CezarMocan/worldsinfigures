@@ -11,8 +11,11 @@ import InputLabel from '@material-ui/core/InputLabel'
 import MenuItem from '@material-ui/core/MenuItem'
 import FormHelperText from '@material-ui/core/FormHelperText'
 import FormControl from '@material-ui/core/FormControl'
+import FormGroup from '@material-ui/core/FormGroup'
+import FormControlLabel from '@material-ui/core/FormControlLabel'
 import Select from '@material-ui/core/Select'
 import Button from '@material-ui/core/Button'
+import Checkbox from '@material-ui/core/Checkbox'
 import shortid from 'shortid'
 import { projectionsList, projectionsMap } from '../modules/Projections'
 import SliderWithInput from '../components/SliderWithInput'
@@ -35,6 +38,10 @@ export default class Index extends React.PureComponent {
             translateX: 50,
             translateY: 50,
             projection: 'geoEquirectangular',
+            rendersImage: true,
+            rendersGraticule: false,
+            rendersWorldMap: false,
+            rendersSubmarineCables: false,
             isCanvasResizing: RESIZING.NO,
         }
 
@@ -49,9 +56,9 @@ export default class Index extends React.PureComponent {
     }
     async loadGeoJson() {
         console.log('Loading json...')
-        // this.geoJson = await d3.json('/static/misc/cable-geo.json')
+        this.cablesMapGeoJson = await d3.json('/static/misc/cable-geo.json')
         const w50m = await d3.json('/static/misc/world-50m.json')
-        this.geoJson = topojson.feature(w50m, w50m.objects.countries)
+        this.worldGeoJson = topojson.feature(w50m, w50m.objects.countries)
         console.log('Loaded!: ', this.geoJson)
     }
     get canvasContext() {
@@ -67,6 +74,8 @@ export default class Index extends React.PureComponent {
         const dx = this._image.width
         const dy = this._image.height
 
+        const { rendersImage, rendersGraticule, rendersSubmarineCables, rendersWorldMap} = this.state
+
         if (!this.sourceData || withCleanSurface) {
             this.canvasContext.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
             this.canvasContext.save()
@@ -75,80 +84,72 @@ export default class Index extends React.PureComponent {
             this.sourceData = this.canvasContext.getImageData(0, 0, this.canvasWidth, this.canvasHeight).data
         }
 
-        this.target = this.canvasContext.createImageData(this.canvasWidth, this.canvasHeight)
-        let targetData = this.target.data
+        if (rendersImage) {
+            this.target = this.canvasContext.createImageData(this.canvasWidth, this.canvasHeight)
+            let targetData = this.target.data
+    
+            const t1 = new Date().getTime()
+    
+            for (var y = 0, i = -1; y <= this.canvasHeight; y += 1) {
+                for (var x = 0; x <= this.canvasWidth; x += 1) {
+                  const _x = x
+                  const _y = y
+                  var p = this.projection.invert([_x, _y])
+                  if (!p) continue
+                  let λ = p[0], φ = p[1];
+    
+                  i = y * (this.canvasWidth) * 4 + x * 4 - 1
+    
+                  if (λ > 180 || λ < -180 || φ > 90 || φ < -90) { 
+                    targetData[++i] = 128;
+                    targetData[++i] = 128;
+                    targetData[++i] = 128;
+                    targetData[++i] = 255;  
+                    continue
+                  }
+                  var q = (((90 - φ) / 180 * this.canvasHeight | 0) * this.canvasWidth + ((180 + λ) / 360 * this.canvasWidth | 0) << 2)
+                    targetData[++i] = this.sourceData[q];
+                    targetData[++i] = this.sourceData[++q];
+                    targetData[++i] = this.sourceData[++q];
+                    targetData[++i] = 255;  
+                }
+              }        
+    
+            this.canvasContext.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
+            this.canvasContext.putImageData(this.target, 0, 0);    
+        } else {
+            this.canvasContext.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
+        }
 
-        const t1 = new Date().getTime()
-
-        for (var y = 0, i = -1; y <= this.canvasHeight; y += 1) {
-            for (var x = 0; x <= this.canvasWidth; x += 1) {
-              const _x = x
-              const _y = y
-              var p = this.projection.invert([_x, _y])
-              if (!p) continue
-              let λ = p[0], φ = p[1];
-
-              i = y * (this.canvasWidth) * 4 + x * 4 - 1
-
-              if (λ > 180 || λ < -180 || φ > 90 || φ < -90) { 
-                targetData[++i] = 128;
-                targetData[++i] = 128;
-                targetData[++i] = 128;
-                targetData[++i] = 255;  
-                continue
-              }
-              var q = (((90 - φ) / 180 * this.canvasHeight | 0) * this.canvasWidth + ((180 + λ) / 360 * this.canvasWidth | 0) << 2)
-                targetData[++i] = this.sourceData[q];
-                targetData[++i] = this.sourceData[++q];
-                targetData[++i] = this.sourceData[++q];
-                targetData[++i] = 255;  
-            }
-          }        
-
-        this.canvasContext.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
-        this.canvasContext.putImageData(this.target, 0, 0);
-
-        const t2 = new Date().getTime()
         var geoGenerator = d3.geoPath()
             .projection(this.projection)
             .context(this.canvasContext);
     
         // Graticule
-        this.canvasContext.save()
-        this.canvasContext.lineWidth = 1;
-        this.canvasContext.strokeStyle = '#ccc';
-        this.canvasContext.fillStyle = 'none';
-        this.canvasContext.setLineDash([2, 2]);
-        this.canvasContext.beginPath();
-        geoGenerator(d3.geoGraticule()());
-        this.canvasContext.stroke();
+        if (rendersGraticule)
+            this.drawGeoJson(d3.geoGraticule()(), geoGenerator, this.canvasContext, 1, '#ccc', false, true)
 
-        // Random circle
-        var circle = d3.geoCircle()
-        .center([0.1278, 51.5074])
-        .radius(50);
-        
-        this.canvasContext.beginPath();
-        geoGenerator(circle());
-        this.canvasContext.stroke();
-
-        this.canvasContext.restore()
+        // World map
+        if (rendersWorldMap)
+            this.drawGeoJson(this.worldGeoJson, geoGenerator, this.canvasContext, 0.5, 'rgba(255, 230, 220, 0.2)', true)
 
         // Cables map
-        this.canvasContext.save()
-        this.canvasContext.lineWidth = 0.5;
-        this.canvasContext.strokeStyle = '#f00';
-        this.canvasContext.fillStyle = 'none';
-        // this.canvasContext.setLineDash([1, 1]);
-        this.canvasContext.beginPath();
-        geoGenerator(this.geoJson);
-        this.canvasContext.stroke();
-        this.canvasContext.restore()
-
-        const t3 = new Date().getTime()
-
-        console.log('1: ', t2 - t1, '2: ', t3 - t2)
-
+        if (rendersSubmarineCables)
+            this.drawGeoJson(this.cablesMapGeoJson, geoGenerator, this.canvasContext, 0.5, '#fdd', false)
+    }
+    drawGeoJson(geoJson, geoGenerator, context, lineWidth, color, fillMode, dashed = false) {
+        context.save()
+        context.lineWidth = lineWidth;
+        context.strokeStyle = color;
+        context.fillStyle = color;
+        if (dashed) context.setLineDash([2, 2])
+        context.beginPath()
+        geoGenerator(geoJson)
+        if (fillMode)
+            context.fill()
+        else
+            context.stroke()
+        context.restore()
     }
     updateProjection() {
         let { scale, rotateX, rotateY, rotateZ, translateX, translateY, projection } = this.state
@@ -212,8 +213,8 @@ export default class Index extends React.PureComponent {
         this.createAndDownloadText(`${projectionId}.txt`, JSON.stringify(this.state, null, 4))
     }
     componentDidUpdate(oldProps, oldState) {
-        console.log(new Date().getTime())
         const { scale, rotateX, rotateY, rotateZ, translateX, translateY, isCanvasResizing, projection } = this.state
+        const { rendersGraticule, rendersSubmarineCables, rendersWorldMap } = this.state
         if (scale != oldState.scale ||
             rotateX != oldState.rotateX ||
             rotateY != oldState.rotateY ||
@@ -221,6 +222,9 @@ export default class Index extends React.PureComponent {
             translateX != oldState.translateX ||
             translateY != oldState.translateY ||
             projection != oldState.projection ||
+            rendersGraticule != oldState.rendersGraticule ||
+            rendersSubmarineCables != oldState.rendersSubmarineCables ||
+            rendersWorldMap != oldState.rendersWorldMap ||
             isCanvasResizing != oldState.isCanvasResizing && !isCanvasResizing) {
                 setTimeout(() => {
                     this.updateProjection()
@@ -235,6 +239,9 @@ export default class Index extends React.PureComponent {
     }
     onCanvasRef = (c) => {
         this._canvas = c
+    }
+    handleCheckboxChange = propName => event => {
+        this.setState({ ...this.state, [propName]: event.target.checked })
     }
     onNewFile = (files) => {
         const file = files[0]
@@ -332,6 +339,7 @@ export default class Index extends React.PureComponent {
     }
     render() {
         const { scale, rotateX, rotateY, rotateZ, translateX, translateY, projection } = this.state
+        const { rendersGraticule, rendersSubmarineCables, rendersWorldMap } = this.state
         return (
             <div
                 onMouseDown={this.onWindowMouseDown}
@@ -384,6 +392,22 @@ export default class Index extends React.PureComponent {
                                     <SliderWithInput label="Y Offset" min={0} max={200} initialValue={translateY} onValueChange={this.onTranslateYSliderChange}/>
                                 </div>
 
+                                <div className="controls checkboxes">
+                                <FormGroup row>
+                                    <FormControlLabel
+                                        control={ <Checkbox color="default" checked={rendersGraticule} onChange={this.handleCheckboxChange('rendersGraticule')} value="rendersGraticule" /> }
+                                        label="Graticule"
+                                    />
+                                    <FormControlLabel
+                                        control={ <Checkbox checked={rendersSubmarineCables} onChange={this.handleCheckboxChange('rendersSubmarineCables')} value="rendersSubmarineCables" /> }
+                                        label="Submarine Cables"
+                                    />
+                                    <FormControlLabel
+                                        control={ <Checkbox color="white" checked={rendersWorldMap} onChange={this.handleCheckboxChange('rendersWorldMap')} value="rendersWorldMap" /> }
+                                        label="World Map"
+                                    />
+                                </FormGroup>
+                                </div>
                             </div>
                         </section>
                     )}
