@@ -42,6 +42,7 @@ export default class Index extends React.PureComponent {
             rendersGraticule: false,
             rendersWorldMap: false,
             rendersSubmarineCables: false,
+            rendersAllRedLine: false,
             isCanvasResizing: RESIZING.NO,
         }
 
@@ -57,6 +58,7 @@ export default class Index extends React.PureComponent {
     async loadGeoJson() {
         console.log('Loading json...')
         this.cablesMapGeoJson = await d3.json('/static/misc/cable-geo.json')
+        this.allRedLineMapGeoJson = await d3.json('/static/misc/all-red-line-geo.json')
         const w50m = await d3.json('/static/misc/world-50m.json')
         this.worldGeoJson = topojson.feature(w50m, w50m.objects.countries)
         console.log('Loaded!: ', this.geoJson)
@@ -74,7 +76,7 @@ export default class Index extends React.PureComponent {
         const dx = this._image.width
         const dy = this._image.height
 
-        const { rendersImage, rendersGraticule, rendersSubmarineCables, rendersWorldMap} = this.state
+        const { rendersImage, rendersGraticule, rendersSubmarineCables, rendersWorldMap, rendersAllRedLine } = this.state
 
         if (!this.sourceData || withCleanSurface) {
             this.canvasContext.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
@@ -136,6 +138,10 @@ export default class Index extends React.PureComponent {
         // Cables map
         if (rendersSubmarineCables)
             this.drawGeoJson(this.cablesMapGeoJson, geoGenerator, this.canvasContext, 0.5, '#fdd', false)
+
+        // All red line map
+        if (rendersAllRedLine)
+            this.drawGeoJson(this.allRedLineMapGeoJson, geoGenerator, this.canvasContext, 2, 'rgba(255, 64, 64, 0.8)', false, false)
     }
     drawGeoJson(geoJson, geoGenerator, context, lineWidth, color, fillMode, dashed = false) {
         context.save()
@@ -214,7 +220,7 @@ export default class Index extends React.PureComponent {
     }
     componentDidUpdate(oldProps, oldState) {
         const { scale, rotateX, rotateY, rotateZ, translateX, translateY, isCanvasResizing, projection } = this.state
-        const { rendersGraticule, rendersSubmarineCables, rendersWorldMap } = this.state
+        const { rendersGraticule, rendersSubmarineCables, rendersWorldMap, rendersAllRedLine } = this.state
         if (scale != oldState.scale ||
             rotateX != oldState.rotateX ||
             rotateY != oldState.rotateY ||
@@ -224,6 +230,7 @@ export default class Index extends React.PureComponent {
             projection != oldState.projection ||
             rendersGraticule != oldState.rendersGraticule ||
             rendersSubmarineCables != oldState.rendersSubmarineCables ||
+            rendersAllRedLine != oldState.rendersAllRedLine ||
             rendersWorldMap != oldState.rendersWorldMap ||
             isCanvasResizing != oldState.isCanvasResizing && !isCanvasResizing) {
                 setTimeout(() => {
@@ -339,7 +346,7 @@ export default class Index extends React.PureComponent {
     }
     render() {
         const { scale, rotateX, rotateY, rotateZ, translateX, translateY, projection } = this.state
-        const { rendersGraticule, rendersSubmarineCables, rendersWorldMap } = this.state
+        const { rendersGraticule, rendersSubmarineCables, rendersWorldMap, rendersAllRedLine } = this.state
         return (
             <div
                 onMouseDown={this.onWindowMouseDown}
@@ -401,6 +408,10 @@ export default class Index extends React.PureComponent {
                                     <FormControlLabel
                                         control={ <Checkbox checked={rendersSubmarineCables} onChange={this.handleCheckboxChange('rendersSubmarineCables')} value="rendersSubmarineCables" /> }
                                         label="Submarine Cables"
+                                    />
+                                    <FormControlLabel
+                                        control={ <Checkbox checked={rendersAllRedLine} onChange={this.handleCheckboxChange('rendersAllRedLine')} value="rendersAllRedLine" /> }
+                                        label="All Red Line"
                                     />
                                     <FormControlLabel
                                         control={ <Checkbox color="white" checked={rendersWorldMap} onChange={this.handleCheckboxChange('rendersWorldMap')} value="rendersWorldMap" /> }
