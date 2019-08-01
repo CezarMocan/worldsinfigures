@@ -59,7 +59,7 @@ export default class Index extends React.PureComponent {
         console.log('Loading json...')
         this.cablesMapGeoJson = await d3.json('/static/misc/cable-geo.json')
         this.allRedLineMapGeoJson = await d3.json('/static/misc/all-red-line-geo.json')
-        const w50m = await d3.json('/static/misc/world-50m.json')
+        const w50m = await d3.json('/static/misc/world-110m.json')
         this.worldGeoJson = topojson.feature(w50m, w50m.objects.countries)
         console.log('Loaded!: ', this.geoJson)
     }
@@ -133,19 +133,31 @@ export default class Index extends React.PureComponent {
     
         // Graticule
         if (rendersGraticule)
-            this.drawGeoJson(d3.geoGraticule()(), geoGenerator, this.canvasContext, 1, '#ccc', false, true)
+            // this.drawGeoJson(d3.geoGraticule()(), geoGenerator, this.canvasContext, 1, '#ccc', false, true)
+            this.drawGeoJsonTiled(this.projections, d3.geoGraticule()(), this.canvasContext, 1, '#ccc', false, true)
 
         // World map
         if (rendersWorldMap)
-            this.drawGeoJson(this.worldGeoJson, geoGenerator, this.canvasContext, 0.5, 'rgba(255, 230, 220, 0.2)', true)
+            // this.drawGeoJson(this.worldGeoJson, geoGenerator, this.canvasContext, 0.5, 'rgba(255, 230, 220, 0.2)', true)
+            this.drawGeoJsonTiled(this.projections, this.worldGeoJson, this.canvasContext, 0.5, 'rgba(255, 230, 220, 0.2)', true)
 
         // Cables map
-        if (rendersSubmarineCables)
-            this.drawGeoJson(this.cablesMapGeoJson, geoGenerator, this.canvasContext, 0.5, '#fdd', false)
+        if (rendersSubmarineCables) {
+            this.drawGeoJsonTiled(this.projections, this.cablesMapGeoJson, this.canvasContext, 0.5, '#fdd', false)
+        }
 
         // All red line map
-        if (rendersAllRedLine)
-            this.drawGeoJson(this.allRedLineMapGeoJson, geoGenerator, this.canvasContext, 2, 'rgba(255, 64, 64, 0.8)', false, false)
+        if (rendersAllRedLine) {
+            this.drawGeoJsonTiled(this.projections, this.allRedLineMapGeoJson, this.canvasContext, 2, 'rgba(255, 64, 64, 0.8)', false, false)
+            // this.drawGeoJson(this.allRedLineMapGeoJson, this.canvasContext, 2, 'rgba(255, 64, 64, 0.8)', false, false)
+        }
+    }
+    drawGeoJsonTiled(projections, geoJson, context, lineWidth, color, fillMode, dashed = false) {
+        projections.forEach(projection => {
+            const { p, offsetX, offsetY } = projection
+            const generator = d3.geoPath().projection(p).context(context)
+            this.drawGeoJson(geoJson, generator, context, lineWidth, color, fillMode, dashed)
+        })
     }
     drawGeoJson(geoJson, geoGenerator, context, lineWidth, color, fillMode, dashed = false) {
         context.save()
@@ -161,16 +173,38 @@ export default class Index extends React.PureComponent {
             context.stroke()
         context.restore()
     }
-    updateProjection() {
+    getProjectionFromState(offsetXFactor, offsetYFactor) {
         let { scale, rotateX, rotateY, rotateZ, translateX, translateY, projection } = this.state
         translateX += (this.canvasTranslate.dx || 0)
         translateY += (this.canvasTranslate.dy || 0)
         const currentProjection = projectionsMap[projection]
-        this.projection = currentProjection.fn()
-        if (this.projection.scale) this.projection = this.projection.scale(scale)
-        if (this.projection.translate) this.projection = this.projection.translate([this.canvasWidth / 2 + this.canvasWidth * (translateX - 50) / 50, this.canvasHeight / 2 + this.canvasHeight * (translateY - 50) / 50])
-        if (this.projection.rotate) this.projection = this.projection.rotate([rotateX, rotateY, rotateZ])
-        if (this.projection.precision) this.projection = this.projection.precision(1)
+        let proj = currentProjection.fn()
+
+        if (proj.scale) proj = proj.scale(scale)
+
+        const offsetXValue = offsetXFactor * (2 * Math.PI * scale)
+        const offsetYValue = offsetYFactor * (Math.PI * scale)
+        if (proj.translate) proj = proj.translate([offsetXValue + this.canvasWidth / 2 + this.canvasWidth * (translateX - 50) / 50, offsetYValue + this.canvasHeight / 2 + this.canvasHeight * (translateY - 50) / 50])
+
+        if (proj.rotate) proj = proj.rotate([rotateX, rotateY, rotateZ])
+
+        if (proj.precision) proj = proj.precision(0.01)
+
+        return proj
+    }
+    updateProjection() {
+        this.projection = this.getProjectionFromState(0, 0)
+        this.projections = []
+        for (let i = -1; i <= 1; i++) {
+            for (let j = -1; j <= 1; j++) {
+                let projection = this.getProjectionFromState(i, j)
+                this.projections.push({
+                    offsetX: i,
+                    offsetY: j,
+                    p: projection
+                })
+            }
+        }
     }
     componentDidMount() {
         this.updateProjection()
