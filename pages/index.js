@@ -220,7 +220,7 @@ export default class Index extends React.PureComponent {
     }
     componentDidUpdate(oldProps, oldState) {
         const { scale, rotateX, rotateY, rotateZ, translateX, translateY, isCanvasResizing, projection } = this.state
-        const { rendersGraticule, rendersSubmarineCables, rendersWorldMap, rendersAllRedLine } = this.state
+        const { rendersImage, rendersGraticule, rendersSubmarineCables, rendersWorldMap, rendersAllRedLine } = this.state
         if (scale != oldState.scale ||
             rotateX != oldState.rotateX ||
             rotateY != oldState.rotateY ||
@@ -228,6 +228,7 @@ export default class Index extends React.PureComponent {
             translateX != oldState.translateX ||
             translateY != oldState.translateY ||
             projection != oldState.projection ||
+            rendersImage != oldState.rendersImage ||
             rendersGraticule != oldState.rendersGraticule ||
             rendersSubmarineCables != oldState.rendersSubmarineCables ||
             rendersAllRedLine != oldState.rendersAllRedLine ||
@@ -346,7 +347,7 @@ export default class Index extends React.PureComponent {
     }
     render() {
         const { scale, rotateX, rotateY, rotateZ, translateX, translateY, projection } = this.state
-        const { rendersGraticule, rendersSubmarineCables, rendersWorldMap, rendersAllRedLine } = this.state
+        const { rendersGraticule, rendersSubmarineCables, rendersWorldMap, rendersAllRedLine, rendersImage } = this.state
         return (
             <div
                 onMouseDown={this.onWindowMouseDown}
@@ -401,6 +402,10 @@ export default class Index extends React.PureComponent {
 
                                 <div className="controls checkboxes">
                                 <FormGroup row>
+                                <FormControlLabel
+                                        control={ <Checkbox color="default" checked={rendersImage} onChange={this.handleCheckboxChange('rendersImage')} value="rendersImage" /> }
+                                        label="Image"
+                                    />
                                     <FormControlLabel
                                         control={ <Checkbox color="default" checked={rendersGraticule} onChange={this.handleCheckboxChange('rendersGraticule')} value="rendersGraticule" /> }
                                         label="Graticule"
