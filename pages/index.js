@@ -121,6 +121,10 @@ export default class Index extends React.PureComponent {
             this.canvasContext.putImageData(this.target, 0, 0);    
         } else {
             this.canvasContext.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
+            this.canvasContext.save()
+            this.canvasContext.fillStyle = 'rgba(64, 62, 62, 1)'
+            this.canvasContext.fillRect(0, 0, this.canvasWidth, this.canvasHeight);
+            this.canvasContext.restore()
         }
 
         var geoGenerator = d3.geoPath()
