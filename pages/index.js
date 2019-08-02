@@ -43,6 +43,7 @@ export default class Index extends React.PureComponent {
             rendersWorldMap: false,
             rendersSubmarineCables: false,
             rendersAllRedLine: false,
+            rendersFace: false,
             isCanvasResizing: RESIZING.NO,
         }
 
@@ -59,6 +60,7 @@ export default class Index extends React.PureComponent {
         console.log('Loading json...')
         this.cablesMapGeoJson = await d3.json('/static/misc/cable-geo.json')
         this.allRedLineMapGeoJson = await d3.json('/static/misc/all-red-line-geo.json')
+        this.faceGeoJson = await d3.json('/static/misc/face-geo.json')
         const w50m = await d3.json('/static/misc/world-110m.json')
         this.worldGeoJson = topojson.feature(w50m, w50m.objects.countries)
         console.log('Loaded!: ', this.geoJson)
@@ -76,7 +78,7 @@ export default class Index extends React.PureComponent {
         const dx = this._image.width
         const dy = this._image.height
 
-        const { rendersImage, rendersGraticule, rendersSubmarineCables, rendersWorldMap, rendersAllRedLine } = this.state
+        const { rendersImage, rendersGraticule, rendersSubmarineCables, rendersWorldMap, rendersAllRedLine, rendersFace } = this.state
 
         if (!this.sourceData || withCleanSurface) {
             this.canvasContext.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
@@ -133,12 +135,10 @@ export default class Index extends React.PureComponent {
     
         // Graticule
         if (rendersGraticule)
-            // this.drawGeoJson(d3.geoGraticule()(), geoGenerator, this.canvasContext, 1, '#ccc', false, true)
             this.drawGeoJsonTiled(this.projections, d3.geoGraticule()(), this.canvasContext, 1, '#ccc', false, true)
 
         // World map
         if (rendersWorldMap)
-            // this.drawGeoJson(this.worldGeoJson, geoGenerator, this.canvasContext, 0.5, 'rgba(255, 230, 220, 0.2)', true)
             this.drawGeoJsonTiled(this.projections, this.worldGeoJson, this.canvasContext, 0.5, 'rgba(255, 230, 220, 0.2)', true)
 
         // Cables map
@@ -149,8 +149,13 @@ export default class Index extends React.PureComponent {
         // All red line map
         if (rendersAllRedLine) {
             this.drawGeoJsonTiled(this.projections, this.allRedLineMapGeoJson, this.canvasContext, 2, 'rgba(255, 64, 64, 0.8)', false, false)
-            // this.drawGeoJson(this.allRedLineMapGeoJson, this.canvasContext, 2, 'rgba(255, 64, 64, 0.8)', false, false)
         }
+
+        // All red line map
+        if (rendersFace) {
+            this.drawGeoJsonTiled(this.projections, this.faceGeoJson, this.canvasContext, 2, 'rgba(64, 64, 255, 0.8)', false, false)
+        }
+
     }
     drawGeoJsonTiled(projections, geoJson, context, lineWidth, color, fillMode, dashed = false) {
         projections.forEach(projection => {
@@ -258,7 +263,7 @@ export default class Index extends React.PureComponent {
     }
     componentDidUpdate(oldProps, oldState) {
         const { scale, rotateX, rotateY, rotateZ, translateX, translateY, isCanvasResizing, projection } = this.state
-        const { rendersImage, rendersGraticule, rendersSubmarineCables, rendersWorldMap, rendersAllRedLine } = this.state
+        const { rendersImage, rendersGraticule, rendersSubmarineCables, rendersWorldMap, rendersAllRedLine, rendersFace } = this.state
         if (scale != oldState.scale ||
             rotateX != oldState.rotateX ||
             rotateY != oldState.rotateY ||
@@ -270,6 +275,7 @@ export default class Index extends React.PureComponent {
             rendersGraticule != oldState.rendersGraticule ||
             rendersSubmarineCables != oldState.rendersSubmarineCables ||
             rendersAllRedLine != oldState.rendersAllRedLine ||
+            rendersFace != oldState.rendersFace ||
             rendersWorldMap != oldState.rendersWorldMap ||
             isCanvasResizing != oldState.isCanvasResizing && !isCanvasResizing) {
                 setTimeout(() => {
@@ -385,7 +391,7 @@ export default class Index extends React.PureComponent {
     }
     render() {
         const { scale, rotateX, rotateY, rotateZ, translateX, translateY, projection } = this.state
-        const { rendersGraticule, rendersSubmarineCables, rendersWorldMap, rendersAllRedLine, rendersImage } = this.state
+        const { rendersGraticule, rendersSubmarineCables, rendersWorldMap, rendersAllRedLine, rendersFace, rendersImage } = this.state
         return (
             <div
                 onMouseDown={this.onWindowMouseDown}
@@ -455,6 +461,10 @@ export default class Index extends React.PureComponent {
                                     <FormControlLabel
                                         control={ <Checkbox checked={rendersAllRedLine} onChange={this.handleCheckboxChange('rendersAllRedLine')} value="rendersAllRedLine" /> }
                                         label="All Red Line"
+                                    />
+                                    <FormControlLabel
+                                        control={ <Checkbox color="primary" checked={rendersFace} onChange={this.handleCheckboxChange('rendersFace')} value="rendersFace" /> }
+                                        label="Gedymin Head"
                                     />
                                     <FormControlLabel
                                         control={ <Checkbox color="white" checked={rendersWorldMap} onChange={this.handleCheckboxChange('rendersWorldMap')} value="rendersWorldMap" /> }
