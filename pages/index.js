@@ -129,13 +129,19 @@ export default class Index extends React.PureComponent {
             this.canvasContext.restore()
         }
 
-        var geoGenerator = d3.geoPath()
-            .projection(this.projection)
-            .context(this.canvasContext);
+        var geoGeneratorSvg = d3.geoPath().projection(this.projection)
     
         // Graticule
-        if (rendersGraticule)
-            this.drawGeoJsonTiled(this.projections, d3.geoGraticule()(), this.canvasContext, 1, '#ccc', false, true)
+        if (rendersGraticule) {
+            const graticule = d3.geoGraticule()()
+            this.drawGeoJsonTiled(this.projections, graticule, this.canvasContext, 1, '#ccc', false, true)
+            d3.select('#svgProjectionGraticule').remove()
+            d3.select('#svgProjection').append('path')
+                .datum(graticule)
+                .attr("id", "svgProjectionGraticule")
+                .attr("class", "graticule")
+                .attr("d", geoGeneratorSvg)
+        }
 
         // World map
         if (rendersWorldMap)
@@ -240,7 +246,6 @@ export default class Index extends React.PureComponent {
         this.setState({ projection })
     }
     createAndDownloadText(filename, text) {
-        console.log('createAndDownloadText')
         var element = document.createElement('a');
         element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
         element.setAttribute('download', filename);
@@ -291,6 +296,8 @@ export default class Index extends React.PureComponent {
     }
     onCanvasRef = (c) => {
         this._canvas = c
+    }
+    onSvgRef = (s) => {
     }
     handleCheckboxChange = propName => event => {
         this.setState({ ...this.state, [propName]: event.target.checked })
@@ -375,9 +382,11 @@ export default class Index extends React.PureComponent {
         const { isCanvasResizing } = this.state
         if (isCanvasResizing == RESIZING.HORIZONTAL) {
             this._canvas.width += evt.clientX - this.lastWindowTouch.x
+            d3.select('#svgProjection').attr("width", this._canvas.width)
             this.lastWindowTouch = { x: evt.clientX, y: evt.clientY }
         } else if (isCanvasResizing == RESIZING.VERTICAL) {
             this._canvas.height += evt.clientY - this.lastWindowTouch.y
+            d3.select('#svgProjection').attr("height", this._canvas.height)
             this.lastWindowTouch = { x: evt.clientX, y: evt.clientY }
         } else if (isCanvasResizing == RESIZING.NO) {
             if (this.eventOnLeftRightBorder(evt, this._canvas, 10)) {
@@ -419,11 +428,23 @@ export default class Index extends React.PureComponent {
                                 >
                                 </canvas>
 
-                                <a href="#" ref={(r) => {this._downloadButton = r}} onClick={this.onDownloadClick} download="">
-                                    <Button variant="outlined">
-                                        Download
-                                    </Button>
-                                </a>
+                                <div id="svgContainer" className="svg-container">
+                                    <svg
+                                        ref={this.onSvgRef}
+                                        id="svgProjection"
+                                        width={600}
+                                        height={300}>
+
+                                    </svg>
+                                </div>
+
+                                <div className="controls download">
+                                    <a href="#" ref={(r) => {this._downloadButton = r}} onClick={this.onDownloadClick} download="">
+                                        <Button variant="outlined">
+                                            Download
+                                        </Button>
+                                    </a>
+                                </div>
 
                                 <div className="controls projection">
                                     <FormControl className="form-control projection-form">
