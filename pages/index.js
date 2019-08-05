@@ -139,8 +139,12 @@ export default class Index extends React.PureComponent {
             d3.select('#svgProjection').append('path')
                 .datum(graticule)
                 .attr("id", "svgProjectionGraticule")
-                .attr("class", "graticule")
+                // .attr("class", "graticule")
                 .attr("d", geoGeneratorSvg)
+                .attr("fill", "none")
+                .attr("stroke", "red")
+                .attr("stroke-dasharray", "2, 2")
+                .attr("stroke-width", "1")
         }
 
         // World map
@@ -247,16 +251,29 @@ export default class Index extends React.PureComponent {
     }
     createAndDownloadText(filename, text) {
         var element = document.createElement('a');
+
         element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
         element.setAttribute('download', filename);
       
         element.style.display = 'none';
         document.body.appendChild(element);
-      
         element.click();
-      
         document.body.removeChild(element);
-      }
+    }
+    createAndDownloadSvg(filename) {
+        const data = '<?xml version="1.0" encoding="utf-8"?>' + this._svg.outerHTML        
+        var svgBlob = new Blob([data], { type:"image/svg+xml;charset=utf-8" })
+        var svgUrl = URL.createObjectURL(svgBlob);
+
+        var downloadLink = document.createElement('a')
+        downloadLink.href = svgUrl
+        downloadLink.download = filename
+        downloadLink.style.display = 'none';
+
+        document.body.appendChild(downloadLink)
+        downloadLink.click()
+        document.body.removeChild(downloadLink)
+    }
     onDownloadClick = () => {
         console.log('onDownloadClick')
         const uid = shortid()
@@ -265,6 +282,7 @@ export default class Index extends React.PureComponent {
         this._downloadButton.download = `${projectionId}.png`
         this._downloadButton.href = dataURL
         this.createAndDownloadText(`${projectionId}.txt`, JSON.stringify(this.state, null, 4))
+        this.createAndDownloadSvg(`${projectionId}.svg`)
     }
     componentDidUpdate(oldProps, oldState) {
         const { scale, rotateX, rotateY, rotateZ, translateX, translateY, isCanvasResizing, projection } = this.state
@@ -298,6 +316,7 @@ export default class Index extends React.PureComponent {
         this._canvas = c
     }
     onSvgRef = (s) => {
+        this._svg = s
     }
     handleCheckboxChange = propName => event => {
         this.setState({ ...this.state, [propName]: event.target.checked })
@@ -433,7 +452,12 @@ export default class Index extends React.PureComponent {
                                         ref={this.onSvgRef}
                                         id="svgProjection"
                                         width={600}
-                                        height={300}>
+                                        height={300}
+                                        version="1.1" 
+                                        xmlns="http://www.w3.org/2000/svg" 
+                                        // xmlns:xlink="http://www.w3.org/1999/xlink" 
+                                        // xml:space="preserve"                                     
+                                    >
 
                                     </svg>
                                 </div>
@@ -488,7 +512,7 @@ export default class Index extends React.PureComponent {
                                         label="Gedymin Head"
                                     />
                                     <FormControlLabel
-                                        control={ <Checkbox color="white" checked={rendersWorldMap} onChange={this.handleCheckboxChange('rendersWorldMap')} value="rendersWorldMap" /> }
+                                        control={ <Checkbox checked={rendersWorldMap} onChange={this.handleCheckboxChange('rendersWorldMap')} value="rendersWorldMap" /> }
                                         label="World Map"
                                     />
                                 </FormGroup>
