@@ -10,8 +10,25 @@ const getProjectionDisplayNameFromKey = (k) => {
     }, "")
 }
 
-let allProjectionIds = Object.keys(d3GeoProjection)
-allProjectionIds.push('geoEquirectangular')
+let allProjectionIds = [
+    'geoEquirectangular',
+    'geoAlbers',
+    'geoAlbersUsa',
+    'geoAzimuthalEqualArea',
+    'geoAzimuthalEquidistant',
+    'geoConicConformal',
+    'geoConicEqualArea',
+    'geoConicEquidistant',
+    'geoEqualEarth',
+    'geoGnomonic',
+    'geoMercator',
+    'geoNaturalEarth1',
+    'geoOrthographic',
+    'geoStereographic',
+    'geoTransverseMercator'    
+]
+
+Object.keys(d3GeoProjection).forEach(p => allProjectionIds.push(p))
 
 const viableProjectionIds = allProjectionIds.filter(id => id.indexOf('Raw') == -1)
                                             // .filter(id => !!(d3GeoProjection[id]().invert))

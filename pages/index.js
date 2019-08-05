@@ -18,6 +18,7 @@ import Button from '@material-ui/core/Button'
 import Checkbox from '@material-ui/core/Checkbox'
 import shortid from 'shortid'
 import { projectionsList, projectionsMap } from '../modules/Projections'
+import { graticuleStyle, worldMapStyle, submarineCablesStyle, allRedLineStyle, gedyminHeadStyle } from '../modules/LayerStyles'
 import SliderWithInput from '../components/SliderWithInput'
 
 const RESIZING = {
@@ -43,7 +44,7 @@ export default class Index extends React.PureComponent {
             rendersWorldMap: false,
             rendersSubmarineCables: false,
             rendersAllRedLine: false,
-            rendersFace: false,
+            rendersGedyminHead: false,
             isCanvasResizing: RESIZING.NO,
         }
 
@@ -57,13 +58,12 @@ export default class Index extends React.PureComponent {
         this.loadGeoJson()
     }
     async loadGeoJson() {
-        console.log('Loading json...')
         this.cablesMapGeoJson = await d3.json('/static/misc/cable-geo.json')
         this.allRedLineMapGeoJson = await d3.json('/static/misc/all-red-line-geo.json')
-        this.faceGeoJson = await d3.json('/static/misc/face-geo.json')
+        this.gedyminHeadGeoJson = await d3.json('/static/misc/face-geo.json')
         const w50m = await d3.json('/static/misc/world-110m.json')
         this.worldGeoJson = topojson.feature(w50m, w50m.objects.countries)
-        console.log('Loaded!: ', this.geoJson)
+        console.log('Loaded geojson files!')
     }
     get canvasContext() {
         return this._canvas.getContext('2d')
@@ -78,7 +78,7 @@ export default class Index extends React.PureComponent {
         const dx = this._image.width
         const dy = this._image.height
 
-        const { rendersImage, rendersGraticule, rendersSubmarineCables, rendersWorldMap, rendersAllRedLine, rendersFace } = this.state
+        const { rendersImage, rendersGraticule, rendersSubmarineCables, rendersWorldMap, rendersAllRedLine, rendersGedyminHead } = this.state
 
         if (!this.sourceData || withCleanSurface) {
             this.canvasContext.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
@@ -91,8 +91,6 @@ export default class Index extends React.PureComponent {
         if (rendersImage) {
             this.target = this.canvasContext.createImageData(this.canvasWidth, this.canvasHeight)
             let targetData = this.target.data
-    
-            const t1 = new Date().getTime()
     
             for (var y = 0, i = -1; y <= this.canvasHeight; y += 1) {
                 for (var x = 0; x <= this.canvasWidth; x += 1) {
@@ -129,68 +127,99 @@ export default class Index extends React.PureComponent {
             this.canvasContext.restore()
         }
 
-        var geoGeneratorSvg = d3.geoPath().projection(this.projection)
+        // Clear SVG
+        d3.select(`#svgProjection`).selectAll('*').remove()
     
         // Graticule
         if (rendersGraticule) {
             const graticule = d3.geoGraticule()()
-            this.drawGeoJsonTiledCanvas(this.projections, graticule, this.canvasContext, 1, '#ccc', false, true)            
-            this.drawGeoJsonSvg(graticule, geoGeneratorSvg, 'svgProjection', 'svgProjectionGraticule', 1, '#ccc', false, true)
+            this.drawGeoJsonTiled(this.projections, 
+                graticule, 
+                { rendersCanvas: true, context: this.canvasContext },
+                { rendersSvg: true, svgId: 'svgProjection' },
+                graticuleStyle
+            )
         }
 
         // World map
         if (rendersWorldMap) {
-            this.drawGeoJsonTiledCanvas(this.projections, this.worldGeoJson, this.canvasContext, 0.5, 'rgba(255, 230, 220, 0.2)', true)
-            this.drawGeoJsonSvg(this.worldGeoJson, geoGeneratorSvg, 'svgProjection', 'svgProjectionWorld', 0.5, 'rgba(255, 230, 220, 0.2)', true)
+            this.drawGeoJsonTiled(this.projections, 
+                this.worldGeoJson, 
+                { rendersCanvas: true, context: this.canvasContext },
+                { rendersSvg: true, svgId: 'svgProjection' },
+                worldMapStyle
+            )
         }
 
         // Cables map
         if (rendersSubmarineCables) {
-            this.drawGeoJsonTiledCanvas(this.projections, this.cablesMapGeoJson, this.canvasContext, 0.5, '#fdd', false)
-            this.drawGeoJsonSvg(this.cablesMapGeoJson, geoGeneratorSvg, 'svgProjection', 'svgProjectionCables', 0.5, '#fdd', false)
+            this.drawGeoJsonTiled(this.projections, 
+                this.cablesMapGeoJson, 
+                { rendersCanvas: true, context: this.canvasContext },
+                { rendersSvg: true, svgId: 'svgProjection' },
+                submarineCablesStyle
+            )
         }
 
         // All red line map
         if (rendersAllRedLine) {
-            this.drawGeoJsonTiledCanvas(this.projections, this.allRedLineMapGeoJson, this.canvasContext, 2, 'rgba(255, 64, 64, 0.8)', false, false)
-            this.drawGeoJsonSvg(this.allRedLineMapGeoJson, geoGeneratorSvg, 'svgProjection', 'svgProjectionAllRedLine', 2, 'rgba(255, 64, 64, 0.8)', false, false)
+            this.drawGeoJsonTiled(this.projections, 
+                this.allRedLineMapGeoJson, 
+                { rendersCanvas: true, context: this.canvasContext },
+                { rendersSvg: true, svgId: 'svgProjection' },
+                allRedLineStyle
+            )
         }
 
         // All red line map
-        if (rendersFace) {
-            this.drawGeoJsonTiledCanvas(this.projections, this.faceGeoJson, this.canvasContext, 2, 'rgba(64, 64, 255, 0.8)', false, false)
-            this.drawGeoJsonSvg(this.faceGeoJson, geoGeneratorSvg, 'svgProjection', 'svgProjectionFace', 2, 'rgba(64, 64, 255, 0.8)', false, false)
+        if (rendersGedyminHead) {
+            this.drawGeoJsonTiled(this.projections, 
+                this.gedyminHeadGeoJson, 
+                { rendersCanvas: true, context: this.canvasContext },
+                { rendersSvg: true, svgId: 'svgProjection' },
+                gedyminHeadStyle
+            )
         }
 
     }
-    drawGeoJsonTiledCanvas(projections, geoJson, context, lineWidth, color, fillMode, dashed = false) {
+    drawGeoJsonTiled(projections, geoJson, canvasOptions, svgOptions, drawingOptions) {
         projections.forEach(projection => {
             const { p, offsetX, offsetY } = projection
-            const generator = d3.geoPath().projection(p).context(context)
-            this.drawGeoJsonCanvas(geoJson, generator, context, lineWidth, color, fillMode, dashed)
+
+            if (canvasOptions.rendersCanvas) {
+                const canvasGenerator = d3.geoPath().projection(p)
+                const { context } = canvasOptions
+                this.drawGeoJsonCanvas(geoJson, canvasGenerator, context, drawingOptions)
+            }
+
+            if (svgOptions.rendersSvg) {
+                const svgGenerator = d3.geoPath().projection(p)
+                const { svgId } = svgOptions
+                this.drawGeoJsonSvg(geoJson, svgGenerator, svgId, drawingOptions)
+            }
         })
     }
-    drawGeoJsonCanvas(geoJson, geoGenerator, context, lineWidth, color, fillMode, dashed = false) {
+    drawGeoJsonCanvas(geoJson, geoGenerator, context, options) {
+        const { lineWidth = 1, color = 'black', fillMode = false, dashed = false } = options
+
         context.save()
         context.lineWidth = lineWidth;
         context.strokeStyle = color;
         context.fillStyle = color;
         if (dashed) context.setLineDash([2, 2])
         context.beginPath()
-        geoGenerator(geoJson)
+        geoGenerator.context(context)(geoJson)
         if (fillMode)
             context.fill()
         else
             context.stroke()
         context.restore()
     }
-    drawGeoJsonSvg(geoJson, geoGenerator, svgId, elementId, lineWidth, color, fillMode, dashed = false) {
+    drawGeoJsonSvg(geoJson, geoGenerator, svgId, options) {
+        const { lineWidth = 1, color = 'black', fillMode = false, dashed = false } = options
         const svg = d3.select(`#${svgId}`)
-        const element = d3.select(`#${elementId}`)
-        element.remove()
         svg.append('path')
             .datum(geoJson)
-            .attr("id", elementId)
             .attr("d", geoGenerator)
             .attr("fill", fillMode ? color : "none")
             .attr("stroke", fillMode ? "none" : color)
@@ -219,8 +248,10 @@ export default class Index extends React.PureComponent {
     updateProjection() {
         this.projection = this.getProjectionFromState(0, 0)
         this.projections = []
-        for (let i = -1; i <= 1; i++) {
-            for (let j = -1; j <= 1; j++) {
+        const minX = 0, maxX = 0, minY = 0, maxY = 0
+
+        for (let i = minX; i <= maxX; i++) {
+            for (let j = minY; j <= maxY; j++) {
                 let projection = this.getProjectionFromState(i, j)
                 this.projections.push({
                     offsetX: i,
@@ -258,47 +289,41 @@ export default class Index extends React.PureComponent {
         const projection = event.target.value
         this.setState({ projection })
     }
-    createAndDownloadText(filename, text) {
-        var element = document.createElement('a');
+    downloadContent(filename, href) {
+        let element = document.createElement('a')
 
-        element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
-        element.setAttribute('download', filename);
-      
+        element.href = href
+        element.download = filename      
         element.style.display = 'none';
+
         document.body.appendChild(element);
         element.click();
         document.body.removeChild(element);
     }
-    createAndDownloadSvg(filename) {
-        const data = '<?xml version="1.0" encoding="utf-8"?>' + this._svg.outerHTML        
+    createAndDownloadText(filename, text) {
+        const href = 'data:text/plain;charset=utf-8,' + encodeURIComponent(text)
+        this.downloadContent(filename, href)
+    }
+    createAndDownloadSvg(filename, svgRef) {
+        const data = '<?xml version="1.0" encoding="utf-8"?>' + svgRef.outerHTML        
         var svgBlob = new Blob([data], { type:"image/svg+xml;charset=utf-8" })
         var svgUrl = URL.createObjectURL(svgBlob);
-
-        var downloadLink = document.createElement('a')
-        downloadLink.href = svgUrl
-        downloadLink.download = filename
-        downloadLink.style.display = 'none';
-
-        document.body.appendChild(downloadLink)
-        downloadLink.click()
-        document.body.removeChild(downloadLink)
+        this.downloadContent(filename, svgUrl)
     }
-    createAndDownloadImage(filename) {
-        const dataURL = this._canvas.toDataURL('image/png')
-        this._downloadButton.download = filename
-        this._downloadButton.href = dataURL
-
+    createAndDownloadImage(filename, canvasRef) {
+        const dataUrl = canvasRef.toDataURL('image/png')
+        this.downloadContent(filename, dataUrl)
     }
     onDownloadClick = () => {
         const uid = shortid()
         const projectionId = `${this.state.projection}-${uid}`        
-        this.createAndDownloadImage(`${projectionId}.png`)
-        this.createAndDownloadSvg(`${projectionId}.svg`)
+        this.createAndDownloadImage(`${projectionId}.png`, this._canvas)
+        this.createAndDownloadSvg(`${projectionId}.svg`, this._svg)
         this.createAndDownloadText(`${projectionId}.txt`, JSON.stringify(this.state, null, 4))
     }
     componentDidUpdate(oldProps, oldState) {
         const { scale, rotateX, rotateY, rotateZ, translateX, translateY, isCanvasResizing, projection } = this.state
-        const { rendersImage, rendersGraticule, rendersSubmarineCables, rendersWorldMap, rendersAllRedLine, rendersFace } = this.state
+        const { rendersImage, rendersGraticule, rendersSubmarineCables, rendersWorldMap, rendersAllRedLine, rendersGedyminHead } = this.state
         if (scale != oldState.scale ||
             rotateX != oldState.rotateX ||
             rotateY != oldState.rotateY ||
@@ -310,7 +335,7 @@ export default class Index extends React.PureComponent {
             rendersGraticule != oldState.rendersGraticule ||
             rendersSubmarineCables != oldState.rendersSubmarineCables ||
             rendersAllRedLine != oldState.rendersAllRedLine ||
-            rendersFace != oldState.rendersFace ||
+            rendersGedyminHead != oldState.rendersGedyminHead ||
             rendersWorldMap != oldState.rendersWorldMap ||
             isCanvasResizing != oldState.isCanvasResizing && !isCanvasResizing) {
                 setTimeout(() => {
@@ -431,7 +456,7 @@ export default class Index extends React.PureComponent {
     }
     render() {
         const { scale, rotateX, rotateY, rotateZ, translateX, translateY, projection } = this.state
-        const { rendersGraticule, rendersSubmarineCables, rendersWorldMap, rendersAllRedLine, rendersFace, rendersImage } = this.state
+        const { rendersGraticule, rendersSubmarineCables, rendersWorldMap, rendersAllRedLine, rendersGedyminHead, rendersImage } = this.state
         return (
             <div
                 onMouseDown={this.onWindowMouseDown}
@@ -517,7 +542,7 @@ export default class Index extends React.PureComponent {
                                         label="All Red Line"
                                     />
                                     <FormControlLabel
-                                        control={ <Checkbox color="primary" checked={rendersFace} onChange={this.handleCheckboxChange('rendersFace')} value="rendersFace" /> }
+                                        control={ <Checkbox color="primary" checked={rendersGedyminHead} onChange={this.handleCheckboxChange('rendersGedyminHead')} value="rendersGedyminHead" /> }
                                         label="Gedymin Head"
                                     />
                                     <FormControlLabel
