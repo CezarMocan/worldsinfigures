@@ -13,8 +13,10 @@
   "license": "ISC",
   "dependencies": {
     "@material-ui/core": "^4.2.0",
+    "@turf/meta": "^6.0.2",
     "@zeit/next-less": "^1.0.1",
     "classnames": "^2.2.6",
+    "clone-deep": "^4.0.1",
     "d3": "^5.9.7",
     "d3-geo": "^1.11.6",
     "d3-geo-projection": "^2.7.0",

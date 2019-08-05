@@ -17,6 +17,8 @@ import Select from '@material-ui/core/Select'
 import Button from '@material-ui/core/Button'
 import Checkbox from '@material-ui/core/Checkbox'
 import shortid from 'shortid'
+import { coordEach } from '@turf/meta'
+import cloneDeep from 'clone-deep'
 import { projectionsList, projectionsMap } from '../modules/Projections'
 import { graticuleStyle, worldMapStyle, submarineCablesStyle, allRedLineStyle, gedyminHeadStyle, twoGedyminHeadsStyle, tissotStyle } from '../modules/LayerStyles'
 import SliderWithInput from '../components/SliderWithInput'
@@ -227,16 +229,25 @@ export default class Index extends React.PureComponent {
         projections.forEach(projection => {
             const { p, offsetX, offsetY } = projection
 
+            const newGeoJson = cloneDeep(geoJson)
+            // coordEach(newGeoJson, (pointCoords) => {
+            //     const newCoords = [pointCoords[0] + 360 * offsetX, pointCoords[1] + 90 * offsetY]
+            //     pointCoords[0] = newCoords[0]
+            //     pointCoords[1] = newCoords[1]
+            // })
+
+            // console.log('new g: ', offsetX, offsetY, newGeoJson)
+
             if (canvasOptions.rendersCanvas) {
                 const canvasGenerator = d3.geoPath().projection(p)
                 const { context } = canvasOptions
-                this.drawGeoJsonCanvas(geoJson, canvasGenerator, context, drawingOptions)
+                this.drawGeoJsonCanvas(newGeoJson, canvasGenerator, context, drawingOptions)
             }
 
             if (svgOptions.rendersSvg) {
                 const svgGenerator = d3.geoPath().projection(p)
                 const { svgId } = svgOptions
-                this.drawGeoJsonSvg(geoJson, svgGenerator, svgId, drawingOptions)
+                this.drawGeoJsonSvg(newGeoJson, svgGenerator, svgId, drawingOptions)
             }
         })
     }
