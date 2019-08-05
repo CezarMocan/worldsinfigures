@@ -32,3 +32,17 @@ export const gedyminHeadStyle = {
     fillMode: false,
     dashed: false
 }
+
+export const twoGedyminHeadsStyle = {
+    lineWidth: 2,
+    color: 'rgba(255, 255, 64, 0.8)',
+    fillMode: false,
+    dashed: false
+}
+
+export const tissotStyle = {
+    lineWidth: 0.5,
+    color: 'rgba(255, 230, 255, 0.2)',
+    fillMode: true,
+    dashed: false
+}

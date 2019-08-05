@@ -18,7 +18,7 @@ import Button from '@material-ui/core/Button'
 import Checkbox from '@material-ui/core/Checkbox'
 import shortid from 'shortid'
 import { projectionsList, projectionsMap } from '../modules/Projections'
-import { graticuleStyle, worldMapStyle, submarineCablesStyle, allRedLineStyle, gedyminHeadStyle } from '../modules/LayerStyles'
+import { graticuleStyle, worldMapStyle, submarineCablesStyle, allRedLineStyle, gedyminHeadStyle, twoGedyminHeadsStyle, tissotStyle } from '../modules/LayerStyles'
 import SliderWithInput from '../components/SliderWithInput'
 
 const RESIZING = {
@@ -26,6 +26,10 @@ const RESIZING = {
     HORIZONTAL: 1,
     VERTICAL: 2
 }
+
+const SVG_ID = 'svgProjection'
+const CANVAS_WIDTH = 600
+const CANVAS_HEIGHT = 300
 
 export default class Index extends React.PureComponent {
     constructor(props) {
@@ -45,6 +49,8 @@ export default class Index extends React.PureComponent {
             rendersSubmarineCables: false,
             rendersAllRedLine: false,
             rendersGedyminHead: false,
+            rendersTwoGedyminHeads: false,
+            rendersTissot: false,
             isCanvasResizing: RESIZING.NO,
         }
 
@@ -61,8 +67,16 @@ export default class Index extends React.PureComponent {
         this.cablesMapGeoJson = await d3.json('/static/misc/cable-geo.json')
         this.allRedLineMapGeoJson = await d3.json('/static/misc/all-red-line-geo.json')
         this.gedyminHeadGeoJson = await d3.json('/static/misc/face-geo.json')
+
+        const tissot = await d3.json('/static/misc/tissot.topojson')
+        this.tissotGeoJson = topojson.feature(tissot, tissot.objects.tissot)
+
+        const twoHeads = await d3.json('/static/misc/two-faces.topojson')
+        this.twoGedyminHeadsGeoJson = topojson.feature(twoHeads, twoHeads.objects.gedymin)
+
         const w50m = await d3.json('/static/misc/world-110m.json')
         this.worldGeoJson = topojson.feature(w50m, w50m.objects.countries)
+
         console.log('Loaded geojson files!')
     }
     get canvasContext() {
@@ -78,7 +92,14 @@ export default class Index extends React.PureComponent {
         const dx = this._image.width
         const dy = this._image.height
 
-        const { rendersImage, rendersGraticule, rendersSubmarineCables, rendersWorldMap, rendersAllRedLine, rendersGedyminHead } = this.state
+        const { rendersImage, 
+            rendersGraticule, 
+            rendersSubmarineCables, 
+            rendersWorldMap, 
+            rendersAllRedLine, 
+            rendersGedyminHead,
+            rendersTwoGedyminHeads,
+            rendersTissot } = this.state
 
         if (!this.sourceData || withCleanSurface) {
             this.canvasContext.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
@@ -128,7 +149,7 @@ export default class Index extends React.PureComponent {
         }
 
         // Clear SVG
-        d3.select(`#svgProjection`).selectAll('*').remove()
+        d3.select(`#${SVG_ID}`).selectAll('*').remove()
     
         // Graticule
         if (rendersGraticule) {
@@ -136,7 +157,7 @@ export default class Index extends React.PureComponent {
             this.drawGeoJsonTiled(this.projections, 
                 graticule, 
                 { rendersCanvas: true, context: this.canvasContext },
-                { rendersSvg: true, svgId: 'svgProjection' },
+                { rendersSvg: true, svgId: SVG_ID },
                 graticuleStyle
             )
         }
@@ -146,7 +167,7 @@ export default class Index extends React.PureComponent {
             this.drawGeoJsonTiled(this.projections, 
                 this.worldGeoJson, 
                 { rendersCanvas: true, context: this.canvasContext },
-                { rendersSvg: true, svgId: 'svgProjection' },
+                { rendersSvg: true, svgId: SVG_ID },
                 worldMapStyle
             )
         }
@@ -156,7 +177,7 @@ export default class Index extends React.PureComponent {
             this.drawGeoJsonTiled(this.projections, 
                 this.cablesMapGeoJson, 
                 { rendersCanvas: true, context: this.canvasContext },
-                { rendersSvg: true, svgId: 'svgProjection' },
+                { rendersSvg: true, svgId: SVG_ID },
                 submarineCablesStyle
             )
         }
@@ -166,18 +187,38 @@ export default class Index extends React.PureComponent {
             this.drawGeoJsonTiled(this.projections, 
                 this.allRedLineMapGeoJson, 
                 { rendersCanvas: true, context: this.canvasContext },
-                { rendersSvg: true, svgId: 'svgProjection' },
+                { rendersSvg: true, svgId: SVG_ID },
                 allRedLineStyle
             )
         }
 
-        // All red line map
+        // One gedymin head
         if (rendersGedyminHead) {
             this.drawGeoJsonTiled(this.projections, 
                 this.gedyminHeadGeoJson, 
                 { rendersCanvas: true, context: this.canvasContext },
-                { rendersSvg: true, svgId: 'svgProjection' },
+                { rendersSvg: true, svgId: SVG_ID },
                 gedyminHeadStyle
+            )
+        }
+
+        // Two gedymin heads
+        if (rendersTwoGedyminHeads) {
+            this.drawGeoJsonTiled(this.projections, 
+                this.twoGedyminHeadsGeoJson, 
+                { rendersCanvas: true, context: this.canvasContext },
+                { rendersSvg: true, svgId: SVG_ID },
+                twoGedyminHeadsStyle
+            )
+        }
+
+        // Tissot indicatrices
+        if (rendersTissot) {
+            this.drawGeoJsonTiled(this.projections, 
+                this.tissotGeoJson, 
+                { rendersCanvas: true, context: this.canvasContext },
+                { rendersSvg: true, svgId: SVG_ID },
+                tissotStyle
             )
         }
 
@@ -323,7 +364,7 @@ export default class Index extends React.PureComponent {
     }
     componentDidUpdate(oldProps, oldState) {
         const { scale, rotateX, rotateY, rotateZ, translateX, translateY, isCanvasResizing, projection } = this.state
-        const { rendersImage, rendersGraticule, rendersSubmarineCables, rendersWorldMap, rendersAllRedLine, rendersGedyminHead } = this.state
+        const { rendersImage, rendersGraticule, rendersSubmarineCables, rendersWorldMap, rendersAllRedLine, rendersGedyminHead, rendersTwoGedyminHeads, rendersTissot } = this.state
         if (scale != oldState.scale ||
             rotateX != oldState.rotateX ||
             rotateY != oldState.rotateY ||
@@ -336,6 +377,8 @@ export default class Index extends React.PureComponent {
             rendersSubmarineCables != oldState.rendersSubmarineCables ||
             rendersAllRedLine != oldState.rendersAllRedLine ||
             rendersGedyminHead != oldState.rendersGedyminHead ||
+            rendersTwoGedyminHeads != oldState.rendersTwoGedyminHeads ||
+            rendersTissot != oldState.rendersTissot ||
             rendersWorldMap != oldState.rendersWorldMap ||
             isCanvasResizing != oldState.isCanvasResizing && !isCanvasResizing) {
                 setTimeout(() => {
@@ -438,11 +481,11 @@ export default class Index extends React.PureComponent {
         const { isCanvasResizing } = this.state
         if (isCanvasResizing == RESIZING.HORIZONTAL) {
             this._canvas.width += evt.clientX - this.lastWindowTouch.x
-            d3.select('#svgProjection').attr("width", this._canvas.width)
+            d3.select(`#${SVG_ID}`).attr("width", this._canvas.width)
             this.lastWindowTouch = { x: evt.clientX, y: evt.clientY }
         } else if (isCanvasResizing == RESIZING.VERTICAL) {
             this._canvas.height += evt.clientY - this.lastWindowTouch.y
-            d3.select('#svgProjection').attr("height", this._canvas.height)
+            d3.select(`#${SVG_ID}`).attr("height", this._canvas.height)
             this.lastWindowTouch = { x: evt.clientX, y: evt.clientY }
         } else if (isCanvasResizing == RESIZING.NO) {
             if (this.eventOnLeftRightBorder(evt, this._canvas, 10)) {
@@ -456,7 +499,7 @@ export default class Index extends React.PureComponent {
     }
     render() {
         const { scale, rotateX, rotateY, rotateZ, translateX, translateY, projection } = this.state
-        const { rendersGraticule, rendersSubmarineCables, rendersWorldMap, rendersAllRedLine, rendersGedyminHead, rendersImage } = this.state
+        const { rendersGraticule, rendersSubmarineCables, rendersWorldMap, rendersAllRedLine, rendersGedyminHead, rendersTwoGedyminHeads, rendersTissot, rendersImage } = this.state
         return (
             <div
                 onMouseDown={this.onWindowMouseDown}
@@ -474,8 +517,8 @@ export default class Index extends React.PureComponent {
                                     style={{display: 'none'}}
                                 />
                                 <canvas 
-                                    width={600}
-                                    height={300}
+                                    width={CANVAS_WIDTH}
+                                    height={CANVAS_HEIGHT}
                                     ref={this.onCanvasRef}
                                     className="main-canvas"
                                     onMouseDown={this.onCanvasMouseDown}
@@ -487,9 +530,9 @@ export default class Index extends React.PureComponent {
                                 <div id="svgContainer" className="svg-container">
                                     <svg
                                         ref={this.onSvgRef}
-                                        id="svgProjection"
-                                        width={600}
-                                        height={300}
+                                        id={SVG_ID}
+                                        width={CANVAS_WIDTH}
+                                        height={CANVAS_HEIGHT}
                                         version="1.1" 
                                         xmlns="http://www.w3.org/2000/svg" 
                                     >
@@ -544,6 +587,14 @@ export default class Index extends React.PureComponent {
                                     <FormControlLabel
                                         control={ <Checkbox color="primary" checked={rendersGedyminHead} onChange={this.handleCheckboxChange('rendersGedyminHead')} value="rendersGedyminHead" /> }
                                         label="Gedymin Head"
+                                    />
+                                    <FormControlLabel
+                                        control={ <Checkbox color="primary" checked={rendersTwoGedyminHeads} onChange={this.handleCheckboxChange('rendersTwoGedyminHeads')} value="rendersTwoGedyminHeads" /> }
+                                        label="Two Gedymin Heads"
+                                    />
+                                    <FormControlLabel
+                                        control={ <Checkbox color="primary" checked={rendersTissot} onChange={this.handleCheckboxChange('rendersTissot')} value="rendersTissot" /> }
+                                        label="Tissot Indicatrices"
                                     />
                                     <FormControlLabel
                                         control={ <Checkbox checked={rendersWorldMap} onChange={this.handleCheckboxChange('rendersWorldMap')} value="rendersWorldMap" /> }
