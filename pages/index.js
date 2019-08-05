@@ -134,47 +134,43 @@ export default class Index extends React.PureComponent {
         // Graticule
         if (rendersGraticule) {
             const graticule = d3.geoGraticule()()
-            this.drawGeoJsonTiled(this.projections, graticule, this.canvasContext, 1, '#ccc', false, true)
-            d3.select('#svgProjectionGraticule').remove()
-            d3.select('#svgProjection').append('path')
-                .datum(graticule)
-                .attr("id", "svgProjectionGraticule")
-                // .attr("class", "graticule")
-                .attr("d", geoGeneratorSvg)
-                .attr("fill", "none")
-                .attr("stroke", "red")
-                .attr("stroke-dasharray", "2, 2")
-                .attr("stroke-width", "1")
+            this.drawGeoJsonTiledCanvas(this.projections, graticule, this.canvasContext, 1, '#ccc', false, true)            
+            this.drawGeoJsonSvg(graticule, geoGeneratorSvg, 'svgProjection', 'svgProjectionGraticule', 1, '#ccc', false, true)
         }
 
         // World map
-        if (rendersWorldMap)
-            this.drawGeoJsonTiled(this.projections, this.worldGeoJson, this.canvasContext, 0.5, 'rgba(255, 230, 220, 0.2)', true)
+        if (rendersWorldMap) {
+            this.drawGeoJsonTiledCanvas(this.projections, this.worldGeoJson, this.canvasContext, 0.5, 'rgba(255, 230, 220, 0.2)', true)
+            this.drawGeoJsonSvg(this.worldGeoJson, geoGeneratorSvg, 'svgProjection', 'svgProjectionWorld', 0.5, 'rgba(255, 230, 220, 0.2)', true)
+        }
 
         // Cables map
         if (rendersSubmarineCables) {
-            this.drawGeoJsonTiled(this.projections, this.cablesMapGeoJson, this.canvasContext, 0.5, '#fdd', false)
+            this.drawGeoJsonTiledCanvas(this.projections, this.cablesMapGeoJson, this.canvasContext, 0.5, '#fdd', false)
+            this.drawGeoJsonSvg(this.cablesMapGeoJson, geoGeneratorSvg, 'svgProjection', 'svgProjectionCables', 0.5, '#fdd', false)
         }
 
         // All red line map
         if (rendersAllRedLine) {
-            this.drawGeoJsonTiled(this.projections, this.allRedLineMapGeoJson, this.canvasContext, 2, 'rgba(255, 64, 64, 0.8)', false, false)
+            this.drawGeoJsonTiledCanvas(this.projections, this.allRedLineMapGeoJson, this.canvasContext, 2, 'rgba(255, 64, 64, 0.8)', false, false)
+            this.drawGeoJsonSvg(this.allRedLineMapGeoJson, geoGeneratorSvg, 'svgProjection', 'svgProjectionAllRedLine', 2, 'rgba(255, 64, 64, 0.8)', false, false)
         }
 
         // All red line map
         if (rendersFace) {
-            this.drawGeoJsonTiled(this.projections, this.faceGeoJson, this.canvasContext, 2, 'rgba(64, 64, 255, 0.8)', false, false)
+            this.drawGeoJsonTiledCanvas(this.projections, this.faceGeoJson, this.canvasContext, 2, 'rgba(64, 64, 255, 0.8)', false, false)
+            this.drawGeoJsonSvg(this.faceGeoJson, geoGeneratorSvg, 'svgProjection', 'svgProjectionFace', 2, 'rgba(64, 64, 255, 0.8)', false, false)
         }
 
     }
-    drawGeoJsonTiled(projections, geoJson, context, lineWidth, color, fillMode, dashed = false) {
+    drawGeoJsonTiledCanvas(projections, geoJson, context, lineWidth, color, fillMode, dashed = false) {
         projections.forEach(projection => {
             const { p, offsetX, offsetY } = projection
             const generator = d3.geoPath().projection(p).context(context)
-            this.drawGeoJson(geoJson, generator, context, lineWidth, color, fillMode, dashed)
+            this.drawGeoJsonCanvas(geoJson, generator, context, lineWidth, color, fillMode, dashed)
         })
     }
-    drawGeoJson(geoJson, geoGenerator, context, lineWidth, color, fillMode, dashed = false) {
+    drawGeoJsonCanvas(geoJson, geoGenerator, context, lineWidth, color, fillMode, dashed = false) {
         context.save()
         context.lineWidth = lineWidth;
         context.strokeStyle = color;
@@ -187,6 +183,19 @@ export default class Index extends React.PureComponent {
         else
             context.stroke()
         context.restore()
+    }
+    drawGeoJsonSvg(geoJson, geoGenerator, svgId, elementId, lineWidth, color, fillMode, dashed = false) {
+        const svg = d3.select(`#${svgId}`)
+        const element = d3.select(`#${elementId}`)
+        element.remove()
+        svg.append('path')
+            .datum(geoJson)
+            .attr("id", elementId)
+            .attr("d", geoGenerator)
+            .attr("fill", fillMode ? color : "none")
+            .attr("stroke", fillMode ? "none" : color)
+            .attr("stroke-dasharray", dashed ? "2, 2" : "")
+            .attr("stroke-width", lineWidth)
     }
     getProjectionFromState(offsetXFactor, offsetYFactor) {
         let { scale, rotateX, rotateY, rotateZ, translateX, translateY, projection } = this.state
@@ -274,15 +283,18 @@ export default class Index extends React.PureComponent {
         downloadLink.click()
         document.body.removeChild(downloadLink)
     }
+    createAndDownloadImage(filename) {
+        const dataURL = this._canvas.toDataURL('image/png')
+        this._downloadButton.download = filename
+        this._downloadButton.href = dataURL
+
+    }
     onDownloadClick = () => {
-        console.log('onDownloadClick')
         const uid = shortid()
         const projectionId = `${this.state.projection}-${uid}`        
-        const dataURL = this._canvas.toDataURL('image/png')
-        this._downloadButton.download = `${projectionId}.png`
-        this._downloadButton.href = dataURL
-        this.createAndDownloadText(`${projectionId}.txt`, JSON.stringify(this.state, null, 4))
+        this.createAndDownloadImage(`${projectionId}.png`)
         this.createAndDownloadSvg(`${projectionId}.svg`)
+        this.createAndDownloadText(`${projectionId}.txt`, JSON.stringify(this.state, null, 4))
     }
     componentDidUpdate(oldProps, oldState) {
         const { scale, rotateX, rotateY, rotateZ, translateX, translateY, isCanvasResizing, projection } = this.state
@@ -455,10 +467,7 @@ export default class Index extends React.PureComponent {
                                         height={300}
                                         version="1.1" 
                                         xmlns="http://www.w3.org/2000/svg" 
-                                        // xmlns:xlink="http://www.w3.org/1999/xlink" 
-                                        // xml:space="preserve"                                     
                                     >
-
                                     </svg>
                                 </div>
 
