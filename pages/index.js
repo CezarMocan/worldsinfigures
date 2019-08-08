@@ -84,6 +84,9 @@ export default class Index extends React.PureComponent {
     get canvasContext() {
         return this._canvas.getContext('2d')
     }
+    get secondaryCanvasContext() {
+        return this._canvas2.getContext('2d')
+    }
     get canvasWidth() {
         return this._canvas.width
     }
@@ -104,11 +107,48 @@ export default class Index extends React.PureComponent {
             rendersTissot } = this.state
 
         if (!this.sourceData || withCleanSurface) {
-            this.canvasContext.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
-            this.canvasContext.save()
-            this.canvasContext.drawImage(this._image, 0, 0, dx, dy, 0, 0, this.canvasWidth, this.canvasHeight)
-            this.canvasContext.restore()
-            this.sourceData = this.canvasContext.getImageData(0, 0, this.canvasWidth, this.canvasHeight).data
+            this.secondaryCanvasContext.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
+            this.secondaryCanvasContext.save()
+            this.secondaryCanvasContext.drawImage(this._image, 0, 0, dx, dy, 0, 0, this.canvasWidth, this.canvasHeight)
+            this.secondaryCanvasContext.restore()
+            this.sourceData = this.secondaryCanvasContext.getImageData(0, 0, this.canvasWidth, this.canvasHeight).data
+        }
+
+        this.canvasContext.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
+
+        // Clear SVG
+        d3.select(`#${SVG_ID}`).selectAll('*').remove()
+
+        this.canvasContext.save()
+
+        // Circle
+        if (false) {
+            var circle = d3.geoCircle().center([-30.1278, 51.5074]).radius(15)()
+            this.drawGeoJsonTiled(this.projections, circle, 
+                { rendersCanvas: true, context: this.canvasContext },
+                { rendersSvg: true, svgId: SVG_ID },
+                allRedLineStyle)
+                
+            console.log('Circle is: ', circle)
+
+            const projection = this.projections[0].p
+
+            this.canvasContext.beginPath()
+            let firstDone = false
+
+            coordEach(circle, (point) => {
+                const pr = projection(point)
+                console.log('1: ', point, '2: ', pr)
+                if (!firstDone) {
+                    this.canvasContext.moveTo(pr[0], pr[1])
+                    firstDone = true
+                } else {
+                    this.canvasContext.lineTo(pr[0], pr[1])
+                }
+            })
+
+            // this.canvasContext.clip()
+            this.canvasContext.stroke()
         }
 
         if (rendersImage) {
@@ -124,10 +164,13 @@ export default class Index extends React.PureComponent {
                   let λ = p[0], φ = p[1];
     
                   i = y * (this.canvasWidth) * 4 + x * 4 - 1
+
+                //   λ = ((λ + 36000000180) % 360) - 180
+                //   φ = ((φ + 36000000090) % 180) - 90
     
                   if (λ > 180 || λ < -180 || φ > 90 || φ < -90) { 
-                    targetData[++i] = 128;
-                    targetData[++i] = 128;
+                    targetData[++i] = 0;
+                    targetData[++i] = 0;
                     targetData[++i] = 128;
                     targetData[++i] = 255;  
                     continue
@@ -139,19 +182,16 @@ export default class Index extends React.PureComponent {
                     targetData[++i] = 255;  
                 }
               }        
-    
-            this.canvasContext.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
-            this.canvasContext.putImageData(this.target, 0, 0);    
+            
+            this.secondaryCanvasContext.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
+            this.secondaryCanvasContext.putImageData(this.target, 0, 0);    
+            this.canvasContext.drawImage(this._canvas2, 0, 0)
         } else {
-            this.canvasContext.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
             this.canvasContext.save()
             this.canvasContext.fillStyle = 'rgba(64, 62, 62, 1)'
             this.canvasContext.fillRect(0, 0, this.canvasWidth, this.canvasHeight);
             this.canvasContext.restore()
         }
-
-        // Clear SVG
-        d3.select(`#${SVG_ID}`).selectAll('*').remove()
     
         // Graticule
         if (rendersGraticule) {
@@ -224,6 +264,8 @@ export default class Index extends React.PureComponent {
             )
         }
 
+        this.canvasContext.restore()
+
     }
     drawGeoJsonTiled(projections, geoJson, canvasOptions, svgOptions, drawingOptions) {
         projections.forEach(projection => {
@@ -231,7 +273,7 @@ export default class Index extends React.PureComponent {
 
             const newGeoJson = cloneDeep(geoJson)
             // coordEach(newGeoJson, (pointCoords) => {
-            //     const newCoords = [pointCoords[0] + 360 * offsetX, pointCoords[1] + 90 * offsetY]
+            //     const newCoords = [pointCoords[0] + 45 * offsetX, pointCoords[1] + 360 * offsetY]
             //     pointCoords[0] = newCoords[0]
             //     pointCoords[1] = newCoords[1]
             // })
@@ -295,6 +337,8 @@ export default class Index extends React.PureComponent {
 
         if (proj.precision) proj = proj.precision(0.01)
 
+        // proj = proj.clipAngle(90)
+
         return proj
     }
     updateProjection() {
@@ -304,6 +348,7 @@ export default class Index extends React.PureComponent {
 
         for (let i = minX; i <= maxX; i++) {
             for (let j = minY; j <= maxY; j++) {
+                // let projection = this.getProjectionFromState(i, j)
                 let projection = this.getProjectionFromState(i, j)
                 this.projections.push({
                     offsetX: i,
@@ -406,6 +451,9 @@ export default class Index extends React.PureComponent {
     onCanvasRef = (c) => {
         this._canvas = c
     }
+    onSecondaryCanvasRef = (c) => {
+        this._canvas2 = c
+    }
     onSvgRef = (s) => {
         this._svg = s
     }
@@ -492,10 +540,12 @@ export default class Index extends React.PureComponent {
         const { isCanvasResizing } = this.state
         if (isCanvasResizing == RESIZING.HORIZONTAL) {
             this._canvas.width += evt.clientX - this.lastWindowTouch.x
+            this._canvas2.width = this._canvas.width
             d3.select(`#${SVG_ID}`).attr("width", this._canvas.width)
             this.lastWindowTouch = { x: evt.clientX, y: evt.clientY }
         } else if (isCanvasResizing == RESIZING.VERTICAL) {
             this._canvas.height += evt.clientY - this.lastWindowTouch.y
+            this._canvas2.height = this._canvas.height
             d3.select(`#${SVG_ID}`).attr("height", this._canvas.height)
             this.lastWindowTouch = { x: evt.clientX, y: evt.clientY }
         } else if (isCanvasResizing == RESIZING.NO) {
@@ -536,6 +586,14 @@ export default class Index extends React.PureComponent {
                                     onMouseUp={this.onCanvasMouseUp}
                                     onMouseMove={this.onCanvasMouseMove}                    
                                 >
+                                </canvas>
+                                <canvas
+                                    width={CANVAS_WIDTH}
+                                    height={CANVAS_HEIGHT}
+                                    ref={this.onSecondaryCanvasRef}
+                                    className="secondary-canvas"
+                                >
+
                                 </canvas>
 
                                 <div id="svgContainer" className="svg-container">
