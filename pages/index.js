@@ -33,6 +33,104 @@ const SVG_ID = 'svgProjection'
 const CANVAS_WIDTH = 600
 const CANVAS_HEIGHT = 300
 
+const layerTypes = {
+    RASTER: 'RASTER',
+    VECTOR: 'VECTOR'
+}
+
+const defaultLayers = {
+    mainImage: {
+        visible: true,
+        type: layerTypes.RASTER,
+        imageObject: null,
+        path: '/static/images/test.png'
+    },
+    graticule: {
+        visible: false,
+        type: layerTypes.VECTOR,
+        geojsonObject: null,
+        generatorFunction: d3.geoGraticule(),
+        style: {
+            lineWidth: 1,
+            color: '#ccc',
+            fillMode: false,
+            dashed: true        
+        }
+    },
+    worldMap: {
+        visible: false,
+        type: layerTypes.VECTOR,
+        path: '/static/misc/world-110m.json',
+        geojsonObject: null,
+        style: {
+            lineWidth: 1,
+            color: '#ccc',
+            fillMode: false,
+            dashed: true        
+        }
+    },
+    submarineCables: {
+        visible: false,
+        type: layerTypes.VECTOR,
+        path: '/static/misc/cable-geo.json',
+        geojsonObject: null,
+        style: {
+            lineWidth: 0.5,
+            color: '#fdd',
+            fillMode: false,
+            dashed: false        
+        }
+    },
+    allRedLine: {
+        visible: false,
+        type: layerTypes.VECTOR,
+        path: '/static/misc/all-red-line-geo.json',
+        geojsonObject: null,
+        style: {
+            lineWidth: 2,
+            color: 'rgba(255, 64, 64, 0.8)',
+            fillMode: false,
+            dashed: false
+        }
+    },
+    gedyminHead: {
+        visible: false,
+        type: layerTypes.VECTOR,
+        path: '/static/misc/face-geo.json',
+        geojsonObject: null,
+        style: {
+            lineWidth: 2,
+            color: 'rgba(64, 64, 255, 0.8)',
+            fillMode: false,
+            dashed: false
+        }
+    },
+    twoGedyminHeads: {
+        visible: false,
+        type: layerTypes.VECTOR,
+        path: '/static/misc/two-faces.topojson',
+        geojsonObject: null,
+        style: {
+            lineWidth: 2,
+            color: 'rgba(255, 255, 64, 0.8)',
+            fillMode: false,
+            dashed: false
+        }
+    },
+    tissot: {
+        visible: false,
+        type: layerTypes.VECTOR,
+        path: '/static/misc/tissot.topojson',
+        geojsonObject: null,
+        style: {
+            lineWidth: 0.5,
+            color: 'rgba(255, 230, 255, 0.2)',
+            fillMode: true,
+            dashed: false
+        }        
+    }
+}
+
 export default class Index extends React.PureComponent {
     constructor(props) {
         super(props)
