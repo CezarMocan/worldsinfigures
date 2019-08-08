@@ -472,84 +472,90 @@ export default class Index extends React.PureComponent {
                     {({getRootProps, getInputProps}) => (
                         <section>
                             <div {...getRootProps()}>
-                                <input {...getInputProps()} />
-                                <img 
-                                    ref={this.onImageRef}
-                                    onLoad={this.onImageLoad}
-                                    style={{display: 'none'}}
-                                />
-                                <canvas 
-                                    width={CANVAS_WIDTH}
-                                    height={CANVAS_HEIGHT}
-                                    ref={this.onCanvasRef}
-                                    className="main-canvas"
-                                    onMouseDown={this.onCanvasMouseDown}
-                                    onMouseUp={this.onCanvasMouseUp}
-                                    onMouseMove={this.onCanvasMouseMove}                    
-                                >
-                                </canvas>
-                                <canvas
-                                    width={CANVAS_WIDTH}
-                                    height={CANVAS_HEIGHT}
-                                    ref={this.onSecondaryCanvasRef}
-                                    className="secondary-canvas"
-                                >
-
-                                </canvas>
-
-                                <div id="svgContainer" className="svg-container">
-                                    <svg
-                                        ref={this.onSvgRef}
-                                        id={SVG_ID}
-                                        width={CANVAS_WIDTH}
-                                        height={CANVAS_HEIGHT}
-                                        version="1.1" 
-                                        xmlns="http://www.w3.org/2000/svg" 
-                                    >
-                                    </svg>
-                                </div>
-
-                                <div className="controls download">
-                                    <a href="#" ref={(r) => {this._downloadButton = r}} onClick={this.onDownloadClick} download="">
-                                        <Button variant="outlined">
-                                            Download
-                                        </Button>
-                                    </a>
-                                </div>
-
-                                <div className="controls projection">
-                                    <FormControl className="form-control projection-form">
-                                        <Select
-                                            value={projection}
-                                            onChange={this.onProjectionSelectChange}
+                                <div className="all-screen-container">
+                                    <div className="all-rendering-container">
+                                        <input {...getInputProps()} />
+                                        <img 
+                                            ref={this.onImageRef}
+                                            onLoad={this.onImageLoad}
+                                            style={{display: 'none'}}
+                                        />
+                                        <canvas 
+                                            width={CANVAS_WIDTH}
+                                            height={CANVAS_HEIGHT}
+                                            ref={this.onCanvasRef}
+                                            className="main-canvas"
+                                            onMouseDown={this.onCanvasMouseDown}
+                                            onMouseUp={this.onCanvasMouseUp}
+                                            onMouseMove={this.onCanvasMouseMove}                    
                                         >
-                                            { projectionsList.map(p => <MenuItem key={p.id} value={p.id}>{p.displayName}</MenuItem>) }
-                                        </Select>
-                                    </FormControl>
-                                </div>
-                                <div className="controls sliders">
-                                    <SliderWithInput label="Scale" min={3} max={500} initialValue={scale} onValueChange={this.onScaleSliderChange}/>
-                                    <SliderWithInput label="X Rotation" min={0} max={360} step={2.5} initialValue={rotateX} onValueChange={this.onRotateXSliderChange}/>
-                                    <SliderWithInput label="Y Rotation" min={0} max={360} step={2.5} initialValue={rotateY} onValueChange={this.onRotateYSliderChange}/>
-                                    <SliderWithInput label="Z Rotation" min={0} max={360} step={2.5} initialValue={rotateZ} onValueChange={this.onRotateZSliderChange}/>
-                                    <SliderWithInput label="X Offset" min={0} max={200} initialValue={translateX} onValueChange={this.onTranslateXSliderChange}/>
-                                    <SliderWithInput label="Y Offset" min={0} max={200} initialValue={translateY} onValueChange={this.onTranslateYSliderChange}/>
-                                </div>
+                                        </canvas>
+                                        <canvas
+                                            width={CANVAS_WIDTH}
+                                            height={CANVAS_HEIGHT}
+                                            ref={this.onSecondaryCanvasRef}
+                                            className="secondary-canvas"
+                                        >
 
-                                <div className="controls checkboxes">
-                                <FormGroup row>
-                                    {
-                                        Object.keys(layers).map(k => {
-                                            const l = layers[k]
-                                            return (
-                                                <FormControlLabel
-                                                    control={ <Checkbox color="default" checked={l.visible} onChange={this.handleCheckboxChange(k)} value="rendersGraticule" /> }
-                                                    label={l.displayName}
-                                                />        
-                                            )
-                                        })
-                                    }
-                                </FormGroup>
+                                        </canvas>
+
+                                        <div id="svgContainer" className="svg-container">
+                                            <svg
+                                                ref={this.onSvgRef}
+                                                id={SVG_ID}
+                                                width={CANVAS_WIDTH}
+                                                height={CANVAS_HEIGHT}
+                                                version="1.1" 
+                                                xmlns="http://www.w3.org/2000/svg" 
+                                            >
+                                            </svg>
+                                        </div>
+
+                                        <div className="controls download">
+                                            <a href="#" ref={(r) => {this._downloadButton = r}} onClick={this.onDownloadClick} download="">
+                                                <Button variant="outlined">
+                                                    Download
+                                                </Button>
+                                            </a>
+                                        </div>
+                                    </div>
+
+                                    <div className="all-controls-container">
+                                        <div className="controls projection">
+                                            <FormControl className="form-control projection-form">
+                                                <Select
+                                                    value={projection}
+                                                    onChange={this.onProjectionSelectChange}
+                                                >
+                                                    { projectionsList.map(p => <MenuItem key={p.id} value={p.id}>{p.displayName}</MenuItem>) }
+                                                </Select>
+                                            </FormControl>
+                                        </div>
+                                        <div className="controls sliders">
+                                            <SliderWithInput label="Scale" min={3} max={500} initialValue={scale} onValueChange={this.onScaleSliderChange}/>
+                                            <SliderWithInput label="X Rotation" min={0} max={360} step={2.5} initialValue={rotateX} onValueChange={this.onRotateXSliderChange}/>
+                                            <SliderWithInput label="Y Rotation" min={0} max={360} step={2.5} initialValue={rotateY} onValueChange={this.onRotateYSliderChange}/>
+                                            <SliderWithInput label="Z Rotation" min={0} max={360} step={2.5} initialValue={rotateZ} onValueChange={this.onRotateZSliderChange}/>
+                                            <SliderWithInput label="X Offset" min={0} max={200} initialValue={translateX} onValueChange={this.onTranslateXSliderChange}/>
+                                            <SliderWithInput label="Y Offset" min={0} max={200} initialValue={translateY} onValueChange={this.onTranslateYSliderChange}/>
+                                        </div>
+
+                                        <div className="controls checkboxes">
+                                            <FormGroup row>
+                                                {
+                                                    Object.keys(layers).map(k => {
+                                                        const l = layers[k]
+                                                        return (
+                                                            <FormControlLabel
+                                                                control={ <Checkbox color="default" checked={l.visible} onChange={this.handleCheckboxChange(k)} value="rendersGraticule" /> }
+                                                                label={l.displayName}
+                                                            />        
+                                                        )
+                                                    })
+                                                }
+                                            </FormGroup>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </section>

@@ -44,3 +44,21 @@ a {
     border: 2px solid blue;
     display: none;
 }
+
+.all-screen-container {
+    display: flex;
+    flex-direction: row;
+
+    .all-rendering-container {
+        flex: 2;
+        padding: 10px;
+    }
+
+    .all-controls-container {
+        flex: 1;
+        padding: 10px;
+        border-left: 1px solid black;
+        border-bottom: 1px solid black;
+        height: 100%;
+    }
+}
