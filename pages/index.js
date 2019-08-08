@@ -3,7 +3,6 @@ import Style from '../static/styles/main.less'
 import Link from 'next/link'
 import classnames from 'classnames'
 import * as d3 from 'd3'
-import * as d3Geo from "d3-geo"
 import Dropzone from 'react-dropzone'
 import * as topojson from 'topojson'
 import Slider from '@material-ui/core/Slider'
@@ -20,7 +19,7 @@ import shortid from 'shortid'
 import { coordEach } from '@turf/meta'
 import cloneDeep from 'clone-deep'
 import { projectionsList, projectionsMap } from '../modules/Projections'
-import { graticuleStyle, worldMapStyle, submarineCablesStyle, allRedLineStyle, gedyminHeadStyle, twoGedyminHeadsStyle, tissotStyle } from '../modules/LayerStyles'
+import { defaultLayers, layerTypes } from '../modules/LayerData'
 import SliderWithInput from '../components/SliderWithInput'
 
 const RESIZING = {
@@ -32,104 +31,6 @@ const RESIZING = {
 const SVG_ID = 'svgProjection'
 const CANVAS_WIDTH = 600
 const CANVAS_HEIGHT = 300
-
-const layerTypes = {
-    RASTER: 'RASTER',
-    VECTOR: 'VECTOR'
-}
-
-const defaultLayers = {
-    mainImage: {
-        visible: true,
-        type: layerTypes.RASTER,
-        imageObject: null,
-        path: '/static/images/test.png'
-    },
-    graticule: {
-        visible: false,
-        type: layerTypes.VECTOR,
-        geojsonObject: null,
-        generatorFunction: d3.geoGraticule(),
-        style: {
-            lineWidth: 1,
-            color: '#ccc',
-            fillMode: false,
-            dashed: true        
-        }
-    },
-    worldMap: {
-        visible: false,
-        type: layerTypes.VECTOR,
-        path: '/static/misc/world-110m.json',
-        geojsonObject: null,
-        style: {
-            lineWidth: 1,
-            color: '#ccc',
-            fillMode: false,
-            dashed: true        
-        }
-    },
-    submarineCables: {
-        visible: false,
-        type: layerTypes.VECTOR,
-        path: '/static/misc/cable-geo.json',
-        geojsonObject: null,
-        style: {
-            lineWidth: 0.5,
-            color: '#fdd',
-            fillMode: false,
-            dashed: false        
-        }
-    },
-    allRedLine: {
-        visible: false,
-        type: layerTypes.VECTOR,
-        path: '/static/misc/all-red-line-geo.json',
-        geojsonObject: null,
-        style: {
-            lineWidth: 2,
-            color: 'rgba(255, 64, 64, 0.8)',
-            fillMode: false,
-            dashed: false
-        }
-    },
-    gedyminHead: {
-        visible: false,
-        type: layerTypes.VECTOR,
-        path: '/static/misc/face-geo.json',
-        geojsonObject: null,
-        style: {
-            lineWidth: 2,
-            color: 'rgba(64, 64, 255, 0.8)',
-            fillMode: false,
-            dashed: false
-        }
-    },
-    twoGedyminHeads: {
-        visible: false,
-        type: layerTypes.VECTOR,
-        path: '/static/misc/two-faces.topojson',
-        geojsonObject: null,
-        style: {
-            lineWidth: 2,
-            color: 'rgba(255, 255, 64, 0.8)',
-            fillMode: false,
-            dashed: false
-        }
-    },
-    tissot: {
-        visible: false,
-        type: layerTypes.VECTOR,
-        path: '/static/misc/tissot.topojson',
-        geojsonObject: null,
-        style: {
-            lineWidth: 0.5,
-            color: 'rgba(255, 230, 255, 0.2)',
-            fillMode: true,
-            dashed: false
-        }        
-    }
-}
 
 export default class Index extends React.PureComponent {
     constructor(props) {
@@ -143,15 +44,8 @@ export default class Index extends React.PureComponent {
             translateX: 50,
             translateY: 50,
             projection: 'geoEquirectangular',
-            rendersImage: true,
-            rendersGraticule: false,
-            rendersWorldMap: false,
-            rendersSubmarineCables: false,
-            rendersAllRedLine: false,
-            rendersGedyminHead: false,
-            rendersTwoGedyminHeads: false,
-            rendersTissot: false,
             isCanvasResizing: RESIZING.NO,
+            layers: { ...defaultLayers  }
         }
 
         this.lastWindowTouch = { x: 0, y: 0 }
@@ -161,24 +55,27 @@ export default class Index extends React.PureComponent {
         this.canvasTranslate = { dx: 0, dy: 0 }
         this.canvasTouchThrottleTime = 0
 
-        this.loadGeoJson()
+        this.loadLayers()
     }
-    async loadGeoJson() {
-        this.cablesMapGeoJson = await d3.json('/static/misc/cable-geo.json')
-        this.allRedLineMapGeoJson = await d3.json('/static/misc/all-red-line-geo.json')
-        this.gedyminHeadGeoJson = await d3.json('/static/misc/face-geo.json')
+    async loadLayers() {
+        const loadedLayers = cloneDeep(this.state.layers)
 
-        const tissot = await d3.json('/static/misc/tissot.topojson')
-        this.tissotGeoJson = topojson.feature(tissot, tissot.objects.tissot)
+        for (let key of Object.keys(loadedLayers)) {
+            const l = loadedLayers[key]
+            if (l.type === layerTypes.VECTOR) {
+                if (l.generatorFunction) {
+                    l.geojsonObject = l.generatorFunction()
+                } else {
+                    const loadedJson = await d3.json(l.url)
+                    l.geojsonObject = l.jsonToGeojsonFn ? l.jsonToGeojsonFn(loadedJson) : loadedJson
+                }
+            } else if (l.type === layerTypes.RASTER) {
 
-        const twoHeads = await d3.json('/static/misc/two-faces.topojson')
-        this.twoGedyminHeadsGeoJson = topojson.feature(twoHeads, twoHeads.objects.gedymin)
+            }
+        }
 
-        const w50m = await d3.json('/static/misc/world-110m.json')
-        this.worldGeoJson = topojson.feature(w50m, w50m.objects.countries)
-
-        console.log('Loaded geojson files!')
-    }
+        this.setState({ layers: loadedLayers })
+    }    
     get canvasContext() {
         return this._canvas.getContext('2d')
     }
@@ -195,15 +92,6 @@ export default class Index extends React.PureComponent {
         const dx = this._image.width
         const dy = this._image.height
 
-        const { rendersImage, 
-            rendersGraticule, 
-            rendersSubmarineCables, 
-            rendersWorldMap, 
-            rendersAllRedLine, 
-            rendersGedyminHead,
-            rendersTwoGedyminHeads,
-            rendersTissot } = this.state
-
         if (!this.sourceData || withCleanSurface) {
             this.secondaryCanvasContext.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
             this.secondaryCanvasContext.save()
@@ -219,37 +107,7 @@ export default class Index extends React.PureComponent {
 
         this.canvasContext.save()
 
-        // Circle
-        if (false) {
-            var circle = d3.geoCircle().center([-30.1278, 51.5074]).radius(15)()
-            this.drawGeoJsonTiled(this.projections, circle, 
-                { rendersCanvas: true, context: this.canvasContext },
-                { rendersSvg: true, svgId: SVG_ID },
-                allRedLineStyle)
-                
-            console.log('Circle is: ', circle)
-
-            const projection = this.projections[0].p
-
-            this.canvasContext.beginPath()
-            let firstDone = false
-
-            coordEach(circle, (point) => {
-                const pr = projection(point)
-                console.log('1: ', point, '2: ', pr)
-                if (!firstDone) {
-                    this.canvasContext.moveTo(pr[0], pr[1])
-                    firstDone = true
-                } else {
-                    this.canvasContext.lineTo(pr[0], pr[1])
-                }
-            })
-
-            // this.canvasContext.clip()
-            this.canvasContext.stroke()
-        }
-
-        if (rendersImage) {
+        if (this.state.layers.mainImage.visible) {
             this.target = this.canvasContext.createImageData(this.canvasWidth, this.canvasHeight)
             let targetData = this.target.data
     
@@ -267,8 +125,8 @@ export default class Index extends React.PureComponent {
                 //   φ = ((φ + 36000000090) % 180) - 90
     
                   if (λ > 180 || λ < -180 || φ > 90 || φ < -90) { 
-                    targetData[++i] = 0;
-                    targetData[++i] = 0;
+                    targetData[++i] = 128;
+                    targetData[++i] = 128;
                     targetData[++i] = 128;
                     targetData[++i] = 255;  
                     continue
@@ -290,77 +148,19 @@ export default class Index extends React.PureComponent {
             this.canvasContext.fillRect(0, 0, this.canvasWidth, this.canvasHeight);
             this.canvasContext.restore()
         }
-    
-        // Graticule
-        if (rendersGraticule) {
-            const graticule = d3.geoGraticule()()
-            this.drawGeoJsonTiled(this.projections, 
-                graticule, 
-                { rendersCanvas: true, context: this.canvasContext },
-                { rendersSvg: true, svgId: SVG_ID },
-                graticuleStyle
-            )
-        }
 
-        // World map
-        if (rendersWorldMap) {
-            this.drawGeoJsonTiled(this.projections, 
-                this.worldGeoJson, 
+        const { layers } = this.state
+        Object.values(layers).forEach(l => {
+            if (l.type != layerTypes.VECTOR) return
+            if (!l.visible) return
+            this.drawGeoJsonTiled(
+                this.projections, 
+                l.geojsonObject,
                 { rendersCanvas: true, context: this.canvasContext },
                 { rendersSvg: true, svgId: SVG_ID },
-                worldMapStyle
+                l.style
             )
-        }
-
-        // Cables map
-        if (rendersSubmarineCables) {
-            this.drawGeoJsonTiled(this.projections, 
-                this.cablesMapGeoJson, 
-                { rendersCanvas: true, context: this.canvasContext },
-                { rendersSvg: true, svgId: SVG_ID },
-                submarineCablesStyle
-            )
-        }
-
-        // All red line map
-        if (rendersAllRedLine) {
-            this.drawGeoJsonTiled(this.projections, 
-                this.allRedLineMapGeoJson, 
-                { rendersCanvas: true, context: this.canvasContext },
-                { rendersSvg: true, svgId: SVG_ID },
-                allRedLineStyle
-            )
-        }
-
-        // One gedymin head
-        if (rendersGedyminHead) {
-            this.drawGeoJsonTiled(this.projections, 
-                this.gedyminHeadGeoJson, 
-                { rendersCanvas: true, context: this.canvasContext },
-                { rendersSvg: true, svgId: SVG_ID },
-                gedyminHeadStyle
-            )
-        }
-
-        // Two gedymin heads
-        if (rendersTwoGedyminHeads) {
-            this.drawGeoJsonTiled(this.projections, 
-                this.twoGedyminHeadsGeoJson, 
-                { rendersCanvas: true, context: this.canvasContext },
-                { rendersSvg: true, svgId: SVG_ID },
-                twoGedyminHeadsStyle
-            )
-        }
-
-        // Tissot indicatrices
-        if (rendersTissot) {
-            this.drawGeoJsonTiled(this.projections, 
-                this.tissotGeoJson, 
-                { rendersCanvas: true, context: this.canvasContext },
-                { rendersSvg: true, svgId: SVG_ID },
-                tissotStyle
-            )
-        }
+        })
 
         this.canvasContext.restore()
 
@@ -518,7 +318,7 @@ export default class Index extends React.PureComponent {
     }
     componentDidUpdate(oldProps, oldState) {
         const { scale, rotateX, rotateY, rotateZ, translateX, translateY, isCanvasResizing, projection } = this.state
-        const { rendersImage, rendersGraticule, rendersSubmarineCables, rendersWorldMap, rendersAllRedLine, rendersGedyminHead, rendersTwoGedyminHeads, rendersTissot } = this.state
+        const { layers } = this.state
         if (scale != oldState.scale ||
             rotateX != oldState.rotateX ||
             rotateY != oldState.rotateY ||
@@ -526,14 +326,7 @@ export default class Index extends React.PureComponent {
             translateX != oldState.translateX ||
             translateY != oldState.translateY ||
             projection != oldState.projection ||
-            rendersImage != oldState.rendersImage ||
-            rendersGraticule != oldState.rendersGraticule ||
-            rendersSubmarineCables != oldState.rendersSubmarineCables ||
-            rendersAllRedLine != oldState.rendersAllRedLine ||
-            rendersGedyminHead != oldState.rendersGedyminHead ||
-            rendersTwoGedyminHeads != oldState.rendersTwoGedyminHeads ||
-            rendersTissot != oldState.rendersTissot ||
-            rendersWorldMap != oldState.rendersWorldMap ||
+            layers != oldState.layers ||
             isCanvasResizing != oldState.isCanvasResizing && !isCanvasResizing) {
                 setTimeout(() => {
                     this.updateProjection()
@@ -555,8 +348,17 @@ export default class Index extends React.PureComponent {
     onSvgRef = (s) => {
         this._svg = s
     }
-    handleCheckboxChange = propName => event => {
-        this.setState({ ...this.state, [propName]: event.target.checked })
+    handleCheckboxChange = layerName => event => {
+        this.setState({
+            ...this.state,
+            layers: {
+                ...this.state.layers,
+                [layerName]: {
+                    ...this.state.layers[layerName],
+                    visible: event.target.checked
+                }
+            }
+        })
     }
     onNewFile = (files) => {
         const file = files[0]
@@ -658,7 +460,8 @@ export default class Index extends React.PureComponent {
     }
     render() {
         const { scale, rotateX, rotateY, rotateZ, translateX, translateY, projection } = this.state
-        const { rendersGraticule, rendersSubmarineCables, rendersWorldMap, rendersAllRedLine, rendersGedyminHead, rendersTwoGedyminHeads, rendersTissot, rendersImage } = this.state
+        const { layers } = this.state
+
         return (
             <div
                 onMouseDown={this.onWindowMouseDown}
@@ -735,38 +538,17 @@ export default class Index extends React.PureComponent {
 
                                 <div className="controls checkboxes">
                                 <FormGroup row>
-                                <FormControlLabel
-                                        control={ <Checkbox color="default" checked={rendersImage} onChange={this.handleCheckboxChange('rendersImage')} value="rendersImage" /> }
-                                        label="Image"
-                                    />
-                                    <FormControlLabel
-                                        control={ <Checkbox color="default" checked={rendersGraticule} onChange={this.handleCheckboxChange('rendersGraticule')} value="rendersGraticule" /> }
-                                        label="Graticule"
-                                    />
-                                    <FormControlLabel
-                                        control={ <Checkbox checked={rendersSubmarineCables} onChange={this.handleCheckboxChange('rendersSubmarineCables')} value="rendersSubmarineCables" /> }
-                                        label="Submarine Cables"
-                                    />
-                                    <FormControlLabel
-                                        control={ <Checkbox checked={rendersAllRedLine} onChange={this.handleCheckboxChange('rendersAllRedLine')} value="rendersAllRedLine" /> }
-                                        label="All Red Line"
-                                    />
-                                    <FormControlLabel
-                                        control={ <Checkbox color="primary" checked={rendersGedyminHead} onChange={this.handleCheckboxChange('rendersGedyminHead')} value="rendersGedyminHead" /> }
-                                        label="Gedymin Head"
-                                    />
-                                    <FormControlLabel
-                                        control={ <Checkbox color="primary" checked={rendersTwoGedyminHeads} onChange={this.handleCheckboxChange('rendersTwoGedyminHeads')} value="rendersTwoGedyminHeads" /> }
-                                        label="Two Gedymin Heads"
-                                    />
-                                    <FormControlLabel
-                                        control={ <Checkbox color="primary" checked={rendersTissot} onChange={this.handleCheckboxChange('rendersTissot')} value="rendersTissot" /> }
-                                        label="Tissot Indicatrices"
-                                    />
-                                    <FormControlLabel
-                                        control={ <Checkbox checked={rendersWorldMap} onChange={this.handleCheckboxChange('rendersWorldMap')} value="rendersWorldMap" /> }
-                                        label="World Map"
-                                    />
+                                    {
+                                        Object.keys(layers).map(k => {
+                                            const l = layers[k]
+                                            return (
+                                                <FormControlLabel
+                                                    control={ <Checkbox color="default" checked={l.visible} onChange={this.handleCheckboxChange(k)} value="rendersGraticule" /> }
+                                                    label={l.displayName}
+                                                />        
+                                            )
+                                        })
+                                    }
                                 </FormGroup>
                                 </div>
                             </div>
