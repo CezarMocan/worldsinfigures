@@ -471,52 +471,39 @@ export default class Index extends React.PureComponent {
                 <Dropzone onDrop={this.onNewFile} multiple={false} noClick={true} noKeyboard={true}>
                     {({getRootProps, getInputProps}) => (
                         <section>
-                            <div {...getRootProps()}>
+                            <div className="header">
+                            
+                            </div>
+                            <div className="content">
                                 <div className="all-screen-container">
-                                    <div className="all-rendering-container">
-                                        <input {...getInputProps()} />
-                                        <img 
-                                            ref={this.onImageRef}
-                                            onLoad={this.onImageLoad}
-                                            style={{display: 'none'}}
-                                        />
-                                        <canvas 
-                                            width={CANVAS_WIDTH}
-                                            height={CANVAS_HEIGHT}
-                                            ref={this.onCanvasRef}
-                                            className="main-canvas"
-                                            onMouseDown={this.onCanvasMouseDown}
-                                            onMouseUp={this.onCanvasMouseUp}
-                                            onMouseMove={this.onCanvasMouseMove}                    
-                                        >
-                                        </canvas>
-                                        <canvas
-                                            width={CANVAS_WIDTH}
-                                            height={CANVAS_HEIGHT}
-                                            ref={this.onSecondaryCanvasRef}
-                                            className="secondary-canvas"
-                                        >
+                                    <div className="all-rendering-container checkerboard-background">
+                                        <div className="canvas-container" {...getRootProps()}>
+                                            <div className="hidden-elements">
+                                                <input {...getInputProps()} />
+                                                <img ref={this.onImageRef} onLoad={this.onImageLoad} style={{display: 'none'}}/>
+                                                <canvas width={CANVAS_WIDTH} height={CANVAS_HEIGHT} ref={this.onSecondaryCanvasRef} className="secondary-canvas"></canvas>
+                                                <div id="svgContainer" className="svg-container">
+                                                    <svg
+                                                        ref={this.onSvgRef}
+                                                        id={SVG_ID}
+                                                        width={CANVAS_WIDTH}
+                                                        height={CANVAS_HEIGHT}
+                                                        version="1.1" 
+                                                        xmlns="http://www.w3.org/2000/svg" 
+                                                    >
+                                                    </svg>
+                                                </div>
+                                            </div>
 
-                                        </canvas>
-
-                                        <div id="svgContainer" className="svg-container">
-                                            <svg
-                                                ref={this.onSvgRef}
-                                                id={SVG_ID}
+                                            <canvas 
                                                 width={CANVAS_WIDTH}
                                                 height={CANVAS_HEIGHT}
-                                                version="1.1" 
-                                                xmlns="http://www.w3.org/2000/svg" 
-                                            >
-                                            </svg>
-                                        </div>
-
-                                        <div className="controls download">
-                                            <a href="#" ref={(r) => {this._downloadButton = r}} onClick={this.onDownloadClick} download="">
-                                                <Button variant="outlined">
-                                                    Download
-                                                </Button>
-                                            </a>
+                                                ref={this.onCanvasRef}
+                                                className="main-canvas"
+                                                onMouseDown={this.onCanvasMouseDown}
+                                                onMouseUp={this.onCanvasMouseUp}
+                                                onMouseMove={this.onCanvasMouseMove}                    
+                                            ></canvas>
                                         </div>
                                     </div>
 
@@ -547,7 +534,8 @@ export default class Index extends React.PureComponent {
                                                         const l = layers[k]
                                                         return (
                                                             <FormControlLabel
-                                                                control={ <Checkbox color="default" checked={l.visible} onChange={this.handleCheckboxChange(k)} value="rendersGraticule" /> }
+                                                                key={`layer-${k}`}
+                                                                control={ <Checkbox color="default" checked={l.visible} onChange={this.handleCheckboxChange(k)} /> }
                                                                 label={l.displayName}
                                                             />        
                                                         )
@@ -555,11 +543,20 @@ export default class Index extends React.PureComponent {
                                                 }
                                             </FormGroup>
                                         </div>
+
+                                        <div className="controls download">
+                                            <a href="#" ref={(r) => {this._downloadButton = r}} onClick={this.onDownloadClick} download="">
+                                                <Button variant="outlined">
+                                                    Download
+                                                </Button>
+                                            </a>
+                                        </div>
+
                                     </div>
                                 </div>
                             </div>
                         </section>
-                    )}
+                )}
                 </Dropzone>
             </div>
         )
