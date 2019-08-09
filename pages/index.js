@@ -21,6 +21,7 @@ import cloneDeep from 'clone-deep'
 import { projectionsList, projectionsMap } from '../modules/Projections'
 import { defaultLayers, layerTypes, propertiesExcludedFromExport } from '../modules/LayerData'
 import SliderWithInput from '../components/SliderWithInput'
+import { getImageData, projectImageData } from '../modules/RenderHelper'
 
 const RESIZING = {
     NO: 0,
@@ -94,17 +95,12 @@ export default class Index extends React.PureComponent {
         return this._canvas.height
     }
     renderMap(withCleanSurface = false) {
-        const dx = this._image.width
-        const dy = this._image.height
-
+        // Get image pixels if the image was updated or if we're just getting started
         if (!this.sourceData || withCleanSurface) {
-            this.secondaryCanvasContext.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
-            this.secondaryCanvasContext.save()
-            this.secondaryCanvasContext.drawImage(this._image, 0, 0, dx, dy, 0, 0, this.canvasWidth, this.canvasHeight)
-            this.secondaryCanvasContext.restore()
-            this.sourceData = this.secondaryCanvasContext.getImageData(0, 0, this.canvasWidth, this.canvasHeight).data
+            this.sourceData = getImageData(this._image, this.secondaryCanvasContext, this.canvasWidth, this.canvasHeight)
         }
 
+        // Clear canvas
         this.canvasContext.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
 
         // Clear SVG
@@ -113,39 +109,9 @@ export default class Index extends React.PureComponent {
         this.canvasContext.save()
 
         if (this.state.layers.mainImage.visible) {
-            this.target = this.canvasContext.createImageData(this.canvasWidth, this.canvasHeight)
-            let targetData = this.target.data
-    
-            for (var y = 0, i = -1; y <= this.canvasHeight; y += 1) {
-                for (var x = 0; x <= this.canvasWidth; x += 1) {
-                  const _x = x
-                  const _y = y
-                  var p = this.projection.invert([_x, _y])
-                  if (!p) continue
-                  let λ = p[0], φ = p[1];
-    
-                  i = y * (this.canvasWidth) * 4 + x * 4 - 1
-
-                //   λ = ((λ + 36000000180) % 360) - 180
-                //   φ = ((φ + 36000000090) % 180) - 90
-    
-                  if (λ > 180 || λ < -180 || φ > 90 || φ < -90) { 
-                    targetData[++i] = 128;
-                    targetData[++i] = 128;
-                    targetData[++i] = 128;
-                    targetData[++i] = 255;  
-                    continue
-                  }
-                  var q = (((90 - φ) / 180 * this.canvasHeight | 0) * this.canvasWidth + ((180 + λ) / 360 * this.canvasWidth | 0) << 2)
-                    targetData[++i] = this.sourceData[q];
-                    targetData[++i] = this.sourceData[++q];
-                    targetData[++i] = this.sourceData[++q];
-                    targetData[++i] = 255;  
-                }
-              }        
-            
+            const projectedImageData = projectImageData(this.sourceData, this.projection, this.canvasContext, this.canvasWidth, this.canvasHeight)            
             this.secondaryCanvasContext.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
-            this.secondaryCanvasContext.putImageData(this.target, 0, 0);    
+            this.secondaryCanvasContext.putImageData(projectedImageData, 0, 0);    
             this.canvasContext.drawImage(this._canvas2, 0, 0)
         } else {
             this.canvasContext.save()
@@ -510,8 +476,6 @@ export default class Index extends React.PureComponent {
         const { scale, rotateX, rotateY, rotateZ, translateX, translateY, projection } = this.state
         const { layers } = this.state
         const { canvasDisplayHeight, canvasDisplayWidth } = this.state
-        // const canvasWidth = this._canvas ? this._canvas.width : 0
-        // const canvasHeight = this._canvas ? this._canvas.height : 0
 
         return (
             <div
