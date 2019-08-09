@@ -531,6 +531,7 @@ export default class Index extends React.PureComponent {
                                     </div>
 
                                     <div className="all-controls-container">
+                                        <h1> Projection </h1>
                                         <div className="controls projection">
                                             <FormControl className="form-control projection-form">
                                                 <Select
@@ -541,6 +542,7 @@ export default class Index extends React.PureComponent {
                                                 </Select>
                                             </FormControl>
                                         </div>
+                                        <h1> Parameters </h1>
                                         <div className="controls sliders">
                                             <SliderWithInput label="Scale" min={3} max={500} initialValue={scale} onValueChange={this.onScaleSliderChange}/>
                                             <SliderWithInput label="X Rotation" min={0} max={360} step={2.5} initialValue={rotateX} onValueChange={this.onRotateXSliderChange}/>
@@ -550,6 +552,7 @@ export default class Index extends React.PureComponent {
                                             <SliderWithInput label="Y Offset" min={0} max={200} initialValue={translateY} onValueChange={this.onTranslateYSliderChange}/>
                                         </div>
 
+                                        <h1> Layers </h1>
                                         <div className="controls checkboxes">
                                             <FormGroup row>
                                                 {
@@ -567,6 +570,7 @@ export default class Index extends React.PureComponent {
                                             </FormGroup>
                                         </div>
 
+                                        <h1> Export </h1>
                                         <div className="controls download">
                                             <a href="#" ref={(r) => {this._downloadButton = r}} onClick={this.onDownloadClick} download="">
                                                 <Button variant="outlined">
