@@ -1,5 +1,6 @@
 import * as d3GeoProjection from "d3-geo-projection"
 import * as d3 from 'd3'
+import { getFlagEmojiForProjection, getGenderEmojiForProjection, getYearForProjection } from './ProjectionsMetadata'
 
 const getProjectionDisplayNameFromKey = (k) => {
     return k.substring(3).split("").reduce((acc, val, index) => {
@@ -31,12 +32,13 @@ Object.keys(d3GeoProjection).forEach(p => allProjectionIds.push(p))
 const viableProjectionIds = allProjectionIds.filter(id => id.indexOf('Raw') == -1)
 
 export const projectionsList = viableProjectionIds.map(p => {
+    const displayName = getProjectionDisplayNameFromKey(p)
     return {
         id: p,
-        displayName: getProjectionDisplayNameFromKey(p),
-        flagEmoji: '🇬🇷',
-        genderEmoji: '👨',
-        year: '100 C.E.',        
+        displayName,
+        flagEmoji: getFlagEmojiForProjection(displayName),
+        genderEmoji: getGenderEmojiForProjection(displayName),
+        year: getYearForProjection(displayName),        
         fn: d3GeoProjection[p] || d3[p]
     }
 })

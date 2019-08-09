@@ -65,7 +65,7 @@ export const projectionsMetadata = {
         year: '1569',
         authorName: 'Gerardus Mercator'
     },
-    'natural earth': {
+    'natural earth1': {
         flagEmoji: '🇺🇸',
         genderEmoji: '👨',
         year: '2012',
@@ -127,4 +127,22 @@ export const projectionsMetadata = {
     }
 }
 
-export const getFlag
+export const getFlagEmojiForProjection = (p) => {
+    if (!projectionsMetadata[p.toLowerCase()]) return ''
+    return projectionsMetadata[p.toLowerCase()].flagEmoji || ''
+}
+
+export const getGenderEmojiForProjection = (p) => {
+    if (!projectionsMetadata[p.toLowerCase()]) return ''
+    return projectionsMetadata[p.toLowerCase()].genderEmoji || ''
+}
+
+export const getYearForProjection = (p) => {
+    if (!projectionsMetadata[p.toLowerCase()]) return ''
+    return projectionsMetadata[p.toLowerCase()].year || ''
+}
+
+export const getAuthorNameForProjection = (p) => {
+    if (!projectionsMetadata[p.toLowerCase()]) return ''
+    return projectionsMetadata[p.toLowerCase()].authorName || ''
+}

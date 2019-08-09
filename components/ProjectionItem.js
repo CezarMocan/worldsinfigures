@@ -5,9 +5,9 @@ export default class ProjectionItem extends React.Component {
         const { displayName, flagEmoji, genderEmoji, year } = this.props
         return (
             <div className="projection-item">
-                <div className="projection-item-datum">{displayName}</div>
+                <div className="projection-item-datum">{displayName}&ensp;{year && `(${year})`}</div>
                 <div className="projection-item-datum">
-                    {flagEmoji}&ensp;{genderEmoji}—{year}
+                    {genderEmoji}&ensp;{flagEmoji}
                 </div>
             </div>
         )
