@@ -9,6 +9,10 @@ body {
     font-size: 10pt;
 }
 
+h1 {
+    font-size: 14pt;
+}
+
 .header {
     height: @header-height;
     border-bottom: 1px solid @border-color;
@@ -37,7 +41,14 @@ body {
 }
 
 .controls {
-    width: 500px;
+    &.download {
+        width: 100%;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 50px;
+    }
 }
 
 .projection {
@@ -102,5 +113,6 @@ a {
         padding: 0 10px;
         border-left: 1px solid rgba(0, 0, 0, 0.2);
         height: 100%;
+        overflow: scroll;
     }
 }

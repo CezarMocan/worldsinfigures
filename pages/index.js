@@ -15,6 +15,7 @@ import FormControlLabel from '@material-ui/core/FormControlLabel'
 import Select from '@material-ui/core/Select'
 import Button from '@material-ui/core/Button'
 import Checkbox from '@material-ui/core/Checkbox'
+import { MuiThemeProvider, createMuiTheme } from '@material-ui/core/styles';  
 import shortid from 'shortid'
 import { coordEach } from '@turf/meta'
 import cloneDeep from 'clone-deep'
@@ -22,6 +23,12 @@ import { projectionsList, projectionsMap } from '../modules/Projections'
 import { defaultLayers, layerTypes, propertiesExcludedFromExport } from '../modules/LayerData'
 import SliderWithInput from '../components/SliderWithInput'
 import { getImageData, projectImageData } from '../modules/RenderHelper'
+
+const theme = createMuiTheme({
+    typography: { 
+       fontSize: '10pt'
+    }
+ }) 
 
 const RESIZING = {
     NO: 0,
@@ -51,7 +58,12 @@ export default class Index extends React.PureComponent {
             isCanvasResizing: RESIZING.NO,
             canvasDisplayWidth: CANVAS_WIDTH,
             canvasDisplayHeight: CANVAS_HEIGHT,
-            layers: { ...defaultLayers  }
+            layers: { ...defaultLayers  },
+            downloadOptions: {
+                png: true,
+                svg: true,
+                config: true
+            }
         }
 
         this.lastWindowTouch = { x: 0, y: 0 }
@@ -291,10 +303,11 @@ export default class Index extends React.PureComponent {
     }
     onDownloadClick = () => {
         const uid = shortid()
-        const projectionId = `${this.state.projection}-${uid}`        
-        this.createAndDownloadImage(`${projectionId}.png`, this._canvas)
-        this.createAndDownloadSvg(`${projectionId}.svg`, this._svg)
-        this.createAndDownloadText(`${projectionId}.txt`, this.parseStateForDownload(this.state))
+        const projectionId = `${this.state.projection}-${uid}`
+        const { downloadOptions } = this.state
+        if (downloadOptions.png) this.createAndDownloadImage(`${projectionId}.png`, this._canvas)
+        if (downloadOptions.svg) this.createAndDownloadSvg(`${projectionId}.svg`, this._svg)
+        if (downloadOptions.config) this.createAndDownloadText(`${projectionId}.txt`, this.parseStateForDownload(this.state))
     }
     componentDidUpdate(oldProps, oldState) {
         const { scale, rotateX, rotateY, rotateZ, translateX, translateY, isCanvasResizing, projection } = this.state
@@ -337,6 +350,15 @@ export default class Index extends React.PureComponent {
                     ...this.state.layers[layerName],
                     visible: event.target.checked
                 }
+            }
+        })
+    }
+    updateDownloadOptions = optionName => event => {
+        this.setState({
+            ...this.state,
+            downloadOptions: {
+                ...this.state.downloadOptions,
+                [optionName]: event.target.checked
             }
         })
     }
@@ -476,116 +498,138 @@ export default class Index extends React.PureComponent {
         const { scale, rotateX, rotateY, rotateZ, translateX, translateY, projection } = this.state
         const { layers } = this.state
         const { canvasDisplayHeight, canvasDisplayWidth } = this.state
+        const { downloadOptions } = this.state
 
         return (
-            <div
-                onMouseDown={this.onWindowMouseDown}
-                onMouseUp={this.onWindowMouseUp}
-                onMouseMove={this.onWindowMouseMove}
-            >
-                <Dropzone onDrop={this.onNewFile} multiple={false} noClick={true} noKeyboard={true}>
-                    {({getRootProps, getInputProps}) => (
-                        <section>
-                            <div className="header">
-                            
-                            </div>
-                            <div className="content">
-                                <div className="all-screen-container">
-                                    <div className="all-rendering-container checkerboard-background">
-                                        <a href="http://www.kopimi.com/" target="__blank">                                        
-                                            <img className="kopimi-logo" src="static/images/kopimi.png"/>
-                                        </a>
-                                        <div className="canvas-container" {...getRootProps()}>
-                                            <div className="hidden-elements">
-                                                <input {...getInputProps()} />
-                                                <img ref={this.onImageRef} onLoad={this.onImageLoad} style={{display: 'none'}}/>
-                                                <canvas width={CANVAS_WIDTH} height={CANVAS_HEIGHT} ref={this.onSecondaryCanvasRef} className="secondary-canvas"></canvas>
-                                                <div id="svgContainer" className="svg-container">
-                                                    <svg
-                                                        ref={this.onSvgRef}
-                                                        id={SVG_ID}
+            <MuiThemeProvider theme={theme}>
+                <div
+                    onMouseDown={this.onWindowMouseDown}
+                    onMouseUp={this.onWindowMouseUp}
+                    onMouseMove={this.onWindowMouseMove}
+                >
+                    <Dropzone onDrop={this.onNewFile} multiple={false} noClick={true} noKeyboard={true}>
+                        {({getRootProps, getInputProps}) => (
+                            <section>
+                                <div className="header">
+                                
+                                </div>
+                                <div className="content">
+                                    <div className="all-screen-container">
+                                        <div className="all-rendering-container checkerboard-background">
+                                            <a href="http://www.kopimi.com/" target="__blank">                                        
+                                                <img className="kopimi-logo" src="static/images/kopimi.png"/>
+                                            </a>
+                                            <div className="canvas-container" {...getRootProps()}>
+                                                <div className="hidden-elements">
+                                                    <input {...getInputProps()} />
+                                                    <img ref={this.onImageRef} onLoad={this.onImageLoad} style={{display: 'none'}}/>
+                                                    <canvas width={CANVAS_WIDTH} height={CANVAS_HEIGHT} ref={this.onSecondaryCanvasRef} className="secondary-canvas"></canvas>
+                                                    <div id="svgContainer" className="svg-container">
+                                                        <svg
+                                                            ref={this.onSvgRef}
+                                                            id={SVG_ID}
+                                                            width={CANVAS_WIDTH}
+                                                            height={CANVAS_HEIGHT}
+                                                            version="1.1" 
+                                                            xmlns="http://www.w3.org/2000/svg" 
+                                                        >
+                                                        </svg>
+                                                    </div>
+                                                </div>
+
+                                                <div className="main-canvas-and-size-container">
+                                                    <div className="canvas-size-container">
+                                                        {canvasDisplayWidth} x {canvasDisplayHeight}
+                                                    </div>
+                                                    <canvas 
                                                         width={CANVAS_WIDTH}
                                                         height={CANVAS_HEIGHT}
-                                                        version="1.1" 
-                                                        xmlns="http://www.w3.org/2000/svg" 
+                                                        ref={this.onCanvasRef}
+                                                        className="main-canvas"
+                                                        onMouseDown={this.onCanvasMouseDown}
+                                                        onMouseUp={this.onCanvasMouseUp}
+                                                        onMouseMove={this.onCanvasMouseMove}                    
+                                                    ></canvas>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="all-controls-container">
+                                            <h1> Projection </h1>
+                                            <div className="controls projection">
+                                                <FormControl className="form-control projection-form">
+                                                    <Select
+                                                        value={projection}
+                                                        onChange={this.onProjectionSelectChange}
                                                     >
-                                                    </svg>
+                                                        { projectionsList.map(p => <MenuItem key={p.id} value={p.id}>{p.displayName}</MenuItem>) }
+                                                    </Select>
+                                                </FormControl>
+                                            </div>
+                                            <h1> Parameters </h1>
+                                            <div className="controls sliders">
+                                                <SliderWithInput label="Scale" min={3} max={500} initialValue={scale} onValueChange={this.onScaleSliderChange}/>
+                                                <SliderWithInput label="X Rotation" min={0} max={360} step={2.5} initialValue={rotateX} onValueChange={this.onRotateXSliderChange}/>
+                                                <SliderWithInput label="Y Rotation" min={0} max={360} step={2.5} initialValue={rotateY} onValueChange={this.onRotateYSliderChange}/>
+                                                <SliderWithInput label="Z Rotation" min={0} max={360} step={2.5} initialValue={rotateZ} onValueChange={this.onRotateZSliderChange}/>
+                                                <SliderWithInput label="X Offset" min={0} max={200} initialValue={translateX} onValueChange={this.onTranslateXSliderChange}/>
+                                                <SliderWithInput label="Y Offset" min={0} max={200} initialValue={translateY} onValueChange={this.onTranslateYSliderChange}/>
+                                            </div>
+
+                                            <h1> Layers </h1>
+                                            <div className="controls checkboxes">
+                                                <FormGroup row>
+                                                    {
+                                                        Object.keys(layers).map(k => {
+                                                            const l = layers[k]
+                                                            return (
+                                                                <FormControlLabel
+                                                                    key={`layer-${k}`}
+                                                                    control={ <Checkbox color="default" checked={l.visible} onChange={this.handleCheckboxChange(k)} /> }
+                                                                    label={l.displayName}
+                                                                />        
+                                                            )
+                                                        })
+                                                    }
+                                                </FormGroup>
+                                            </div>
+
+                                            <h1> Export </h1>
+                                            <div className="controls download">
+                                                <div className="download-options">
+                                                    <FormGroup column>
+                                                        <FormControlLabel
+                                                            control={ <Checkbox color="default" checked={downloadOptions.png} onChange={this.updateDownloadOptions('png')} /> }
+                                                            label="PNG"
+                                                        />        
+                                                        <FormControlLabel
+                                                            control={ <Checkbox color="primary" checked={downloadOptions.svg} onChange={this.updateDownloadOptions('svg')} /> }
+                                                            label="SVG"
+                                                        />        
+                                                        <FormControlLabel
+                                                            control={ <Checkbox color="secondary" checked={downloadOptions.config} onChange={this.updateDownloadOptions('config')} /> }
+                                                            label="CONFIG"
+                                                        />        
+                                                    </FormGroup>
+                                                </div>
+
+                                                <div className="download-button">
+                                                    <a href="#" ref={(r) => {this._downloadButton = r}} onClick={this.onDownloadClick} download="">
+                                                        <Button variant="outlined">
+                                                            Download
+                                                        </Button>
+                                                    </a>
                                                 </div>
                                             </div>
 
-                                            <div className="main-canvas-and-size-container">
-                                                <div className="canvas-size-container">
-                                                    {canvasDisplayWidth} x {canvasDisplayHeight}
-                                                </div>
-                                                <canvas 
-                                                    width={CANVAS_WIDTH}
-                                                    height={CANVAS_HEIGHT}
-                                                    ref={this.onCanvasRef}
-                                                    className="main-canvas"
-                                                    onMouseDown={this.onCanvasMouseDown}
-                                                    onMouseUp={this.onCanvasMouseUp}
-                                                    onMouseMove={this.onCanvasMouseMove}                    
-                                                ></canvas>
-                                            </div>
                                         </div>
-                                    </div>
-
-                                    <div className="all-controls-container">
-                                        <h1> Projection </h1>
-                                        <div className="controls projection">
-                                            <FormControl className="form-control projection-form">
-                                                <Select
-                                                    value={projection}
-                                                    onChange={this.onProjectionSelectChange}
-                                                >
-                                                    { projectionsList.map(p => <MenuItem key={p.id} value={p.id}>{p.displayName}</MenuItem>) }
-                                                </Select>
-                                            </FormControl>
-                                        </div>
-                                        <h1> Parameters </h1>
-                                        <div className="controls sliders">
-                                            <SliderWithInput label="Scale" min={3} max={500} initialValue={scale} onValueChange={this.onScaleSliderChange}/>
-                                            <SliderWithInput label="X Rotation" min={0} max={360} step={2.5} initialValue={rotateX} onValueChange={this.onRotateXSliderChange}/>
-                                            <SliderWithInput label="Y Rotation" min={0} max={360} step={2.5} initialValue={rotateY} onValueChange={this.onRotateYSliderChange}/>
-                                            <SliderWithInput label="Z Rotation" min={0} max={360} step={2.5} initialValue={rotateZ} onValueChange={this.onRotateZSliderChange}/>
-                                            <SliderWithInput label="X Offset" min={0} max={200} initialValue={translateX} onValueChange={this.onTranslateXSliderChange}/>
-                                            <SliderWithInput label="Y Offset" min={0} max={200} initialValue={translateY} onValueChange={this.onTranslateYSliderChange}/>
-                                        </div>
-
-                                        <h1> Layers </h1>
-                                        <div className="controls checkboxes">
-                                            <FormGroup row>
-                                                {
-                                                    Object.keys(layers).map(k => {
-                                                        const l = layers[k]
-                                                        return (
-                                                            <FormControlLabel
-                                                                key={`layer-${k}`}
-                                                                control={ <Checkbox color="default" checked={l.visible} onChange={this.handleCheckboxChange(k)} /> }
-                                                                label={l.displayName}
-                                                            />        
-                                                        )
-                                                    })
-                                                }
-                                            </FormGroup>
-                                        </div>
-
-                                        <h1> Export </h1>
-                                        <div className="controls download">
-                                            <a href="#" ref={(r) => {this._downloadButton = r}} onClick={this.onDownloadClick} download="">
-                                                <Button variant="outlined">
-                                                    Download
-                                                </Button>
-                                            </a>
-                                        </div>
-
                                     </div>
                                 </div>
-                            </div>
-                        </section>
-                )}
-                </Dropzone>
-            </div>
+                            </section>
+                    )}
+                    </Dropzone>
+                </div>
+            </MuiThemeProvider>
         )
     }
 }
