@@ -19,7 +19,7 @@ import shortid from 'shortid'
 import { coordEach } from '@turf/meta'
 import cloneDeep from 'clone-deep'
 import { projectionsList, projectionsMap } from '../modules/Projections'
-import { defaultLayers, layerTypes } from '../modules/LayerData'
+import { defaultLayers, layerTypes, propertiesExcludedFromExport } from '../modules/LayerData'
 import SliderWithInput from '../components/SliderWithInput'
 
 const RESIZING = {
@@ -31,8 +31,8 @@ const RESIZING = {
 }
 
 const SVG_ID = 'svgProjection'
-const CANVAS_WIDTH = 600
-const CANVAS_HEIGHT = 300
+const CANVAS_WIDTH = 450
+const CANVAS_HEIGHT = 600
 const BORDER_HOVER_THRESHOLD = 10
 
 export default class Index extends React.PureComponent {
@@ -175,13 +175,6 @@ export default class Index extends React.PureComponent {
             const { p, offsetX, offsetY } = projection
 
             const newGeoJson = cloneDeep(geoJson)
-            // coordEach(newGeoJson, (pointCoords) => {
-            //     const newCoords = [pointCoords[0] + 45 * offsetX, pointCoords[1] + 360 * offsetY]
-            //     pointCoords[0] = newCoords[0]
-            //     pointCoords[1] = newCoords[1]
-            // })
-
-            // console.log('new g: ', offsetX, offsetY, newGeoJson)
 
             if (canvasOptions.rendersCanvas) {
                 const canvasGenerator = d3.geoPath().projection(p)
@@ -240,8 +233,6 @@ export default class Index extends React.PureComponent {
 
         if (proj.precision) proj = proj.precision(0.01)
 
-        // proj = proj.clipAngle(90)
-
         return proj
     }
     updateProjection() {
@@ -285,7 +276,7 @@ export default class Index extends React.PureComponent {
     onTranslateYSliderChange = (newValue) => {
         this.setState({ translateY: newValue })
     }
-    onProjectionSelectChange = (event, newValue) => {
+    onProjectionSelectChange = (event) => {
         const projection = event.target.value
         this.setState({ projection })
     }
@@ -314,12 +305,30 @@ export default class Index extends React.PureComponent {
         const dataUrl = canvasRef.toDataURL('image/png')
         this.downloadContent(filename, dataUrl)
     }
+    parseStateForDownload(state) {
+        const layersSimplified = Object.keys(state.layers).reduce((acc, k) => {
+            const layer = state.layers[k]
+            acc[k] = {}
+            Object.keys(layer).forEach(lk => {
+                if (propertiesExcludedFromExport.indexOf(lk) != -1) return
+                acc[k][lk] = layer[lk]
+            })
+            return acc
+        }, {})
+
+        const stateSimplified = {
+            ...state,
+            layers: layersSimplified
+        }
+
+        return JSON.stringify(stateSimplified, null, 4)
+    }
     onDownloadClick = () => {
         const uid = shortid()
         const projectionId = `${this.state.projection}-${uid}`        
         this.createAndDownloadImage(`${projectionId}.png`, this._canvas)
         this.createAndDownloadSvg(`${projectionId}.svg`, this._svg)
-        this.createAndDownloadText(`${projectionId}.txt`, JSON.stringify(this.state, null, 4))
+        this.createAndDownloadText(`${projectionId}.txt`, this.parseStateForDownload(this.state))
     }
     componentDidUpdate(oldProps, oldState) {
         const { scale, rotateX, rotateY, rotateZ, translateX, translateY, isCanvasResizing, projection } = this.state

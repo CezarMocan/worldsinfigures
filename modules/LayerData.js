@@ -109,3 +109,5 @@ export const defaultLayers = {
         }        
     }
 }
+
+export const propertiesExcludedFromExport = ['jsonToGeojsonFn', 'geojsonObject', 'imageObject']
