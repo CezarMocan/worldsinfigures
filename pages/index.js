@@ -24,13 +24,16 @@ import SliderWithInput from '../components/SliderWithInput'
 
 const RESIZING = {
     NO: 0,
-    HORIZONTAL: 1,
-    VERTICAL: 2
+    HORIZONTAL_LEFT: 1,
+    HORIZONTAL_RIGHT: 2,
+    VERTICAL_TOP: 3,
+    VERTICAL_BOTTOM: 4
 }
 
 const SVG_ID = 'svgProjection'
 const CANVAS_WIDTH = 600
 const CANVAS_HEIGHT = 300
+const BORDER_HOVER_THRESHOLD = 10
 
 export default class Index extends React.PureComponent {
     constructor(props) {
@@ -45,6 +48,8 @@ export default class Index extends React.PureComponent {
             translateY: 50,
             projection: 'geoEquirectangular',
             isCanvasResizing: RESIZING.NO,
+            canvasDisplayWidth: CANVAS_WIDTH,
+            canvasDisplayHeight: CANVAS_HEIGHT,
             layers: { ...defaultLayers  }
         }
 
@@ -369,22 +374,37 @@ export default class Index extends React.PureComponent {
 
         if (file) reader.readAsDataURL(file)
     }
-
-    eventOnLeftRightBorder = (evt, el, thresh) => {
+    eventOnLeftBorder = (evt, el, thresh) => {
         const br = el.getBoundingClientRect()
         const { clientX, clientY } = evt
-        return (Math.abs(clientX - br.right) < thresh || Math.abs(clientX - br.left) < thresh)
+        return (Math.abs(clientX - br.left) < thresh)
+    }
+    eventOnRightBorder = (evt, el, thresh) => {
+        const br = el.getBoundingClientRect()
+        const { clientX, clientY } = evt
+        return (Math.abs(clientX - br.right) < thresh)
+    }
+    eventOnLeftRightBorder = (evt, el, thresh) => {
+        return (this.eventOnLeftBorder(evt, el, thresh) || this.eventOnRightBorder(evt, el, thresh))
+    }
+    eventOnTopBorder = (evt, el, thresh) => {
+        const br = el.getBoundingClientRect()
+        const { clientX, clientY } = evt
+        return (Math.abs(clientY - br.top) < thresh)
     }
 
-    eventOnTopBottomBorder = (evt, el, thresh) => {
+    eventOnBottomBorder = (evt, el, thresh) => {
         const br = el.getBoundingClientRect()
         const { clientX, clientY } = evt
-        return (Math.abs(clientY - br.top) < thresh || Math.abs(clientY - br.bottom) < thresh)
+        return (Math.abs(clientY - br.bottom) < thresh)
+    }
+    eventOnTopBottomBorder = (evt, el, thresh) => {
+        return (this.eventOnTopBorder(evt, el, thresh) || this.eventOnBottomBorder(evt, el, thresh))
     }
 
     onCanvasMouseDown = (evt) => {
-        if (this.eventOnLeftRightBorder(evt, this._canvas, 10)) return
-        if (this.eventOnTopBottomBorder(evt, this._canvas, 10)) return
+        if (this.eventOnLeftRightBorder(evt, this._canvas, BORDER_HOVER_THRESHOLD)) return
+        if (this.eventOnTopBottomBorder(evt, this._canvas, BORDER_HOVER_THRESHOLD)) return
         this.isCanvasTouching = true
         this.lastCanvasTouch = { x: evt.clientX, y: evt.clientY }
         this.canvasTranslate = { dx: 0, dy: 0 }
@@ -424,10 +444,14 @@ export default class Index extends React.PureComponent {
     onWindowMouseDown = (evt) => {
         evt.stopPropagation()
         this.lastWindowTouch = { x: evt.clientX, y: evt.clientY }
-        if (this.eventOnLeftRightBorder(evt, this._canvas, 10)) {
-            this.setState({ isCanvasResizing: RESIZING.HORIZONTAL })
-        } else if (this.eventOnTopBottomBorder(evt, this._canvas, 10)) {
-            this.setState({ isCanvasResizing: RESIZING.VERTICAL })
+        if (this.eventOnLeftBorder(evt, this._canvas, BORDER_HOVER_THRESHOLD)) {
+            this.setState({ isCanvasResizing: RESIZING.HORIZONTAL_LEFT })
+        } else if (this.eventOnRightBorder(evt, this._canvas, BORDER_HOVER_THRESHOLD)) {
+            this.setState({ isCanvasResizing: RESIZING.HORIZONTAL_RIGHT })
+        } else if (this.eventOnTopBorder(evt, this._canvas, BORDER_HOVER_THRESHOLD)) {
+            this.setState({ isCanvasResizing: RESIZING.VERTICAL_TOP })
+        } else if (this.eventOnBottomBorder(evt, this._canvas, BORDER_HOVER_THRESHOLD)) {
+            this.setState({ isCanvasResizing: RESIZING.VERTICAL_BOTTOM })
         } else {
         }
     } 
@@ -438,29 +462,47 @@ export default class Index extends React.PureComponent {
     onWindowMouseMove = (evt) => {
         evt.stopPropagation()
         const { isCanvasResizing } = this.state
-        if (isCanvasResizing == RESIZING.HORIZONTAL) {
-            this._canvas.width += evt.clientX - this.lastWindowTouch.x
-            this._canvas2.width = this._canvas.width
-            d3.select(`#${SVG_ID}`).attr("width", this._canvas.width)
-            this.lastWindowTouch = { x: evt.clientX, y: evt.clientY }
-        } else if (isCanvasResizing == RESIZING.VERTICAL) {
-            this._canvas.height += evt.clientY - this.lastWindowTouch.y
-            this._canvas2.height = this._canvas.height
-            d3.select(`#${SVG_ID}`).attr("height", this._canvas.height)
-            this.lastWindowTouch = { x: evt.clientX, y: evt.clientY }
-        } else if (isCanvasResizing == RESIZING.NO) {
+
+        if (isCanvasResizing == RESIZING.NO) {
             if (this.eventOnLeftRightBorder(evt, this._canvas, 10)) {
                 this._canvas.style.cursor = 'ew-resize'
             } else if (this.eventOnTopBottomBorder(evt, this._canvas, 10)) {
                 this._canvas.style.cursor = 'ns-resize'
             } else {
                 this._canvas.style.cursor = 'grab'
-            }    
+            }
+            return
         }
+
+        if (isCanvasResizing == RESIZING.HORIZONTAL_LEFT || isCanvasResizing == RESIZING.HORIZONTAL_RIGHT) {
+            const delta = evt.clientX - this.lastWindowTouch.x
+            const sgn = (isCanvasResizing == RESIZING.HORIZONTAL_LEFT) ? -1 : 1
+            this._canvas.width += 2 * delta * sgn
+        } else if (isCanvasResizing == RESIZING.VERTICAL_TOP || isCanvasResizing == RESIZING.VERTICAL_BOTTOM) {
+            const delta = evt.clientY - this.lastWindowTouch.y
+            const sgn = (isCanvasResizing == RESIZING.VERTICAL_TOP) ? -1 : 1
+            this._canvas.height += 2 * delta * sgn
+        }
+
+        this._canvas2.width = this._canvas.width
+        this._canvas2.height = this._canvas.height
+
+        d3.select(`#${SVG_ID}`).attr("width", this._canvas.width)
+        d3.select(`#${SVG_ID}`).attr("height", this._canvas.height)
+
+        this.lastWindowTouch = { x: evt.clientX, y: evt.clientY }
+
+        this.setState({
+            canvasDisplayWidth: this._canvas.width,
+            canvasDisplayHeight: this._canvas.height
+        })
     }
     render() {
         const { scale, rotateX, rotateY, rotateZ, translateX, translateY, projection } = this.state
         const { layers } = this.state
+        const { canvasDisplayHeight, canvasDisplayWidth } = this.state
+        // const canvasWidth = this._canvas ? this._canvas.width : 0
+        // const canvasHeight = this._canvas ? this._canvas.height : 0
 
         return (
             <div
@@ -495,15 +537,20 @@ export default class Index extends React.PureComponent {
                                                 </div>
                                             </div>
 
-                                            <canvas 
-                                                width={CANVAS_WIDTH}
-                                                height={CANVAS_HEIGHT}
-                                                ref={this.onCanvasRef}
-                                                className="main-canvas"
-                                                onMouseDown={this.onCanvasMouseDown}
-                                                onMouseUp={this.onCanvasMouseUp}
-                                                onMouseMove={this.onCanvasMouseMove}                    
-                                            ></canvas>
+                                            <div className="main-canvas-and-size-container">
+                                                <div className="canvas-size-container">
+                                                    {canvasDisplayWidth} x {canvasDisplayHeight}
+                                                </div>
+                                                <canvas 
+                                                    width={CANVAS_WIDTH}
+                                                    height={CANVAS_HEIGHT}
+                                                    ref={this.onCanvasRef}
+                                                    className="main-canvas"
+                                                    onMouseDown={this.onCanvasMouseDown}
+                                                    onMouseUp={this.onCanvasMouseUp}
+                                                    onMouseMove={this.onCanvasMouseMove}                    
+                                                ></canvas>
+                                            </div>
                                         </div>
                                     </div>
 
