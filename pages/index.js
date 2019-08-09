@@ -23,6 +23,7 @@ import { projectionsList, projectionsMap } from '../modules/Projections'
 import { defaultLayers, layerTypes, propertiesExcludedFromExport } from '../modules/LayerData'
 import SliderWithInput from '../components/SliderWithInput'
 import { getImageData, projectImageData } from '../modules/RenderHelper'
+import ProjectionItem from '../components/ProjectionItem'
 
 const theme = createMuiTheme({
     typography: { 
@@ -562,7 +563,12 @@ export default class Index extends React.PureComponent {
                                                         value={projection}
                                                         onChange={this.onProjectionSelectChange}
                                                     >
-                                                        { projectionsList.map(p => <MenuItem key={p.id} value={p.id}>{p.displayName}</MenuItem>) }
+                                                        { projectionsList.map(p => (
+                                                            <MenuItem key={p.id} value={p.id}>
+                                                                <ProjectionItem displayName={p.displayName} flagEmoji={p.flagEmoji} genderEmoji={p.genderEmoji} year={p.year}/>
+                                                            </MenuItem>
+                                                            )) 
+                                                        }
                                                     </Select>
                                                 </FormControl>
                                             </div>

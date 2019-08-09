@@ -39,6 +39,9 @@ export const projectionsList = viableProjectionIds.map(p => {
     return {
         id: p,
         displayName: getProjectionDisplayNameFromKey(p),
+        flagEmoji: '🇬🇷',
+        genderEmoji: '👨',
+        year: '100 C.E.',        
         fn: d3GeoProjection[p] || d3[p]
     }
 })
