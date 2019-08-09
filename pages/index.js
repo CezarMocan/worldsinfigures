@@ -134,7 +134,6 @@ export default class Index extends React.PureComponent {
         })
 
         this.canvasContext.restore()
-
     }
     drawGeoJsonTiled(projections, geoJson, canvasOptions, svgOptions, drawingOptions) {
         projections.forEach(projection => {
@@ -204,6 +203,7 @@ export default class Index extends React.PureComponent {
     updateProjection() {
         this.projection = this.getProjectionFromState(0, 0)
         this.projections = []
+        // const minX = -1, maxX = 1, minY = -1, maxY = 1
         const minX = 0, maxX = 0, minY = 0, maxY = 0
 
         for (let i = minX; i <= maxX; i++) {
@@ -492,6 +492,9 @@ export default class Index extends React.PureComponent {
                             <div className="content">
                                 <div className="all-screen-container">
                                     <div className="all-rendering-container checkerboard-background">
+                                        <a href="http://www.kopimi.com/" target="__blank">                                        
+                                            <img className="kopimi-logo" src="static/images/kopimi.png"/>
+                                        </a>
                                         <div className="canvas-container" {...getRootProps()}>
                                             <div className="hidden-elements">
                                                 <input {...getInputProps()} />
