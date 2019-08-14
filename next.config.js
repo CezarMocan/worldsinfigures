@@ -10,4 +10,8 @@ module.exports = withLess({
   lessLoaderOptions: {
     javascriptEnabled: true,
   },
+  generateBuildId: async () => {
+    // For example get the latest git commit hash here
+    return 'constant-build-id'
+  },
 })
