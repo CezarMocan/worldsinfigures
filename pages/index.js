@@ -620,7 +620,7 @@ export default class Index extends React.PureComponent {
                                                 </div>
 
                                                 <div className="download-button">
-                                                    <a href="#" ref={(r) => {this._downloadButton = r}} onClick={this.onDownloadClick} download="">
+                                                    <a href="#" ref={(r) => {this._downloadButton = r}} onClick={this.onDownloadClick}>
                                                         <Button variant="outlined">
                                                             Download
                                                         </Button>
