@@ -56,6 +56,7 @@ export default class Index extends React.PureComponent {
             translateX: 50,
             translateY: 50,
             projection: 'geoEquirectangular',
+            clipToEarthBounds: false,
             isCanvasResizing: RESIZING.NO,
             canvasDisplayWidth: CANVAS_WIDTH,
             canvasDisplayHeight: CANVAS_HEIGHT,
@@ -121,6 +122,16 @@ export default class Index extends React.PureComponent {
 
         this.canvasContext.save()
 
+        // Clip to earth sphere bounds, if the option is active
+        const { clipToEarthBounds } = this.state
+        if (clipToEarthBounds) {
+            const clipGenerator = d3.geoPath().projection(this.projections[0].p).context(this.canvasContext)
+            this.canvasContext.beginPath()
+            clipGenerator({type: "Sphere"}) 
+            this.canvasContext.clip()    
+        }
+
+        // Draw raster image
         if (this.state.layers.mainImage.visible) {
             const projectedImageData = projectImageData(this.sourceData, this.projection, this.canvasContext, this.canvasWidth, this.canvasHeight)            
             this.secondaryCanvasContext.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
@@ -128,11 +139,12 @@ export default class Index extends React.PureComponent {
             this.canvasContext.drawImage(this._canvas2, 0, 0)
         } else {
             this.canvasContext.save()
-            this.canvasContext.fillStyle = 'rgba(64, 62, 62, 1)'
+            this.canvasContext.fillStyle = 'rgba(242, 242, 252, 1)'
             this.canvasContext.fillRect(0, 0, this.canvasWidth, this.canvasHeight);
             this.canvasContext.restore()
         }
 
+        // Draw vector layers on top of raster image
         const { layers } = this.state
         Object.values(layers).forEach(l => {
             if (l.type != layerTypes.VECTOR) return
@@ -311,7 +323,7 @@ export default class Index extends React.PureComponent {
         if (downloadOptions.config) this.createAndDownloadText(`${projectionId}.txt`, this.parseStateForDownload(this.state))
     }
     componentDidUpdate(oldProps, oldState) {
-        const { scale, rotateX, rotateY, rotateZ, translateX, translateY, isCanvasResizing, projection } = this.state
+        const { scale, rotateX, rotateY, rotateZ, translateX, translateY, isCanvasResizing, projection, clipToEarthBounds } = this.state
         const { layers } = this.state
         if (scale != oldState.scale ||
             rotateX != oldState.rotateX ||
@@ -321,6 +333,7 @@ export default class Index extends React.PureComponent {
             translateY != oldState.translateY ||
             projection != oldState.projection ||
             layers != oldState.layers ||
+            clipToEarthBounds != oldState.clipToEarthBounds ||
             isCanvasResizing != oldState.isCanvasResizing && !isCanvasResizing) {
                 setTimeout(() => {
                     this.updateProjection()
@@ -342,7 +355,7 @@ export default class Index extends React.PureComponent {
     onSvgRef = (s) => {
         this._svg = s
     }
-    handleCheckboxChange = layerName => event => {
+    handleLayerToggle = layerName => event => {
         this.setState({
             ...this.state,
             layers: {
@@ -361,6 +374,11 @@ export default class Index extends React.PureComponent {
                 ...this.state.downloadOptions,
                 [optionName]: event.target.checked
             }
+        })
+    }
+    onClipToEarthBoundsUpdate = event => {
+        this.setState({
+            clipToEarthBounds: event.target.checked
         })
     }
     onNewFile = (files) => {
@@ -496,7 +514,7 @@ export default class Index extends React.PureComponent {
         })
     }
     render() {
-        const { scale, rotateX, rotateY, rotateZ, translateX, translateY, projection } = this.state
+        const { scale, rotateX, rotateY, rotateZ, translateX, translateY, projection, clipToEarthBounds } = this.state
         const { layers } = this.state
         const { canvasDisplayHeight, canvasDisplayWidth } = this.state
         const { downloadOptions } = this.state
@@ -582,6 +600,16 @@ export default class Index extends React.PureComponent {
                                                 <SliderWithInput label="Y Offset" min={0} max={200} initialValue={translateY} onValueChange={this.onTranslateYSliderChange}/>
                                             </div>
 
+                                            <h1> Rendering </h1>
+                                            <div className="controls rendering">
+                                                <FormGroup row>
+                                                    <FormControlLabel
+                                                        control={ <Checkbox color="default" checked={clipToEarthBounds} onChange={this.onClipToEarthBoundsUpdate} /> }
+                                                        label="Clipping"
+                                                    />        
+                                                </FormGroup>
+                                            </div>
+
                                             <h1> Layers </h1>
                                             <div className="controls checkboxes">
                                                 <FormGroup row>
@@ -591,7 +619,7 @@ export default class Index extends React.PureComponent {
                                                             return (
                                                                 <FormControlLabel
                                                                     key={`layer-${k}`}
-                                                                    control={ <Checkbox color="default" checked={l.visible} onChange={this.handleCheckboxChange(k)} /> }
+                                                                    control={ <Checkbox color="default" checked={l.visible} onChange={this.handleLayerToggle(k)} /> }
                                                                     label={l.displayName}
                                                                 />        
                                                             )

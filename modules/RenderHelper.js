@@ -26,9 +26,9 @@ export const projectImageData = (sourceData, projection, context, canvasWidth, c
         //   φ = ((φ + 36000000090) % 180) - 90
 
           if (λ > 180 || λ < -180 || φ > 90 || φ < -90) { 
-            targetData[++i] = 128;
-            targetData[++i] = 128;
-            targetData[++i] = 128;
+            targetData[++i] = 242;
+            targetData[++i] = 242;
+            targetData[++i] = 252;
             targetData[++i] = 255;  
             continue
           }
