@@ -8,9 +8,9 @@
     "prebuild": "rm -rf .next",
     "build": "next build",
     "start": "next build && next start",
-    "export": "next build && next export",
-    "dat:create": "rm -rf dat/ && mkdir dat && cd dat/ && dat .",
-    "dat:refreshBuild": "rm -rf dat/^.dat && cp -r out/* dat/",
+    "export": "rm -rf .next && next build && next export",
+    "dat:create": "rm -rf dat/ && mkdir dat && cd dat/ && dat .",    
+    "dat:refreshBuild": "mv dat/.dat . && rm -rf dat/* && mv .dat dat/ && cp -r out/* dat/",
     "dat:sync": "cd dat/ && dat sync",
     "deploy": "rm -rf out && npm run export && npm run dat:refreshBuild && npm run dat:sync"
   },
