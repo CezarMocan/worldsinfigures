@@ -13,7 +13,7 @@
     "dat:refreshBuild": "mv dat/.dat . && rm -rf dat/* && mv .dat dat/ && cp -r out/* dat/",
     "dat:sync": "cd dat/ && dat sync",
     "dat:watch": "pm2 stop all; pm2 delete all; pm2 start npm -- run dat:sync",
-    "deploy": "rm -rf out && npm run export && npm run dat:refreshBuild"
+    "deploy": "rm -rf out && npm run export && npm run dat:refreshBuild && npm run dat:watch"
   },
   "author": "",
   "license": "ISC",
