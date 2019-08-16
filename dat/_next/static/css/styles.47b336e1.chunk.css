@@ -1,0 +1,111 @@
+body {
+  margin: 0;
+  overflow: hidden;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 10pt;
+}
+h1 {
+  font-size: 12pt;
+  margin: 7px 0;
+}
+.header {
+  height: 0px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.25);
+}
+.content {
+  height: calc(100vh - 0px);
+}
+.graticule {
+  fill: none;
+  stroke: #777;
+  stroke-width: 0.5px;
+  stroke-opacity: 0.5;
+}
+.land {
+  fill: #222;
+}
+.boundary {
+  fill: none;
+  stroke: #f00;
+  stroke-width: 0.5px;
+}
+.controls {
+  margin-bottom: 10px;
+}
+.controls.download {
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 50px;
+}
+.projection {
+  margin-bottom: 25px;
+}
+.projection .projection-form {
+  width: 100%;
+}
+a {
+  text-decoration: none;
+}
+.secondary-canvas {
+  display: none;
+}
+.svg-container svg {
+  border: 2px solid blue;
+  display: none;
+}
+.checkerboard-background {
+  background-image: linear-gradient(45deg, #F0F0F0 25%, transparent 25%), linear-gradient(-45deg, #F0F0F0 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #F0F0F0 75%), linear-gradient(-45deg, transparent 75%, #F0F0F0 75%);
+  background-size: 20px 20px;
+  background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+}
+.all-screen-container {
+  display: flex;
+  flex-direction: row;
+  height: 100%;
+}
+.all-screen-container .all-rendering-container {
+  flex: 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.all-screen-container .all-rendering-container .kopimi-logo {
+  position: absolute;
+  left: 10px;
+  bottom: 10px;
+  width: 30px;
+}
+.all-screen-container .all-rendering-container .canvas-instructions {
+  position: absolute;
+  bottom: 15px;
+  color: rgba(0, 0, 0, 0.5);
+}
+.all-screen-container .all-rendering-container .canvas-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.all-screen-container .all-rendering-container .canvas-container .main-canvas {
+  cursor: grab;
+  border: 1px solid rgba(0, 0, 0, 0.25);
+  margin-bottom: 15px;
+  background-color: rgba(52, 52, 42, 0.2);
+}
+.all-screen-container .all-controls-container {
+  flex: 1;
+  padding: 0 10px;
+  border-left: 1px solid rgba(0, 0, 0, 0.2);
+  height: 100%;
+  overflow: scroll;
+}
+.projection-item {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
