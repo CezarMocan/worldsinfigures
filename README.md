@@ -13,7 +13,7 @@ npm install -g dat
 2. Clone this repository, by running:
 
 ```sh
-git clone git@github.com:CezarMocan/projections.git
+git clone https://github.com/CezarMocan/projections.git
 ```
 
 3. In the project main directory, install the dependencies by running:
@@ -44,4 +44,18 @@ npm run deploy
 ```
 
 This will build the source code and update the contens of the `dat` archive with the new static site. This command will not return, since it ends with `dat sync`. Once the contents of the archive are done processing, you can quit the `dat sync` shell (`Ctrl+C`).
+
+
+## Development guide
+
+If you wish to make changes to the source code, you can start a local development server on port 3000 by running:
+
+```sh
+npm run dev
+```
+
+This command starts the static file server, and enables the features useful for development (e.g. live reload.) If you navigate to `http://localhost:3000`, you should be able to access the sotware.
+
+### Repository structure
+
 
