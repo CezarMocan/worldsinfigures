@@ -50,7 +50,7 @@ export default class Index extends React.PureComponent {
             rotateZ: 0,
             translateX: 50,
             translateY: 50,
-            projection: 'geoAitoff',
+            projection: 'geoEquirectangular',
             clipToEarthBounds: false,
             tileVectors: false,
             isCanvasResizing: RESIZING.NO,
