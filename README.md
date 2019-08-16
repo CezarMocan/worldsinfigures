@@ -16,7 +16,7 @@ npm install -g dat
 git clone https://github.com/CezarMocan/projections.git
 ```
 
-3. In the project main directory, install the dependencies by running:
+3. Make sure you are in the project directory (`cd projections`) and then install the dependencies by running:
 
 ```sh
 npm install
