@@ -61,7 +61,8 @@ export default class Index extends React.PureComponent {
                 png: true,
                 svg: true,
                 config: true
-            }
+            },
+            imageChanged: false
         }
 
         this.lastWindowTouch = { x: 0, y: 0 }
@@ -311,13 +312,14 @@ export default class Index extends React.PureComponent {
     // Callback for a new image layer (when an image is dropped)
 
     onNewFile = (files) => {
-        const file = files[0]
-        const reader = new FileReader()
-        reader.addEventListener("load", () => {
-            this._image.src = reader.result
-        }, false)
-
-        if (file) reader.readAsDataURL(file)
+        this.setState({ imageChanged: true }, () => {
+            const file = files[0]
+            const reader = new FileReader()
+            reader.addEventListener("load", () => {
+                this._image.src = reader.result
+            }, false)
+            if (file) reader.readAsDataURL(file)    
+        })
     }
 
 
@@ -423,7 +425,7 @@ export default class Index extends React.PureComponent {
     }
     render() {
         const { scale, rotateX, rotateY, rotateZ, translateX, translateY, projection } = this.state
-        const { clipToEarthBounds, tileVectors } = this.state
+        const { clipToEarthBounds, tileVectors, imageChanged } = this.state
         const { layers } = this.state
         const { canvasDisplayHeight, canvasDisplayWidth } = this.state
         const { downloadOptions } = this.state
@@ -447,6 +449,11 @@ export default class Index extends React.PureComponent {
                                             <a href="http://www.kopimi.com/" target="__blank">                                        
                                                 <img className="kopimi-logo" src="static/images/kopimi.png"/>
                                             </a>
+                                            { !imageChanged &&
+                                                <div className="canvas-instructions">
+                                                    Change the image by dragging and dropping a new one on top of the canvas.
+                                                </div>
+                                            }
                                             <div className="canvas-container" {...getRootProps()}>
                                                 <div className="hidden-elements">
                                                     <input {...getInputProps()} />
