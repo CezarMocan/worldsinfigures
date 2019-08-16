@@ -520,7 +520,7 @@ export default class Index extends React.PureComponent {
                                                     />        
                                                     <FormControlLabel
                                                         control={ <Checkbox color="primary" checked={tileVectors} onChange={this.onCheckboxUpdate('tileVectors')} /> }
-                                                        label="Vector Tiling"
+                                                        label="Vector Tiling (experimental)"
                                                     />
                                                 </FormGroup>
                                             </div>
