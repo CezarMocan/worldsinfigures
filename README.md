@@ -64,7 +64,15 @@ The repository uses [`React`](https://reactjs.org/) as its main javascript frame
 
 `/dat`: This is the site that gets served over `dat`. The folder contains a static build of this repository, as well as the configuration files for the `dat` archive. Every time the site is re-deployed, the contents of this folder change to the new build (but the `dat` configuration stays the same, since we're keeping the same archive and URL.)
 
-`/modules`: Various utility files. For example, `DownloadHelper.js` contains functions needed to download the `png`, `svg` and configuration files to the disk.
+`/modules`: Various utility files. For example:
+
+  - `DownloadHelper.js` contains functions needed to download the `png`, `svg` and configuration files to the disk.
+
+  - `LayerData.js` contains the configuration file for the default information layers that get displayed in the software. (raster image, Gedymin heads, etc.)
+
+  - `ProjectionsMetadata.js` contains the creation year, author gender and country of origin for the projections we are using.
+
+  - `RenderHelper.js` contains utility functions for projecting and displaying raster and vector images.
 
 `/pages`: These are the components that get transformed into the website's HTML pages. We currently only have one—index. `pages/index.js` is where the bulk of the project is implemented.
 
