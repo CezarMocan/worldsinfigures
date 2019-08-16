@@ -23,7 +23,7 @@ import ProjectionItem from '../components/ProjectionItem'
 
 const theme = createMuiTheme({
     typography: { 
-       fontSize: '10pt'
+       fontSize: 10
     }
  }) 
 
@@ -43,7 +43,6 @@ const BORDER_HOVER_THRESHOLD = 10
 export default class Index extends React.PureComponent {
     constructor(props) {
         super(props)
-        this.onImageLoad = this.onImageLoad.bind(this)
         this.state = {
             scale: 100,
             rotateX: 0,
@@ -66,7 +65,6 @@ export default class Index extends React.PureComponent {
         }
 
         this.lastWindowTouch = { x: 0, y: 0 }
-
         this.isCanvasTouching = false
         this.lastCanvasTouch = { x: 0, y: 0 }
         this.canvasTranslate = { dx: 0, dy: 0 }
@@ -104,7 +102,7 @@ export default class Index extends React.PureComponent {
         this._image = i
         this._image.src="/static/images/test.png" 
     }
-    onImageLoad() { this.renderMap(true) }
+    onImageLoad = () => { this.renderMap(true) }
     onCanvasRef = (c) => { this._canvas = c }
     onSecondaryCanvasRef = (c) => { this._canvas2 = c }
     onSvgRef = (s) => { this._svg = s }
@@ -546,7 +544,7 @@ export default class Index extends React.PureComponent {
                                             <h1> Export </h1>
                                             <div className="controls download">
                                                 <div className="download-options">
-                                                    <FormGroup column>
+                                                    <FormGroup row>
                                                         <FormControlLabel
                                                             control={ <Checkbox color="default" checked={downloadOptions.png} onChange={this.onDownloadOptionsUpdate('png')} /> }
                                                             label="PNG"

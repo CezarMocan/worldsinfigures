@@ -83,7 +83,7 @@ a {
   cursor: grab;
   border: 1px solid rgba(0, 0, 0, 0.25);
   margin-bottom: 15px;
-  background-color: #fcf2f2;
+  background-color: rgba(52, 52, 42, 0.2);
 }
 .all-screen-container .all-controls-container {
   flex: 1;
