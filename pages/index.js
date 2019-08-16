@@ -337,7 +337,7 @@ export default class Index extends React.PureComponent {
     onCanvasMouseMove = (evt) => {
         if (!this.isCanvasTouching) return
         const now = new Date().getTime()
-        if (now - this.canvasTouchThrottleTime < 100) return
+        if (now - this.canvasTouchThrottleTime < 66) return
         this.canvasTouchThrottleTime = now
 
         const dx = (evt.clientX - this.lastCanvasTouch.x) / this.canvasWidth * 35
