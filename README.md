@@ -56,6 +56,20 @@ npm run dev
 
 This command starts the static file server, and enables the features useful for development (e.g. live reload.) If you navigate to `http://localhost:3000`, you should be able to access the sotware.
 
+The repository uses [`React`](https://reactjs.org/) as its main javascript framework, and handles build and deployment using [`Next.js`](https://nextjs.org/).
+
 ### Repository structure
 
+`/components`: UI individual components (e.g. a slider, a list item, etc.)
 
+`/dat`: This is the site that gets served over `dat`. The folder contains a static build of this repository, as well as the configuration files for the `dat` archive. Every time the site is re-deployed, the contents of this folder change to the new build (but the `dat` configuration stays the same, since we're keeping the same archive and URL.)
+
+`/modules`: Various utility files. For example, `DownloadHelper.js` contains functions needed to download the `png`, `svg` and configuration files to the disk.
+
+`/pages`: These are the components that get transformed into the website's HTML pages. We currently only have one—index. `pages/index.js` is where the bulk of the project is implemented.
+
+`/static`: This is where the site's static assets are: images, stylesheets, geojson files, etc.
+
+`next.config.js`: The configuration file for the `Next.js` framework.
+
+`package.json`: The configuration file for this as a Javascript `npm` based project. Contains `npm` dependencies and scripts.
