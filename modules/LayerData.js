@@ -30,7 +30,7 @@ export const defaultLayers = {
     worldMap: {
         visible: false,
         type: layerTypes.VECTOR,
-        url: '/static/misc/world-110m.json',
+        url: '/static/misc/world-110m.topojson',
         jsonToGeojsonFn: (json) => topojson.feature(json, json.objects.countries),
         geojsonObject: null,
         displayName: 'World Map',
@@ -44,7 +44,7 @@ export const defaultLayers = {
     submarineCables: {
         visible: false,
         type: layerTypes.VECTOR,
-        url: '/static/misc/cable-geo.json',
+        url: '/static/misc/cable-geo.geojson',
         geojsonObject: null,
         displayName: 'Submarine Cables',
         style: {
@@ -57,7 +57,7 @@ export const defaultLayers = {
     allRedLine: {
         visible: false,
         type: layerTypes.VECTOR,
-        url: '/static/misc/all-red-line-geo.json',
+        url: '/static/misc/all-red-line-geo.geojson',
         geojsonObject: null,
         displayName: 'All Red Line',
         style: {
@@ -70,7 +70,7 @@ export const defaultLayers = {
     gedyminHead: {
         visible: false,
         type: layerTypes.VECTOR,
-        url: '/static/misc/face-geo.json',
+        url: '/static/misc/face-geo.geojson',
         geojsonObject: null,
         displayName: 'Gedymin Head',
         style: {
@@ -78,7 +78,22 @@ export const defaultLayers = {
             color: 'rgba(64, 64, 255, 0.8)',
             fillMode: false,
             dashed: false
-        }
+        },
+        duplicateHemispheres: false
+    },
+    fauxGedyminHeads: {
+        visible: false,
+        type: layerTypes.VECTOR,
+        url: '/static/misc/face-geo.geojson',
+        geojsonObject: null,
+        displayName: 'Faux 2 Gedymin Heads',
+        style: {
+            lineWidth: 2,
+            color: 'rgba(255, 64, 255, 0.8)',
+            fillMode: false,
+            dashed: false
+        },
+        duplicateHemispheres: true
     },
     twoGedyminHeads: {
         visible: false,
@@ -106,7 +121,7 @@ export const defaultLayers = {
             color: 'rgba(255, 230, 255, 0.2)',
             fillMode: true,
             dashed: false
-        }        
+        } 
     }
 }
 
