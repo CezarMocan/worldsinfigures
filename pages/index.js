@@ -20,6 +20,7 @@ import { createAndDownloadImage, createAndDownloadSvg, createAndDownloadText } f
 import { duplicateOnHemispheres } from '../modules/GeoJsonHelper'
 import SliderWithInput from '../components/SliderWithInput'
 import ProjectionItem from '../components/ProjectionItem'
+import LayerItem from '../components/LayerItem'
 
 const theme = createMuiTheme({
     typography: { 
@@ -254,14 +255,29 @@ export default class Index extends React.PureComponent {
     onSliderUpdate = sliderName => newValue => {
         this.setState({ [sliderName]: newValue })
     }
-    onLayerToggleUpdate = layerName => event => {
+    onLayerToggleUpdate = layerName => newVisible => {
         this.setState({
             ...this.state,
             layers: {
                 ...this.state.layers,
                 [layerName]: {
                     ...this.state.layers[layerName],
-                    visible: event.target.checked
+                    visible: newVisible
+                }
+            }
+        })
+    }
+    onLayerColorUpdate = layerName => newColor => {
+        this.setState({
+            ...this.state,
+            layers: {
+                ...this.state.layers,
+                [layerName]: {
+                    ...this.state.layers[layerName],
+                    style: {
+                        ...this.state.layers[layerName].style,
+                        color: newColor
+                    }
                 }
             }
         })
@@ -530,20 +546,20 @@ export default class Index extends React.PureComponent {
 
                                             <h1> Layers </h1>
                                             <div className="controls checkboxes">
-                                                <FormGroup row>
-                                                    {
-                                                        Object.keys(layers).map(k => {
-                                                            const l = layers[k]
-                                                            return (
-                                                                <FormControlLabel
-                                                                    key={`layer-${k}`}
-                                                                    control={ <Checkbox color="default" checked={l.visible} onChange={this.onLayerToggleUpdate(k)} /> }
-                                                                    label={l.displayName}
-                                                                />        
-                                                            )
-                                                        })
-                                                    }
-                                                </FormGroup>
+                                                { Object.keys(layers).map(k => {
+                                                    const l = layers[k]
+                                                    return (
+                                                        <LayerItem
+                                                            key={`layer-${k}`}
+                                                            visible={l.visible}
+                                                            color={l.style && l.style.color}                                                            
+                                                            onVisibilityUpdate={this.onLayerToggleUpdate(k)}
+                                                            onColorChange={this.onLayerColorUpdate(k)}
+                                                            label={l.displayName}
+                                                        />
+                                                    )
+                                                })}
+
                                             </div>
 
                                             <h1> Export </h1>

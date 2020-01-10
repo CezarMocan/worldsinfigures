@@ -133,3 +133,40 @@ a {
     justify-content: space-between;
     width: 100%;
 }
+
+.layer-item {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    padding: 4px 4px;
+    background-color: #fdfdfd;
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    font-size: 9pt;    
+
+    .layer-item-controls {
+        display: flex;
+        flex-direction: row;
+
+        .layer-items-controls-visibility {
+            cursor: pointer;
+        }
+
+        .layer-items-control-fill {
+            position: relative;
+            width: 14px;
+            height: 14px;            
+            border-radius: 10px;            
+            background-color:red;   
+            border: 1px solid black;         
+            margin: 1px 5px 0 3px;            
+            cursor: pointer;        
+        }
+
+        .color-picker-container {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+        }
+    }
+}

@@ -10,7 +10,6 @@ export const defaultLayers = {
     mainImage: {
         visible: true,
         type: layerTypes.RASTER,
-        imageObject: null,
         url: '/static/images/test.png',
         displayName: 'Image'
     },
@@ -26,6 +25,20 @@ export const defaultLayers = {
             fillMode: false,
             dashed: true        
         }
+    },
+    tissot: {
+        visible: false,
+        type: layerTypes.VECTOR,
+        url: '/static/geo/tissot.topojson',
+        jsonToGeojsonFn: (json) => topojson.feature(json, json.objects.tissot),
+        geojsonObject: null,
+        displayName: 'Tissot Indicatrices',
+        style: {
+            lineWidth: 0.5,
+            color: 'rgba(255, 230, 255, 0.2)',
+            fillMode: true,
+            dashed: false
+        } 
     },
     worldMap: {
         visible: false,
@@ -67,6 +80,20 @@ export const defaultLayers = {
             dashed: false
         }
     },
+    originalTwoGedymin: {
+        visible: false,
+        type: layerTypes.VECTOR,
+        url: '/static/geo/two-faces.topojson',
+        jsonToGeojsonFn: (json) => topojson.feature(json, json.objects.gedymin),
+        geojsonObject: null,
+        displayName: '[ORIGINAL] 2 Gedymin Heads',
+        style: {
+            lineWidth: 2,
+            color: 'rgba(255, 255, 64, 0.8)',
+            fillMode: false,
+            dashed: false
+        }
+    },
     gedyminHead: {
         visible: false,
         type: layerTypes.VECTOR,
@@ -81,12 +108,12 @@ export const defaultLayers = {
         },
         duplicateHemispheres: false
     },
-    fauxGedyminHeads: {
+    duplicatedSingleGedyminHead: {
         visible: false,
         type: layerTypes.VECTOR,
         url: '/static/geo/face-geo.geojson',
         geojsonObject: null,
-        displayName: 'Faux 2 Gedymin Heads',
+        displayName: '[**NEW**] Duplicated single Gedymin Head',
         style: {
             lineWidth: 2,
             color: 'rgba(255, 64, 255, 0.8)',
@@ -94,34 +121,6 @@ export const defaultLayers = {
             dashed: false
         },
         duplicateHemispheres: true
-    },
-    twoGedyminHeads: {
-        visible: false,
-        type: layerTypes.VECTOR,
-        url: '/static/geo/two-faces.topojson',
-        jsonToGeojsonFn: (json) => topojson.feature(json, json.objects.gedymin),
-        geojsonObject: null,
-        displayName: 'Two Gedymin Heads',
-        style: {
-            lineWidth: 2,
-            color: 'rgba(255, 255, 64, 0.8)',
-            fillMode: false,
-            dashed: false
-        }
-    },
-    tissot: {
-        visible: false,
-        type: layerTypes.VECTOR,
-        url: '/static/geo/tissot.topojson',
-        jsonToGeojsonFn: (json) => topojson.feature(json, json.objects.tissot),
-        geojsonObject: null,
-        displayName: 'Tissot Indicatrices',
-        style: {
-            lineWidth: 0.5,
-            color: 'rgba(255, 230, 255, 0.2)',
-            fillMode: true,
-            dashed: false
-        } 
     }
 }
 
