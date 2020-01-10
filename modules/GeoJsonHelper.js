@@ -20,13 +20,13 @@ export const duplicateOnHemispheres = (geojsonObject) => {
   let bottomHalf = cloneDeep(geojsonObject)
 
   eachCoordMap(topHalf, (pos) => {
-      pos[0] = pos[0] / 2.0;
-      pos[1] = pos[1] / 2.0 + 45
+      pos[0] = pos[0] * 0.75;
+      pos[1] = pos[1] * 0.5 + 45
   })
 
   eachCoordMap(bottomHalf, (pos) => {
-      pos[0] = pos[0] / 2.0;
-      pos[1] = pos[1] / 2.0 - 45
+      pos[0] = pos[0] * 0.75;
+      pos[1] = pos[1] * 0.5 - 45
   })
 
   let topAndBottom = cloneDeep(geojsonObject)
