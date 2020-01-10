@@ -11,13 +11,13 @@ import Button from '@material-ui/core/Button'
 import Checkbox from '@material-ui/core/Checkbox'
 import { MuiThemeProvider, createMuiTheme } from '@material-ui/core/styles';  
 import shortid from 'shortid'
-import { coordEach } from '@turf/meta'
 import cloneDeep from 'clone-deep'
 import * as EventsHelper from '../modules/MouseEventsHelper'
 import { projectionsList, projectionsMap } from '../modules/Projections'
-import { defaultLayers, layerTypes, propertiesExcludedFromExport } from '../modules/LayerData'
+import { defaultLayers, layerTypes, propertiesExcludedFromExport } from '../data/LayerData'
 import { getImageData, projectImageData, drawGeoJsonCanvas, drawGeoJsonSvg } from '../modules/RenderHelper'
 import { createAndDownloadImage, createAndDownloadSvg, createAndDownloadText } from '../modules/DownloadHelper'
+import { duplicateOnHemispheres } from '../modules/GeoJsonHelper'
 import SliderWithInput from '../components/SliderWithInput'
 import ProjectionItem from '../components/ProjectionItem'
 
@@ -74,46 +74,6 @@ export default class Index extends React.PureComponent {
         this.loadLayers()
     }
 
-    dfs(object, transformFn) {
-        if (Array.isArray(object) && object.length == 2 && (typeof object[0] == 'number') && (typeof object[1] == 'number')) {
-            transformFn(object)
-            return
-        }
-
-        let children = null
-        if (typeof object == 'object' && object != null) children = Object.values(object)
-        else if (Array.isArray(object)) children = object
-
-        if (!children) return
-
-        children.forEach(c => this.dfs(c, transformFn))
-    }
-
-    transformToHalf(geojsonObject) {
-        console.log('geojsonObject: ', geojsonObject)
-        let topHalf = cloneDeep(geojsonObject)
-        let bottomHalf = cloneDeep(geojsonObject)
-
-        this.dfs(topHalf, (pos) => {
-            pos[0] = pos[0] / 2.0;
-            pos[1] = pos[1] / 2.0 + 45
-        })
-
-        this.dfs(bottomHalf, (pos) => {
-            pos[0] = pos[0] / 2.0;
-            pos[1] = pos[1] / 2.0 - 45
-        })
-
-        let topAndBottom = cloneDeep(geojsonObject)
-        if (topHalf.features) {
-            topAndBottom.features = topHalf.features.concat(bottomHalf.features)
-        } else if (topHalf.coordinates) {
-            topAndBottom.coordinates = topHalf.coordinates.concat(bottomHalf.coordinates)
-        }
-
-        return topAndBottom
-    }
-
     // Loading raster and vector data
     async loadLayers() {
         const loadedLayers = cloneDeep(this.state.layers)
@@ -128,7 +88,7 @@ export default class Index extends React.PureComponent {
                     l.geojsonObject = l.jsonToGeojsonFn ? l.jsonToGeojsonFn(loadedJson) : loadedJson
                 }
                 if (l.duplicateHemispheres)
-                    l.geojsonObject = this.transformToHalf(l.geojsonObject)
+                    l.geojsonObject = duplicateOnHemispheres(l.geojsonObject)
             } else if (l.type === layerTypes.RASTER) {
 
             }
@@ -139,7 +99,6 @@ export default class Index extends React.PureComponent {
 
 
     // Callbacks for when DOM objects are created
-
     onImageRef = (i) => {
         this._image = i
         this._image.src="/static/images/test.png" 
@@ -151,7 +110,6 @@ export default class Index extends React.PureComponent {
 
 
     // Convenience getters
-
     get canvasContext() { return this._canvas.getContext('2d') }
     get secondaryCanvasContext() { return this._canvas2.getContext('2d') }
     get canvasWidth() { return this._canvas.width }
@@ -159,7 +117,6 @@ export default class Index extends React.PureComponent {
 
 
     // Layer rendering
-
     renderMap(withCleanSurface = false) {
         // Get image pixels if the image was updated or if we're just getting started
         if (!this.sourceData || withCleanSurface) {

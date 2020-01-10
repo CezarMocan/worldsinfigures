@@ -30,7 +30,7 @@ export const defaultLayers = {
     worldMap: {
         visible: false,
         type: layerTypes.VECTOR,
-        url: '/static/misc/world-110m.topojson',
+        url: '/static/geo/world-110m.topojson',
         jsonToGeojsonFn: (json) => topojson.feature(json, json.objects.countries),
         geojsonObject: null,
         displayName: 'World Map',
@@ -44,7 +44,7 @@ export const defaultLayers = {
     submarineCables: {
         visible: false,
         type: layerTypes.VECTOR,
-        url: '/static/misc/cable-geo.geojson',
+        url: '/static/geo/cable-geo.geojson',
         geojsonObject: null,
         displayName: 'Submarine Cables',
         style: {
@@ -57,7 +57,7 @@ export const defaultLayers = {
     allRedLine: {
         visible: false,
         type: layerTypes.VECTOR,
-        url: '/static/misc/all-red-line-geo.geojson',
+        url: '/static/geo/all-red-line-geo.geojson',
         geojsonObject: null,
         displayName: 'All Red Line',
         style: {
@@ -70,7 +70,7 @@ export const defaultLayers = {
     gedyminHead: {
         visible: false,
         type: layerTypes.VECTOR,
-        url: '/static/misc/face-geo.geojson',
+        url: '/static/geo/face-geo.geojson',
         geojsonObject: null,
         displayName: 'Gedymin Head',
         style: {
@@ -84,7 +84,7 @@ export const defaultLayers = {
     fauxGedyminHeads: {
         visible: false,
         type: layerTypes.VECTOR,
-        url: '/static/misc/face-geo.geojson',
+        url: '/static/geo/face-geo.geojson',
         geojsonObject: null,
         displayName: 'Faux 2 Gedymin Heads',
         style: {
@@ -98,7 +98,7 @@ export const defaultLayers = {
     twoGedyminHeads: {
         visible: false,
         type: layerTypes.VECTOR,
-        url: '/static/misc/two-faces.topojson',
+        url: '/static/geo/two-faces.topojson',
         jsonToGeojsonFn: (json) => topojson.feature(json, json.objects.gedymin),
         geojsonObject: null,
         displayName: 'Two Gedymin Heads',
@@ -112,7 +112,7 @@ export const defaultLayers = {
     tissot: {
         visible: false,
         type: layerTypes.VECTOR,
-        url: '/static/misc/tissot.topojson',
+        url: '/static/geo/tissot.topojson',
         jsonToGeojsonFn: (json) => topojson.feature(json, json.objects.tissot),
         geojsonObject: null,
         displayName: 'Tissot Indicatrices',
