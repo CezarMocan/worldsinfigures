@@ -121,7 +121,7 @@ export const defaultLayers = {
             dashed: false
         },
         duplicateHemispheres: true
-    }
+    },
 }
 
 export const propertiesExcludedFromExport = ['jsonToGeojsonFn', 'geojsonObject', 'imageObject']

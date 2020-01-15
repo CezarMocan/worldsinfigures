@@ -590,6 +590,15 @@ export default class Index extends React.PureComponent {
                                                 </div>
                                             </div>
 
+                                            <h1> Tools </h1>
+                                            <div className="controls tools">
+                                                <a href="/convert" target="__blank">
+                                                    <Button variant="outlined">
+                                                        SVG to GeoJSON
+                                                    </Button>
+                                                </a>
+                                            </div>
+
                                         </div>
                                     </div>
                                 </div>
