@@ -68,6 +68,7 @@ export default class Convert extends React.Component {
           <h2>Convert SVG to GeoJSON</h2>
         </div>
         <h3 className="convert-step-title">Step 1: Upload a file</h3> 
+        <p className="convert-instructions">Before uploading, make sure to run <span className="code">Object -> Path -> Clean-up</span> in Illustrator, in order to avoid rendering bugs.</p>
         <Dropzone onDrop={this.uploadSVG} multiple={false}>
           {({getRootProps, getInputProps}) => (
             <div className="convert-dropzone" {...getRootProps()}>
