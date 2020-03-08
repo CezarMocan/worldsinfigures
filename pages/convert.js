@@ -21,7 +21,6 @@ export default class Convert extends React.Component {
   uploadSVG = (files) => {
     const file = files[0]
     const reader = new FileReader()
-    console.log('file is: ', file)
     reader.addEventListener("load", () => {
       this._svgContainer.innerHTML = reader.result
       this.setState({ 

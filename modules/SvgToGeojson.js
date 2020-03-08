@@ -179,17 +179,18 @@ export const svgToGeoJson = (bounds, svgNode, complexity = 5, attributes = [], m
               properties[attr] = value;
       });
 
+    //   let isLineString = elem.tagName === 'polyline'
+        let isLineString = true
+
       geoJson.features.push({
           type: 'Feature',
           properties: properties,
           geometry: {
-              type: (elem.tagName === 'polyline') ? 'LineString' : 'Polygon',
-              coordinates: (elem.tagName === 'polyline') ? mappedCoords : [mappedCoords],
+              type: isLineString ? 'LineString' : 'Polygon',
+              coordinates: isLineString ? mappedCoords : [mappedCoords],
           },
       });
   });
-
-  // console.log('geoJson: ', geoJson)
 
   return geoJson;
 }

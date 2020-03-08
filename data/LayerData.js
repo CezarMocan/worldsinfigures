@@ -122,6 +122,19 @@ export const defaultLayers = {
         },
         duplicateHemispheres: true
     },
+    Gy0lx8IQ8: { // You can replace this ID with something legible, as long as it's different from all others in the file.
+      visible: false,
+      type: layerTypes.VECTOR,
+      url: '/static/geo/michele-bottom-edge-1.svg.geojson',
+      displayName: 'michele-bottom-edge-1', // Or however you want to see it in the layer list.
+      style: {
+       lineWidth: 2,
+       color: 'rgba(255, 255, 255, 1)',
+       fillMode: false,
+       dashed: false
+      },
+      duplicateHemispheres: false
+     }
 }
 
 export const propertiesExcludedFromExport = ['jsonToGeojsonFn', 'geojsonObject', 'imageObject']
