@@ -4,6 +4,7 @@ Code taken and adapted from here: https://github.com/davecranwell/svg-to-geojson
 
 import { applyPolyfill } from '../modules/PathDataPolyfill'
 import { scaleLinear } from 'd3-scale'
+import { projectionsList, projectionsMap } from '../modules/Projections'
 
 export const reducePathSegCurveComplexity = (pathSegList = [], complexity = 5) => {
   const newSegs = [];
@@ -113,7 +114,7 @@ export const getSVGDimensions = (svgNode) => {
 * @param  {DOM Node} svgNode
 * @return {GeoJson Object}
 */
-export const svgToGeoJson = (bounds, svgNode, complexity = 5, attributes = [], multiplier = 1) => {
+export const svgToGeoJson = (bounds, svgNode, projectionId, complexity = 5, attributes = [], multiplier = 1) => {
   applyPolyfill()
   const geoJson = {
       type: 'FeatureCollection',
@@ -126,6 +127,9 @@ export const svgToGeoJson = (bounds, svgNode, complexity = 5, attributes = [], m
 
   const mapX = scaleLinear().range([parseFloat(sw[1]), parseFloat(ne[1])]);
   const mapY = scaleLinear().range([parseFloat(ne[0]), parseFloat(sw[0])]);
+  // const mapX = scaleLinear().range([-10, 10]);
+  // const mapY = scaleLinear().range([-10, 10]);
+
   const svgDims = getSVGDimensions(svgNode);
 
   // Limit the elements we're interested in. We don't want 'defs' or 'g' for example
@@ -163,12 +167,17 @@ export const svgToGeoJson = (bounds, svgNode, complexity = 5, attributes = [], m
           return [pathitem.values[0], pathitem.values[1]];
       });
 
+      const projection = projectionsMap[projectionId].fn()
+
       coords.forEach((coord) => {          
-          // Map points onto d3 scale
-          mappedCoords.push([
-              mapX(coord[0]) * multiplier,
-              mapY(coord[1]) * multiplier,
-          ]);
+          coord[0] = mapX(coord[0])
+          coord[1] = mapY(coord[1])
+          const newCoords = projection.invert(coord)
+          if (newCoords[0] < -180) newCoords[0] = -180
+          if (newCoords[0] > 180) newCoords[0] = 180
+          if (newCoords[1] < -90) newCoords[1] = -90
+          if (newCoords[1] > 90) newCoords[1] = 90
+          mappedCoords.push(newCoords);
       });
 
       var properties = {};
