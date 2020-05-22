@@ -4,6 +4,9 @@ const sleep = (s) => new Promise((res, rej) => setTimeout(res, s * 1000))
 
 const MainContext = React.createContext()
 
+export const PROJECTION_ATTRIBUTES = 'projectionAttributes'
+export const RENDER_OPTIONS = 'renderOptions'
+
 export default class MainContextProvider extends React.Component {
     state = {
       action: this,
@@ -16,15 +19,24 @@ export default class MainContextProvider extends React.Component {
         translateX: 50,
         translateY: 50,
         projection: 'geoEquirectangular',
+      },
+
+      renderOptions: {
+        clipToEarthBounds: false,
+        tileVectors: false,
       }
     }    
 
-    updateProjectionAttributes(newAttributes) {
-      let projectionAttributes = { ...this.state.projectionAttributes }
+    updateStateObject = (itemName, newAttributes) => {
+      let attributes = { ...this.state[itemName]}
       for (let k in newAttributes) {
-        currAttributes[k] = newAttributes[k]
+        attributes[k] = newAttributes[k]
       }
-      this.setState(projectionAttributes)
+      this.setState({ [itemName]: { ...attributes } })
+    }
+
+    updateStateItem = (itemName, newValue) => {
+      this.setState({ [itemName]: newValue })
     }
 
     render() {

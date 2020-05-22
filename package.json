@@ -28,6 +28,7 @@
     "d3-geo": "^1.11.6",
     "d3-geo-projection": "^2.7.0",
     "d3-scale": "^3.2.1",
+    "deep-diff": "^1.0.2",
     "fetch": "^1.1.0",
     "imagetracerjs": "^1.2.5",
     "jquery": "^3.4.1",

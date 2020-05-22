@@ -2,6 +2,7 @@ import React from 'react'
 import Style from '../static/styles/main.less'
 import * as d3 from 'd3'
 import Dropzone from 'react-dropzone'
+import DeepDiff from 'deep-diff'
 import MenuItem from '@material-ui/core/MenuItem'
 import FormControl from '@material-ui/core/FormControl'
 import FormGroup from '@material-ui/core/FormGroup'
@@ -46,15 +47,6 @@ class Main extends React.PureComponent {
     constructor(props) {
         super(props)
         this.state = {
-            scale: 100,
-            rotateX: 0,
-            rotateY: 0,
-            rotateZ: 0,
-            translateX: 50,
-            translateY: 50,
-            projection: 'geoEquirectangular',
-            clipToEarthBounds: false,
-            tileVectors: false,
             isCanvasResizing: RESIZING.NO,
             canvasDisplayWidth: CANVAS_WIDTH,
             canvasDisplayHeight: CANVAS_HEIGHT,
@@ -134,8 +126,8 @@ class Main extends React.PureComponent {
         this.canvasContext.save()
 
         // Clip to earth sphere bounds, if the option is active
-        const { clipToEarthBounds } = this.state
-        if (clipToEarthBounds) {
+        const { renderOptions } = this.props
+        if (renderOptions.clipToEarthBounds) {
             const proj = this.projections.find(p => p.offsetX == 0 && p.offsetY == 0)
             const clipGenerator = d3.geoPath().projection(proj.p).context(this.canvasContext)
             this.canvasContext.beginPath()
@@ -187,7 +179,9 @@ class Main extends React.PureComponent {
         })
     }
     getProjectionFromState(offsetXFactor, offsetYFactor) {
-        let { scale, rotateX, rotateY, rotateZ, translateX, translateY, projection } = this.state
+        let { projectionAttributes } = this.props
+        let { scale, rotateX, rotateY, rotateZ, translateX, translateY, projection } = projectionAttributes
+        // let { scale, rotateX, rotateY, rotateZ, translateX, translateY, projection } = this.state
         translateX += (this.canvasTranslate.dx || 0)
         translateY += (this.canvasTranslate.dy || 0)
         const currentProjection = projectionsMap[projection]
@@ -210,8 +204,8 @@ class Main extends React.PureComponent {
         this.projections = []
         let minX = 0, maxX = 0, minY = 0, maxY = 0        
         
-        const { tileVectors } = this.state
-        if (tileVectors) {
+        const { renderOptions } = this.props
+        if (renderOptions.tileVectors) {
             minX = minY = -1
             maxX = maxY = 1
         }
@@ -231,13 +225,20 @@ class Main extends React.PureComponent {
         this.updateProjection()
     }
     componentDidUpdate(oldProps, oldState) {
-        const renderRelatedState = ['scale', 'rotateX', 'rotateY', 'rotateZ', 'translateX', 
-            'translateY', 'isCanvasResizing', 'projection', 'clipToEarthBounds', 'tileVectors',
-            'layers']
+        const renderRelatedState = ['isCanvasResizing', 'layers']
+        const renderRelatedProps = ['projectionAttributes', 'renderOptions']
 
-        let needsReRender = renderRelatedState.reduce((acc, p) => {
-            return (acc || (this.state[p] != oldState[p]))
+        let needsReRenderState = renderRelatedState.reduce((acc, p) => {
+            let different = !!!(DeepDiff(this.state[p], oldState[p]))
+            return (acc || different)
         }, false)
+
+        let needsReRenderProps = renderRelatedProps.reduce((acc, p) => {
+            let different = !!!(DeepDiff(this.props[p], oldProps[p]))
+            return (acc || different)
+        }, false)
+
+        let needsReRender = (needsReRenderState || needsReRenderProps)
 
         if (needsReRender) {
             setTimeout(() => {
@@ -251,7 +252,12 @@ class Main extends React.PureComponent {
     // Handling updates to right-side panel options
 
     onProjectionSelectionUpdate = (event) => {
-        this.setState({ projection: event.target.value })
+        const { updateStateObject } = this.props
+        updateStateObject('projectionAttributes', { projection: event.target.value })
+    }
+    onSliderProjectionAttributeUpdate = sliderName => newValue => {
+        const { updateStateObject } = this.props
+        updateStateObject('projectionAttributes', { [sliderName]: newValue })
     }
     onSliderUpdate = sliderName => newValue => {
         this.setState({ [sliderName]: newValue })
@@ -283,8 +289,9 @@ class Main extends React.PureComponent {
             }
         })
     }
-    onCheckboxUpdate = optionName => event => {
-        this.setState({ [optionName]: event.target.checked })
+    onCheckboxRenderOptionsUpdate = optionName => event => {
+      const { updateStateObject } = this.props
+      updateStateObject('renderOptions', { [optionName]: event.target.checked })
     }
     onDownloadOptionsUpdate = optionName => event => {
         this.setState({
@@ -370,13 +377,15 @@ class Main extends React.PureComponent {
     onCanvasMouseUp = (evt) => {
         this.isCanvasTouching = false
         this.lastCanvasTouch = { x: evt.clientX, y: evt.clientY }
-        this.setState({
-            translateX: this.state.translateX + this.canvasTranslate.dx,
-            translateY: this.state.translateY + this.canvasTranslate.dy,
-        }, () => {
-            this._canvas.style.cursor = 'grab'
-            this.canvasTranslate = { dx: 0, dy: 0 }
-        })
+        const { projectionAttributes, updateStateObject } = this.props
+        updateStateObject(
+          'projectionAttributes',
+          { 
+            translateX: projectionAttributes.translateX + this.canvasTranslate.dx,
+            translateY: projectionAttributes.translateY + this.canvasTranslate.dy 
+          })
+        this._canvas.style.cursor = 'grab'
+        this.canvasTranslate = { dx: 0, dy: 0 }
     }
 
 
@@ -439,8 +448,12 @@ class Main extends React.PureComponent {
         })
     }
     render() {
-        const { scale, rotateX, rotateY, rotateZ, translateX, translateY, projection } = this.state
-        const { clipToEarthBounds, tileVectors, imageChanged } = this.state
+        const { projectionAttributes, renderOptions } = this.props
+        
+        const { scale, rotateX, rotateY, rotateZ, translateX, translateY, projection } = projectionAttributes
+        const { clipToEarthBounds, tileVectors } = renderOptions
+
+        const { imageChanged } = this.state
         const { layers } = this.state
         const { canvasDisplayHeight, canvasDisplayWidth } = this.state
         const { downloadOptions } = this.state
@@ -521,23 +534,23 @@ class Main extends React.PureComponent {
                                             </div>
                                             <h1> Parameters </h1>
                                             <div className="controls sliders">
-                                                <SliderWithInput label="Scale" min={3} max={500} initialValue={scale} onValueChange={this.onSliderUpdate('scale')}/>
-                                                <SliderWithInput label="X Rotation" min={0} max={360} step={2.5} initialValue={rotateX} onValueChange={this.onSliderUpdate('rotateX')}/>
-                                                <SliderWithInput label="Y Rotation" min={0} max={360} step={2.5} initialValue={rotateY} onValueChange={this.onSliderUpdate('rotateY')}/>
-                                                <SliderWithInput label="Z Rotation" min={0} max={360} step={2.5} initialValue={rotateZ} onValueChange={this.onSliderUpdate('rotateZ')}/>
-                                                <SliderWithInput label="X Offset" min={0} max={200} initialValue={translateX} onValueChange={this.onSliderUpdate('translateX')}/>
-                                                <SliderWithInput label="Y Offset" min={0} max={200} initialValue={translateY} onValueChange={this.onSliderUpdate('translateY')}/>
+                                                <SliderWithInput label="Scale" min={3} max={500} initialValue={scale} onValueChange={this.onSliderProjectionAttributeUpdate('scale')}/>
+                                                <SliderWithInput label="X Rotation" min={0} max={360} step={2.5} initialValue={rotateX} onValueChange={this.onSliderProjectionAttributeUpdate('rotateX')}/>
+                                                <SliderWithInput label="Y Rotation" min={0} max={360} step={2.5} initialValue={rotateY} onValueChange={this.onSliderProjectionAttributeUpdate('rotateY')}/>
+                                                <SliderWithInput label="Z Rotation" min={0} max={360} step={2.5} initialValue={rotateZ} onValueChange={this.onSliderProjectionAttributeUpdate('rotateZ')}/>
+                                                <SliderWithInput label="X Offset" min={0} max={200} initialValue={translateX} onValueChange={this.onSliderProjectionAttributeUpdate('translateX')}/>
+                                                <SliderWithInput label="Y Offset" min={0} max={200} initialValue={translateY} onValueChange={this.onSliderProjectionAttributeUpdate('translateY')}/>
                                             </div>
 
                                             <h1> Rendering </h1>
                                             <div className="controls rendering">
                                                 <FormGroup row>
                                                     <FormControlLabel
-                                                        control={ <Checkbox color="default" checked={clipToEarthBounds} onChange={this.onCheckboxUpdate('clipToEarthBounds')} /> }
+                                                        control={ <Checkbox color="default" checked={clipToEarthBounds} onChange={this.onCheckboxRenderOptionsUpdate('clipToEarthBounds')} /> }
                                                         label="Clipping"
                                                     />        
                                                     <FormControlLabel
-                                                        control={ <Checkbox color="primary" checked={tileVectors} onChange={this.onCheckboxUpdate('tileVectors')} /> }
+                                                        control={ <Checkbox color="primary" checked={tileVectors} onChange={this.onCheckboxRenderOptionsUpdate('tileVectors')} /> }
                                                         label="Vector Tiling (experimental)"
                                                     />
                                                 </FormGroup>
@@ -613,7 +626,8 @@ class Main extends React.PureComponent {
 export default withMainContext((context, props) => ({
     // Properties
     projectionAttributes: context.projectionAttributes,
+    renderOptions: context.renderOptions,
 
     // Actions
-    updateProjectionAttributes: context.action.updateProjectionAttributes,
+    updateStateObject: context.action.updateStateObject,
 }))(Main)
