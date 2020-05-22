@@ -3,26 +3,16 @@ import Style from '../static/styles/main.less'
 import * as d3 from 'd3'
 import Dropzone from 'react-dropzone'
 import DeepDiff from 'deep-diff'
-import MenuItem from '@material-ui/core/MenuItem'
-import FormControl from '@material-ui/core/FormControl'
-import FormGroup from '@material-ui/core/FormGroup'
-import FormControlLabel from '@material-ui/core/FormControlLabel'
-import Select from '@material-ui/core/Select'
-import Button from '@material-ui/core/Button'
-import Checkbox from '@material-ui/core/Checkbox'
 import { MuiThemeProvider, createMuiTheme } from '@material-ui/core/styles';  
 import { withMainContext } from '../context/MainContext'
 import shortid from 'shortid'
 import cloneDeep from 'clone-deep'
 import * as EventsHelper from '../modules/MouseEventsHelper'
 import { projectionsList, projectionsMap } from '../modules/Projections'
-import { defaultLayers, layerTypes, propertiesExcludedFromExport } from '../data/LayerData'
-import { getImageData, projectImageData, drawGeoJsonCanvas, drawGeoJsonSvg } from '../modules/RenderHelper'
+import { layerTypes } from '../data/LayerData'
+import { getImageData, projectImageData, drawGeoJsonCanvas, drawGeoJsonSvg } from './Renderer/RenderHelper'
 import { createAndDownloadImage, createAndDownloadSvg, createAndDownloadText } from '../modules/DownloadHelper'
-import { duplicateOnHemispheres } from '../modules/GeoJsonHelper'
-import SliderWithInput from '../components/SliderWithInput'
-import ProjectionItem from '../components/ProjectionItem'
-import LayerItem from '../components/LayerItem'
+import ControlPanel from '../components/ControlPanel'
 
 const theme = createMuiTheme({
     typography: { 
@@ -45,52 +35,20 @@ const BORDER_HOVER_THRESHOLD = 10
 
 class Main extends React.PureComponent {
     constructor(props) {
-        super(props)
-        this.state = {
-            isCanvasResizing: RESIZING.NO,
-            canvasDisplayWidth: CANVAS_WIDTH,
-            canvasDisplayHeight: CANVAS_HEIGHT,
-            layers: { ...defaultLayers  },
-            downloadOptions: {
-                png: true,
-                svg: true,
-                config: true
-            },
-            imageChanged: false
-        }
+      super(props)
+      this.state = {
+        isCanvasResizing: RESIZING.NO,
+        canvasDisplayWidth: CANVAS_WIDTH,
+        canvasDisplayHeight: CANVAS_HEIGHT,
+        imageChanged: false
+      }
 
-        this.lastWindowTouch = { x: 0, y: 0 }
-        this.isCanvasTouching = false
-        this.lastCanvasTouch = { x: 0, y: 0 }
-        this.canvasTranslate = { dx: 0, dy: 0 }
-        this.canvasTouchThrottleTime = 0
-
-        this.loadLayers()
+      this.lastWindowTouch = { x: 0, y: 0 }
+      this.isCanvasTouching = false
+      this.lastCanvasTouch = { x: 0, y: 0 }
+      this.canvasTranslate = { dx: 0, dy: 0 }
+      this.canvasTouchThrottleTime = 0
     }
-
-    // Loading raster and vector data
-    async loadLayers() {
-        const loadedLayers = cloneDeep(this.state.layers)
-
-        for (let key of Object.keys(loadedLayers)) {
-            const l = loadedLayers[key]
-            if (l.type === layerTypes.VECTOR) {
-                if (l.generatorFunction) {
-                    l.geojsonObject = l.generatorFunction()
-                } else {
-                    const loadedJson = await d3.json(l.url)
-                    l.geojsonObject = l.jsonToGeojsonFn ? l.jsonToGeojsonFn(loadedJson) : loadedJson
-                }
-                if (l.duplicateHemispheres)
-                    l.geojsonObject = duplicateOnHemispheres(l.geojsonObject)
-            } else if (l.type === layerTypes.RASTER) {
-
-            }
-        }
-
-        this.setState({ layers: loadedLayers })
-    }
-
 
     // Callbacks for when DOM objects are created
     onImageRef = (i) => {
@@ -109,230 +67,169 @@ class Main extends React.PureComponent {
     get canvasWidth() { return this._canvas.width }
     get canvasHeight() { return this._canvas.height }
 
+    updateRasterData() {
+      this.rasterData = getImageData(this._image, this.secondaryCanvasContext, this.canvasWidth, this.canvasHeight)
+    }
+
+    renderLayersToCanvas(targetCanvas, bufferCanvas, projection, allProjections, rasterData, layers, renderOptions) {
+      const canvasWidth = targetCanvas.width, canvasHeight = targetCanvas.height      
+      const canvasContext = targetCanvas.getContext('2d')
+      const bufferContext = bufferCanvas.getContext('2d')
+
+      // Clear canvas
+      canvasContext.clearRect(0, 0, canvasWidth, canvasHeight);
+      canvasContext.save()
+
+      // Clip to earth bounds
+      if (renderOptions.clipToEarthBounds) {
+        const clipGenerator = d3.geoPath().projection(projection).context(canvasContext)
+        canvasContext.beginPath()
+        clipGenerator({type: "Sphere"}) 
+        canvasContext.clip()    
+      }
+
+      // Draw raster image
+      if (layers.mainImage.visible) {
+          const projectedImageData = projectImageData(rasterData, projection, canvasContext, canvasWidth, canvasHeight)            
+          bufferContext.clearRect(0, 0, canvasWidth, canvasHeight);
+          bufferContext.putImageData(projectedImageData, 0, 0);    
+          canvasContext.drawImage(bufferCanvas, 0, 0)
+      }
+
+      // Draw vector layers on top of raster image
+      Object.values(layers).forEach(l => {
+        if (l.type != layerTypes.VECTOR || !l.visible) return
+        this.drawGeoJsonTiledCanvas(allProjections, l.geojsonObject, canvasContext, l.style)
+      })
+
+      canvasContext.restore()
+    }
+
+    renderLayersToSVG(svgId, layers, allProjections) {
+      // Clear SVG
+      d3.select(`#${svgId}`).selectAll('*').remove()
+
+      Object.values(layers).forEach(l => {
+        if (l.type != layerTypes.VECTOR) return
+        if (!l.visible) return
+        this.drawGeoJsonTiledSVG(allProjections, l.geojsonObject, svgId, l.style)
+      })
+    }
+    drawGeoJsonTiledCanvas(projections, geoJson, context, drawingOptions) {
+        projections.forEach(projection => {
+          const { p, offsetX, offsetY } = projection
+          const newGeoJson = cloneDeep(geoJson)
+          const canvasGenerator = d3.geoPath().projection(p)
+          drawGeoJsonCanvas(newGeoJson, canvasGenerator, context, drawingOptions)
+        })
+    }
+    drawGeoJsonTiledSVG(projections, geoJson, svgId, drawingOptions) {
+      projections.forEach(projection => {
+        const { p, offsetX, offsetY } = projection
+        const newGeoJson = cloneDeep(geoJson)
+        const svgGenerator = d3.geoPath().projection(p)
+        const { svgId } = svgOptions
+        drawGeoJsonSvg(newGeoJson, svgGenerator, svgId, drawingOptions)
+      })
+    }
 
     // Layer rendering
     renderMap(withCleanSurface = false) {
-        // Get image pixels if the image was updated or if we're just getting started
-        if (!this.sourceData || withCleanSurface) {
-            this.sourceData = getImageData(this._image, this.secondaryCanvasContext, this.canvasWidth, this.canvasHeight)
-        }
-
-        // Clear canvas
-        this.canvasContext.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
-
-        // Clear SVG
-        d3.select(`#${SVG_ID}`).selectAll('*').remove()
-
-        this.canvasContext.save()
-
-        // Clip to earth sphere bounds, if the option is active
-        const { renderOptions } = this.props
-        if (renderOptions.clipToEarthBounds) {
-            const proj = this.projections.find(p => p.offsetX == 0 && p.offsetY == 0)
-            const clipGenerator = d3.geoPath().projection(proj.p).context(this.canvasContext)
-            this.canvasContext.beginPath()
-            clipGenerator({type: "Sphere"}) 
-            this.canvasContext.clip()    
-        }
-
-        // Draw raster image
-        if (this.state.layers.mainImage.visible) {
-            const projectedImageData = projectImageData(this.sourceData, this.projection, this.canvasContext, this.canvasWidth, this.canvasHeight)            
-            this.secondaryCanvasContext.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
-            this.secondaryCanvasContext.putImageData(projectedImageData, 0, 0);    
-            this.canvasContext.drawImage(this._canvas2, 0, 0)
-        }
-
-        // Draw vector layers on top of raster image
-        const { layers } = this.state
-        Object.values(layers).forEach(l => {
-            if (l.type != layerTypes.VECTOR) return
-            if (!l.visible) return
-            this.drawGeoJsonTiled(
-                this.projections, 
-                l.geojsonObject,
-                { rendersCanvas: true, context: this.canvasContext },
-                { rendersSvg: true, svgId: SVG_ID },
-                l.style
-            )
-        })
-
-        this.canvasContext.restore()
+      if (!this.rasterData || withCleanSurface) this.updateRasterData()
+      const { layers, renderOptions } = this.props
+      this.renderLayersToCanvas(this._canvas, this._canvas2, this.projection, this.projections, this.rasterData, layers, renderOptions)
+      this.renderLayersToSVG(SVG_ID, layers, this.projections)
     }
-    drawGeoJsonTiled(projections, geoJson, canvasOptions, svgOptions, drawingOptions) {
-        projections.forEach(projection => {
-            const { p, offsetX, offsetY } = projection
-
-            const newGeoJson = cloneDeep(geoJson)
-
-            if (canvasOptions.rendersCanvas) {
-                const canvasGenerator = d3.geoPath().projection(p)
-                const { context } = canvasOptions
-                drawGeoJsonCanvas(newGeoJson, canvasGenerator, context, drawingOptions)
-            }
-
-            if (svgOptions.rendersSvg) {
-                const svgGenerator = d3.geoPath().projection(p)
-                const { svgId } = svgOptions
-                drawGeoJsonSvg(newGeoJson, svgGenerator, svgId, drawingOptions)
-            }
-        })
-    }
-    getProjectionFromState(offsetXFactor, offsetYFactor) {
-        let { projectionAttributes } = this.props
+  
+    getProjectionFromState(projectionAttributes, canvasAttributes, offsetFactor) {
         let { scale, rotateX, rotateY, rotateZ, translateX, translateY, projection } = projectionAttributes
-        // let { scale, rotateX, rotateY, rotateZ, translateX, translateY, projection } = this.state
-        translateX += (this.canvasTranslate.dx || 0)
-        translateY += (this.canvasTranslate.dy || 0)
-        const currentProjection = projectionsMap[projection]
-        let proj = currentProjection.fn()
+        const { canvasWidth, canvasHeight, canvasTX, canvasTY } = canvasAttributes
+        const tX = translateX + (canvasTX || 0)
+        const tY = translateY + (canvasTY || 0)
+        const offsetXValue = offsetFactor.x * (2 * Math.PI * scale)
+        const offsetYValue = offsetFactor.y * (Math.PI * scale)
+
+        let proj = projectionsMap[projection].fn()
 
         if (proj.scale) proj = proj.scale(scale)
-
-        const offsetXValue = offsetXFactor * (2 * Math.PI * scale)
-        const offsetYValue = offsetYFactor * (Math.PI * scale)
-        if (proj.translate) proj = proj.translate([offsetXValue + this.canvasWidth / 2 + this.canvasWidth * (translateX - 50) / 50, offsetYValue + this.canvasHeight / 2 + this.canvasHeight * (translateY - 50) / 50])
-
+        if (proj.translate) proj = proj.translate([offsetXValue + canvasWidth / 2 + canvasWidth * (tX - 50) / 50, offsetYValue + canvasHeight / 2 + canvasHeight * (tY - 50) / 50])
         if (proj.rotate) proj = proj.rotate([rotateX, rotateY, rotateZ])
-
         if (proj.precision) proj = proj.precision(0.01)
 
         return proj
     }
     updateProjection() {
-        this.projection = this.getProjectionFromState(0, 0)
+        let { projectionAttributes } = this.props
+        let canvasAttributes = {
+          canvasWidth: this.canvasWidth,
+          canvasHeight: this.canvasHeight,
+          canvasTX: this.canvasTranslate.dx,
+          canvasTY: this.canvasTranslate.dy
+        }
+
+        this.projection = this.getProjectionFromState(projectionAttributes, canvasAttributes, { x: 0, y: 0 })
         this.projections = []
         let minX = 0, maxX = 0, minY = 0, maxY = 0        
         
         const { renderOptions } = this.props
         if (renderOptions.tileVectors) {
-            minX = minY = -1
-            maxX = maxY = 1
+          minX = minY = -1
+          maxX = maxY = 1
         }
 
         for (let i = minX; i <= maxX; i++) {
-            for (let j = minY; j <= maxY; j++) {
-                let projection = this.getProjectionFromState(i, j)
-                this.projections.push({
-                    offsetX: i,
-                    offsetY: j,
-                    p: projection
-                })
-            }
+          for (let j = minY; j <= maxY; j++) {
+            let projection = this.getProjectionFromState(projectionAttributes, canvasAttributes, { x: i, y: j })
+            this.projections.push({
+              offsetX: i,
+              offsetY: j,
+              p: projection
+            })
+          }
         }
     }
     componentDidMount() {
-        this.updateProjection()
+        const { loadLayers } = this.props
+        loadLayers()
     }
     componentDidUpdate(oldProps, oldState) {
-        const renderRelatedState = ['isCanvasResizing', 'layers']
-        const renderRelatedProps = ['projectionAttributes', 'renderOptions']
+      if (!this.props.ready) return
+      const renderRelatedState = ['isCanvasResizing', 'layers']
+      const renderRelatedProps = ['projectionAttributes', 'renderOptions', 'layers', 'ready']
 
-        let needsReRenderState = renderRelatedState.reduce((acc, p) => {
-            let different = !!!(DeepDiff(this.state[p], oldState[p]))
-            return (acc || different)
-        }, false)
+      let needsReRenderState = renderRelatedState.reduce((acc, p) => {
+          let different = !!!(DeepDiff(this.state[p], oldState[p]))
+          return (acc || different)
+      }, false)
 
-        let needsReRenderProps = renderRelatedProps.reduce((acc, p) => {
-            let different = !!!(DeepDiff(this.props[p], oldProps[p]))
-            return (acc || different)
-        }, false)
+      let needsReRenderProps = renderRelatedProps.reduce((acc, p) => {
+          let different = !!!(DeepDiff(this.props[p], oldProps[p]))
+          return (acc || different)
+      }, false)
 
-        let needsReRender = (needsReRenderState || needsReRenderProps)
+      let needsReRender = (needsReRenderState || needsReRenderProps)
 
-        if (needsReRender) {
-            setTimeout(() => {
-                this.updateProjection()
-                const withCleanSurface = (this.state.isCanvasResizing != oldState.isCanvasResizing)
-                this.renderMap(withCleanSurface)    
-            }, 0)        
-        }
+      if (needsReRender) {
+          setTimeout(() => {
+              this.updateProjection()
+              const withCleanSurface = (this.state.isCanvasResizing != oldState.isCanvasResizing)
+              this.renderMap(withCleanSurface)    
+          }, 0)        
+      }
     }
 
-    // Handling updates to right-side panel options
-
-    onProjectionSelectionUpdate = (event) => {
-        const { updateStateObject } = this.props
-        updateStateObject('projectionAttributes', { projection: event.target.value })
-    }
-    onSliderProjectionAttributeUpdate = sliderName => newValue => {
-        const { updateStateObject } = this.props
-        updateStateObject('projectionAttributes', { [sliderName]: newValue })
-    }
-    onSliderUpdate = sliderName => newValue => {
-        this.setState({ [sliderName]: newValue })
-    }
-    onLayerToggleUpdate = layerName => newVisible => {
-        this.setState({
-            ...this.state,
-            layers: {
-                ...this.state.layers,
-                [layerName]: {
-                    ...this.state.layers[layerName],
-                    visible: newVisible
-                }
-            }
-        })
-    }
-    onLayerColorUpdate = layerName => newColor => {
-        this.setState({
-            ...this.state,
-            layers: {
-                ...this.state.layers,
-                [layerName]: {
-                    ...this.state.layers[layerName],
-                    style: {
-                        ...this.state.layers[layerName].style,
-                        color: newColor
-                    }
-                }
-            }
-        })
-    }
-    onCheckboxRenderOptionsUpdate = optionName => event => {
-      const { updateStateObject } = this.props
-      updateStateObject('renderOptions', { [optionName]: event.target.checked })
-    }
-    onDownloadOptionsUpdate = optionName => event => {
-        this.setState({
-            ...this.state,
-            downloadOptions: {
-                ...this.state.downloadOptions,
-                [optionName]: event.target.checked
-            }
-        })
-    }
     // Image downloading
-
-    parseStateForDownload(state) {
-        const layersSimplified = Object.keys(state.layers).reduce((acc, k) => {
-            const layer = state.layers[k]
-            acc[k] = {}
-            Object.keys(layer).forEach(lk => {
-                if (propertiesExcludedFromExport.indexOf(lk) != -1) return
-                acc[k][lk] = layer[lk]
-            })
-            return acc
-        }, {})
-
-        const stateSimplified = {
-            ...state,
-            layers: layersSimplified
-        }
-
-        return JSON.stringify(stateSimplified, null, 4)
-    }
-    onDownloadClick = () => {
+    onDownload = () => {
         const uid = shortid()
-        const projectionId = `${this.state.projection}-${uid}`
-        const { downloadOptions } = this.state
+        const { projectionAttributes, parseStateForDownload } = this.props
+        const projectionId = `${projectionAttributes.projection}-${uid}`
+        const { downloadOptions } = this.props
         if (downloadOptions.png) createAndDownloadImage(`${projectionId}.png`, this._canvas)
         if (downloadOptions.svg) createAndDownloadSvg(`${projectionId}.svg`, this._svg)
-        if (downloadOptions.config) createAndDownloadText(`${projectionId}.txt`, this.parseStateForDownload(this.state))
+        if (downloadOptions.config) createAndDownloadText(`${projectionId}.txt`, parseStateForDownload())
     }
 
     // Callback for a new image layer (when an image is dropped)
-
     onNewFile = (files) => {
         this.setState({ imageChanged: true }, () => {
             const file = files[0]
@@ -346,7 +243,6 @@ class Main extends React.PureComponent {
 
 
     // Mouse events on top of the canvas: dragging the image
-
     onCanvasMouseDown = (evt) => {
         if (EventsHelper.eventOnLeftRightBorder(evt, this._canvas, BORDER_HOVER_THRESHOLD)) return
         if (EventsHelper.eventOnTopBottomBorder(evt, this._canvas, BORDER_HOVER_THRESHOLD)) return
@@ -447,16 +343,12 @@ class Main extends React.PureComponent {
             canvasDisplayHeight: this._canvas.height
         })
     }
-    render() {
-        const { projectionAttributes, renderOptions } = this.props
-        
-        const { scale, rotateX, rotateY, rotateZ, translateX, translateY, projection } = projectionAttributes
-        const { clipToEarthBounds, tileVectors } = renderOptions
-
+    render() {    
         const { imageChanged } = this.state
-        const { layers } = this.state
         const { canvasDisplayHeight, canvasDisplayWidth } = this.state
-        const { downloadOptions } = this.state
+        const { ready } = this.props
+
+        if (!ready) return null
 
         return (
             <MuiThemeProvider theme={theme}>
@@ -466,154 +358,57 @@ class Main extends React.PureComponent {
                     <Dropzone onDrop={this.onNewFile} multiple={false} noClick={true} noKeyboard={true}>
                         {({getRootProps, getInputProps}) => (
                             <section>
-                                <div className="header">
-                                
-                                </div>
-                                <div className="content">
-                                    <div className="all-screen-container">
-                                        <div className="all-rendering-container checkerboard-background">
-                                            <a href="http://www.kopimi.com/" target="__blank">                                        
-                                              <img className="kopimi-logo" src="static/images/kopimi.png"/>
-                                            </a>
-                                            { !imageChanged &&
-                                                <div className="canvas-instructions">
-                                                    Change the image by dragging and dropping a new one on top of the canvas.
-                                                </div>
-                                            }
-                                            <div className="canvas-container" {...getRootProps()}>
-                                                <div className="hidden-elements">
-                                                    <input {...getInputProps()} />
-                                                    <img ref={this.onImageRef} onLoad={this.onImageLoad} style={{display: 'none'}}/>
-                                                    <canvas width={CANVAS_WIDTH} height={CANVAS_HEIGHT} ref={this.onSecondaryCanvasRef} className="secondary-canvas"></canvas>
-                                                    <div id="svgContainer" className="svg-container">
-                                                        <svg
-                                                            ref={this.onSvgRef}
-                                                            id={SVG_ID}
-                                                            width={CANVAS_WIDTH}
-                                                            height={CANVAS_HEIGHT}
-                                                            version="1.1" 
-                                                            xmlns="http://www.w3.org/2000/svg" 
-                                                        >
-                                                        </svg>
-                                                    </div>
-                                                </div>
+                              <div className="header">
+                              
+                              </div>
+                              
+                              <div className="content">
+                                <div className="all-screen-container">
 
-                                                <div className="main-canvas-and-size-container">
-                                                    <div className="canvas-size-container">
-                                                        {canvasDisplayWidth} x {canvasDisplayHeight}
-                                                    </div>
-                                                    <canvas 
-                                                        width={CANVAS_WIDTH}
-                                                        height={CANVAS_HEIGHT}
-                                                        ref={this.onCanvasRef}
-                                                        className="main-canvas"
-                                                        onMouseDown={this.onCanvasMouseDown}
-                                                        onMouseUp={this.onCanvasMouseUp}
-                                                        onMouseMove={this.onCanvasMouseMove}                    
-                                                    ></canvas>
-                                                </div>
-                                            </div>
+                                  <div className="all-rendering-container checkerboard-background">
+                                    <a href="http://www.kopimi.com/" target="__blank">                                        
+                                      <img className="kopimi-logo" src="static/images/kopimi.png"/>
+                                    </a>
+                                    { !imageChanged &&
+                                      <div className="canvas-instructions">
+                                        Change the image by dragging and dropping a new one on top of the canvas.
+                                      </div>
+                                    }
+                                    <div className="canvas-container" {...getRootProps()}>
+                                      <div className="hidden-elements">
+                                        <input {...getInputProps()} />
+                                        <img ref={this.onImageRef} onLoad={this.onImageLoad} style={{display: 'none'}}/>
+                                        <canvas width={CANVAS_WIDTH} height={CANVAS_HEIGHT} ref={this.onSecondaryCanvasRef} className="secondary-canvas"></canvas>
+                                        <div id="svgContainer" className="svg-container">
+                                          <svg
+                                            ref={this.onSvgRef}
+                                            id={SVG_ID}
+                                            width={CANVAS_WIDTH}
+                                            height={CANVAS_HEIGHT}
+                                            version="1.1" 
+                                            xmlns="http://www.w3.org/2000/svg" >
+                                          </svg>
                                         </div>
+                                      </div>
 
-                                        <div className="all-controls-container">
-                                            <h1> Projection </h1>
-                                            <div className="controls projection">
-                                                <FormControl className="form-control projection-form">
-                                                    <Select
-                                                        value={projection}
-                                                        onChange={this.onProjectionSelectionUpdate}
-                                                    >
-                                                        { projectionsList.map(p => (
-                                                            <MenuItem key={p.id} value={p.id}>
-                                                                <ProjectionItem displayName={p.displayName} flagEmoji={p.flagEmoji} genderEmoji={p.genderEmoji} year={p.year}/>
-                                                            </MenuItem>
-                                                            )) 
-                                                        }
-                                                    </Select>
-                                                </FormControl>
-                                            </div>
-                                            <h1> Parameters </h1>
-                                            <div className="controls sliders">
-                                                <SliderWithInput label="Scale" min={3} max={500} initialValue={scale} onValueChange={this.onSliderProjectionAttributeUpdate('scale')}/>
-                                                <SliderWithInput label="X Rotation" min={0} max={360} step={2.5} initialValue={rotateX} onValueChange={this.onSliderProjectionAttributeUpdate('rotateX')}/>
-                                                <SliderWithInput label="Y Rotation" min={0} max={360} step={2.5} initialValue={rotateY} onValueChange={this.onSliderProjectionAttributeUpdate('rotateY')}/>
-                                                <SliderWithInput label="Z Rotation" min={0} max={360} step={2.5} initialValue={rotateZ} onValueChange={this.onSliderProjectionAttributeUpdate('rotateZ')}/>
-                                                <SliderWithInput label="X Offset" min={0} max={200} initialValue={translateX} onValueChange={this.onSliderProjectionAttributeUpdate('translateX')}/>
-                                                <SliderWithInput label="Y Offset" min={0} max={200} initialValue={translateY} onValueChange={this.onSliderProjectionAttributeUpdate('translateY')}/>
-                                            </div>
-
-                                            <h1> Rendering </h1>
-                                            <div className="controls rendering">
-                                                <FormGroup row>
-                                                    <FormControlLabel
-                                                        control={ <Checkbox color="default" checked={clipToEarthBounds} onChange={this.onCheckboxRenderOptionsUpdate('clipToEarthBounds')} /> }
-                                                        label="Clipping"
-                                                    />        
-                                                    <FormControlLabel
-                                                        control={ <Checkbox color="primary" checked={tileVectors} onChange={this.onCheckboxRenderOptionsUpdate('tileVectors')} /> }
-                                                        label="Vector Tiling (experimental)"
-                                                    />
-                                                </FormGroup>
-                                            </div>
-
-                                            <h1> Layers </h1>
-                                            <div className="controls checkboxes">
-                                                { Object.keys(layers).map(k => {
-                                                    const l = layers[k]
-                                                    return (
-                                                        <LayerItem
-                                                            key={`layer-${k}`}
-                                                            visible={l.visible}
-                                                            color={l.style && l.style.color}                                                            
-                                                            onVisibilityUpdate={this.onLayerToggleUpdate(k)}
-                                                            onColorChange={this.onLayerColorUpdate(k)}
-                                                            label={l.displayName}
-                                                        />
-                                                    )
-                                                })}
-
-                                            </div>
-
-                                            <h1> Export </h1>
-                                            <div className="controls download">
-                                                <div className="download-options">
-                                                    <FormGroup row>
-                                                        <FormControlLabel
-                                                            control={ <Checkbox color="default" checked={downloadOptions.png} onChange={this.onDownloadOptionsUpdate('png')} /> }
-                                                            label="PNG"
-                                                        />        
-                                                        <FormControlLabel
-                                                            control={ <Checkbox color="primary" checked={downloadOptions.svg} onChange={this.onDownloadOptionsUpdate('svg')} /> }
-                                                            label="SVG"
-                                                        />        
-                                                        <FormControlLabel
-                                                            control={ <Checkbox color="secondary" checked={downloadOptions.config} onChange={this.onDownloadOptionsUpdate('config')} /> }
-                                                            label="CONFIG"
-                                                        />        
-                                                    </FormGroup>
-                                                </div>
-
-                                                <div className="download-button">
-                                                    <a href="#" ref={(r) => {this._downloadButton = r}} onClick={this.onDownloadClick}>
-                                                        <Button variant="outlined">
-                                                            Download
-                                                        </Button>
-                                                    </a>
-                                                </div>
-                                            </div>
-
-                                            <h1> Tools </h1>
-                                            <div className="controls tools">
-                                                <a href="/convert" target="__blank">
-                                                    <Button variant="outlined">
-                                                        SVG to GeoJSON
-                                                    </Button>
-                                                </a>
-                                            </div>
-
-                                        </div>
+                                      <div className="main-canvas-and-size-container">
+                                        <div className="canvas-size-container"> {canvasDisplayWidth} x {canvasDisplayHeight} </div>
+                                        <canvas 
+                                          width={CANVAS_WIDTH}
+                                          height={CANVAS_HEIGHT}
+                                          ref={this.onCanvasRef}
+                                          className="main-canvas"
+                                          onMouseDown={this.onCanvasMouseDown}
+                                          onMouseUp={this.onCanvasMouseUp}
+                                          onMouseMove={this.onCanvasMouseMove}>
+                                        </canvas>
+                                      </div>
                                     </div>
+                                  </div>
+
+                                  <ControlPanel onDownload={this.onDownload}/>
                                 </div>
+                              </div>
                             </section>
                     )}
                     </Dropzone>
@@ -627,7 +422,12 @@ export default withMainContext((context, props) => ({
     // Properties
     projectionAttributes: context.projectionAttributes,
     renderOptions: context.renderOptions,
+    downloadOptions: context.downloadOptions,
+    layers: context.layers,
+    ready: context.ready,
 
     // Actions
+    loadLayers: context.action.loadLayers,
     updateStateObject: context.action.updateStateObject,
+    parseStateForDownload: context.action.parseStateForDownload
 }))(Main)
