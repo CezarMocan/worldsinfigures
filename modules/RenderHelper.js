@@ -1,3 +1,5 @@
+import * as d3 from 'd3'
+
 export const getImageData = (image, context, canvasWidth, canvasHeight) => {
     const dx = image.width
     const dy = image.height    
@@ -38,4 +40,33 @@ export const projectImageData = (sourceData, projection, context, canvasWidth, c
       }        
 
       return target
+}
+
+export const drawGeoJsonCanvas = (geoJson, geoGenerator, context, options) => {
+    const { lineWidth = 1, color = 'black', fillMode = false, dashed = false } = options
+
+    context.save()
+    context.lineWidth = lineWidth;
+    context.strokeStyle = color;
+    context.fillStyle = color;
+    if (dashed) context.setLineDash([2, 2])
+    context.beginPath()
+    geoGenerator.context(context)(geoJson)
+    if (fillMode)
+        context.fill()
+    else
+        context.stroke()
+    context.restore()
+}
+
+export const drawGeoJsonSvg = (geoJson, geoGenerator, svgId, options) => {
+    const { lineWidth = 1, color = 'black', fillMode = false, dashed = false } = options
+    const svg = d3.select(`#${svgId}`)
+    svg.append('path')
+        .datum(geoJson)
+        .attr("d", geoGenerator)
+        .attr("fill", fillMode ? color : "none")
+        .attr("stroke", fillMode ? "none" : color)
+        .attr("stroke-dasharray", dashed ? "2, 2" : "")
+        .attr("stroke-width", lineWidth)
 }

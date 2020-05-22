@@ -12,12 +12,14 @@
     "dat:create": "rm -rf dat/ && mkdir dat && cd dat/ && dat .",
     "dat:refreshBuild": "mv dat/.dat . && rm -rf dat/* && mv .dat dat/ && cp -r out/* dat/",
     "dat:sync": "cd dat/ && dat sync",
-    "deploy": "rm -rf out && npm run export && npm run dat:refreshBuild && npm run dat:sync"
+    "dat:watch": "pm2 stop all; pm2 delete all; pm2 start npm -- run dat:sync",
+    "deploy": "rm -rf out && npm run export && npm run dat:refreshBuild && npm run dat:watch"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
     "@material-ui/core": "^4.2.0",
+    "@material-ui/icons": "^4.5.1",
     "@turf/meta": "^6.0.2",
     "@zeit/next-less": "^1.0.1",
     "classnames": "^2.2.6",
@@ -25,15 +27,20 @@
     "d3": "^5.9.7",
     "d3-geo": "^1.11.6",
     "d3-geo-projection": "^2.7.0",
+    "d3-scale": "^3.2.1",
     "fetch": "^1.1.0",
     "imagetracerjs": "^1.2.5",
+    "jquery": "^3.4.1",
     "less": "^3.9.0",
     "next": "^9.0.2",
     "node-fetch-polyfill": "^2.0.6",
+    "path-data-polyfill": "^1.0.3",
     "png.js": "^0.2.1",
     "react": "^16.8.6",
+    "react-color": "^2.18.0",
     "react-dom": "^16.8.6",
     "react-dropzone": "^10.1.6",
+    "react-load-script": "0.0.6",
     "shortid": "^2.2.14",
     "topojson": "^3.0.2"
   }

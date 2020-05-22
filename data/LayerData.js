@@ -10,7 +10,6 @@ export const defaultLayers = {
     mainImage: {
         visible: true,
         type: layerTypes.RASTER,
-        imageObject: null,
         url: '/static/images/test.png',
         displayName: 'Image'
     },
@@ -27,10 +26,24 @@ export const defaultLayers = {
             dashed: true        
         }
     },
+    tissot: {
+        visible: false,
+        type: layerTypes.VECTOR,
+        url: '/static/geo/tissot.topojson',
+        jsonToGeojsonFn: (json) => topojson.feature(json, json.objects.tissot),
+        geojsonObject: null,
+        displayName: 'Tissot Indicatrices',
+        style: {
+            lineWidth: 0.5,
+            color: 'rgba(255, 230, 255, 0.2)',
+            fillMode: true,
+            dashed: false
+        } 
+    },
     worldMap: {
         visible: false,
         type: layerTypes.VECTOR,
-        url: '/static/misc/world-110m.json',
+        url: '/static/geo/world-110m.topojson',
         jsonToGeojsonFn: (json) => topojson.feature(json, json.objects.countries),
         geojsonObject: null,
         displayName: 'World Map',
@@ -44,7 +57,7 @@ export const defaultLayers = {
     submarineCables: {
         visible: false,
         type: layerTypes.VECTOR,
-        url: '/static/misc/cable-geo.json',
+        url: '/static/geo/cable-geo.geojson',
         geojsonObject: null,
         displayName: 'Submarine Cables',
         style: {
@@ -57,7 +70,7 @@ export const defaultLayers = {
     allRedLine: {
         visible: false,
         type: layerTypes.VECTOR,
-        url: '/static/misc/all-red-line-geo.json',
+        url: '/static/geo/all-red-line-geo.geojson',
         geojsonObject: null,
         displayName: 'All Red Line',
         style: {
@@ -67,26 +80,13 @@ export const defaultLayers = {
             dashed: false
         }
     },
-    gedyminHead: {
+    originalTwoGedymin: {
         visible: false,
         type: layerTypes.VECTOR,
-        url: '/static/misc/face-geo.json',
-        geojsonObject: null,
-        displayName: 'Gedymin Head',
-        style: {
-            lineWidth: 2,
-            color: 'rgba(64, 64, 255, 0.8)',
-            fillMode: false,
-            dashed: false
-        }
-    },
-    twoGedyminHeads: {
-        visible: false,
-        type: layerTypes.VECTOR,
-        url: '/static/misc/two-faces.topojson',
+        url: '/static/geo/two-faces.topojson',
         jsonToGeojsonFn: (json) => topojson.feature(json, json.objects.gedymin),
         geojsonObject: null,
-        displayName: 'Two Gedymin Heads',
+        displayName: '[ORIGINAL] 2 Gedymin Heads',
         style: {
             lineWidth: 2,
             color: 'rgba(255, 255, 64, 0.8)',
@@ -94,20 +94,47 @@ export const defaultLayers = {
             dashed: false
         }
     },
-    tissot: {
+    gedyminHead: {
         visible: false,
         type: layerTypes.VECTOR,
-        url: '/static/misc/tissot.topojson',
-        jsonToGeojsonFn: (json) => topojson.feature(json, json.objects.tissot),
+        url: '/static/geo/face-geo.geojson',
         geojsonObject: null,
-        displayName: 'Tissot Indicatrices',
+        displayName: 'Gedymin Head',
         style: {
-            lineWidth: 0.5,
-            color: 'rgba(255, 230, 255, 0.2)',
-            fillMode: true,
+            lineWidth: 2,
+            color: 'rgba(64, 64, 255, 0.8)',
+            fillMode: false,
             dashed: false
-        }        
-    }
+        },
+        duplicateHemispheres: false
+    },
+    duplicatedSingleGedyminHead: {
+        visible: false,
+        type: layerTypes.VECTOR,
+        url: '/static/geo/face-geo.geojson',
+        geojsonObject: null,
+        displayName: '[**NEW**] Duplicated single Gedymin Head',
+        style: {
+            lineWidth: 2,
+            color: 'rgba(255, 64, 255, 0.8)',
+            fillMode: false,
+            dashed: false
+        },
+        duplicateHemispheres: true
+    },
+    Gy0lx8IQ8: { // You can replace this ID with something legible, as long as it's different from all others in the file.
+      visible: false,
+      type: layerTypes.VECTOR,
+      url: '/static/geo/michele-bottom-edge-1.svg.geojson',
+      displayName: 'michele-bottom-edge-1', // Or however you want to see it in the layer list.
+      style: {
+       lineWidth: 2,
+       color: 'rgba(255, 255, 255, 1)',
+       fillMode: false,
+       dashed: false
+      },
+      duplicateHemispheres: false
+     }
 }
 
 export const propertiesExcludedFromExport = ['jsonToGeojsonFn', 'geojsonObject', 'imageObject']
