@@ -8,7 +8,7 @@ import { withMainContext, sleep } from '../context/MainContext'
 import shortid from 'shortid'
 import * as EventsHelper from '../modules/MouseEventsHelper'
 import { getImageData } from './Renderer/RenderHelper'
-import { createAndDownloadImage, createAndDownloadSvg, createAndDownloadText } from '../modules/DownloadHelper'
+import { createAndDownloadImage, createAndDownloadSvg, createAndDownloadText, Zipper } from '../modules/DownloadHelper'
 import ControlPanel from '../components/ControlPanel'
 import { renderLayersToCanvas, renderLayersToSVG } from './Renderer'
 
@@ -136,11 +136,15 @@ class Main extends React.PureComponent {
       console.log('this is: ', this)
       console.log(projAttr)
 
+      let zip = new Zipper()
+      let filenameIndex = 0
+
       for (let isDone = false; !isDone; isDone) {
         isDone = true
         this.renderMap(false, projAttr)
-        let axes = ['x', 'y', 'z']
+        await zip.addImage(filenameIndex, this._canvas, this._svg)
 
+        let axes = ['x', 'y', 'z']
         axes.forEach(axis => {
           if (!animationOptions[axis].active) return
           let currAttr = mapping[axis]
@@ -150,10 +154,10 @@ class Main extends React.PureComponent {
         })
 
         await sleep(0.05)
+        filenameIndex++
       }
 
-      // while (!done) {
-      // }
+      await zip.complete()
     }
 
     // Callback for a new image layer (when an image is dropped)

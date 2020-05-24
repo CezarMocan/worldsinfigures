@@ -1,3 +1,16 @@
+import JSZip from 'jszip'
+import { saveAs } from 'file-saver'
+
+const blobToBase64 = (blob) => {
+  return new Promise((res, rej) => {
+    var reader = new FileReader()
+    reader.readAsDataURL(blob)
+    reader.onloadend = () => { res(reader.result) }
+  })
+}
+
+const dataURLToBase64 = (dataURL) => dataURL.replace(/^data:image\/(png|jpg);base64,/, "");
+
 export const downloadContent = (filename, href) => {
     let element = document.createElement('a')
 
@@ -24,4 +37,35 @@ export const createAndDownloadSvg = (filename, svgRef) => {
 export const createAndDownloadImage = (filename, canvasRef) => {
     const dataUrl = canvasRef.toDataURL('image/png')
     downloadContent(filename, dataUrl)
+}
+
+export const Zipper = class Zipper {
+  constructor() {
+    this._zipper = new JSZip()    
+    this._png = this._zipper.folder('png')
+    this._svg = this._zipper.folder('svg')
+  }
+  async addImage(filename, canvasRef, svgRef) {
+    let dataBase64
+    if (canvasRef) {
+      dataBase64 = dataURLToBase64(canvasRef.toDataURL('image/png'))
+      this._png.file(`${filename}.png`, dataBase64, { base64: true })
+    }
+    if (svgRef) {
+      const data = '<?xml version="1.0" encoding="utf-8"?>' + svgRef.outerHTML        
+      var svgBlob = new Blob([data], { type:"image/svg+xml;charset=utf-8" })
+      dataBase64 = await blobToBase64(svgBlob)
+      // this._svg.file(`${filename}.svg`, dataBase64, { base64: true })
+    }   
+  }
+  async complete() {
+    console.log('completing...')
+    return new Promise((res, rej) => {
+      this._zipper.generateAsync({ type:"blob" }).then((blob) => {
+        console.log('generated blob...', blob)
+        saveAs(blob, "hello.zip");
+        res()
+      })
+    })
+  }
 }
