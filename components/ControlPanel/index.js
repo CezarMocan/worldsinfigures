@@ -1,4 +1,6 @@
 import React from 'react'
+import Input from '@material-ui/core/Input'
+import TextField from '@material-ui/core/TextField';
 import MenuItem from '@material-ui/core/MenuItem'
 import FormControl from '@material-ui/core/FormControl'
 import FormGroup from '@material-ui/core/FormGroup'
@@ -14,13 +16,16 @@ import LayerItem from '../../components/LayerItem'
 
 class ControlPanel extends React.Component {
     state = {
+      animationOptions: {
+        x: { active: true, start: 0, increment: 5, total: 360 },
+        y: { active: true, start: 0, increment: 5, total: 360 },
+        z: { active: true, start: 0, increment: 5, total: 360 },
+      },
     }
-
     onProjectionSelectionUpdate = (event) => {
       const { updateStateObject } = this.props
       updateStateObject('projectionAttributes', { projection: event.target.value })
     }
-
     onSliderProjectionAttributeUpdate = sliderName => newValue => {
       const { updateStateObject } = this.props
       updateStateObject('projectionAttributes', { [sliderName]: newValue })
@@ -35,7 +40,7 @@ class ControlPanel extends React.Component {
     }
     onLayerColorUpdate = layerName => newColor => {
       const { updateLayerColor } = this.props
-      updateLayerColor(layerName, newVisible)      
+      updateLayerColor(layerName, newColor)      
     }
     onDownloadOptionsUpdate = optionName => event => {
       const { updateStateObject } = this.props
@@ -45,11 +50,34 @@ class ControlPanel extends React.Component {
       const { onDownload } = this.props
       onDownload()
     }
-
+    onAnimationOptionsUpdate = (axisName, propertyName, eventProp) => event => {
+      const { updateStateObject } = this.props
+      if (propertyName == 'start') {
+        const mapping = { 'x': 'rotateX', 'y': 'rotateY', 'z': 'rotateZ' }
+        updateStateObject('projectionAttributes', { [mapping[axisName]]: parseInt(event.target[eventProp]) })
+      }
+      this.setState({
+        animationOptions: {
+          ...this.state.animationOptions,
+          [axisName]: {
+            ...this.state.animationOptions[axisName],
+            [propertyName]: eventProp == 'value' ? parseInt(event.target[eventProp]) : event.target[eventProp]
+          }
+        }
+      })
+    }
+    onAnimateClick = () => {
+      const { onAnimate } = this.props
+      const { animationOptions } = this.state
+      onAnimate(animationOptions)
+    }
     render() {
       const { projectionAttributes, renderOptions, downloadOptions, layers } = this.props        
       const { scale, rotateX, rotateY, rotateZ, translateX, translateY, projection } = projectionAttributes
       const { clipToEarthBounds, tileVectors } = renderOptions
+      const { animationOptions } = this.state
+
+      console.log('control panel projection attributes: ', projectionAttributes)
 
       return (
         <div className="all-controls-container">
@@ -142,6 +170,45 @@ class ControlPanel extends React.Component {
               <a href="#" ref={(r) => {this._downloadButton = r}} onClick={this.onDownloadClick}>
                 <Button variant="outlined">
                   Download
+                </Button>
+              </a>
+            </div>
+          </div>
+
+          <h1> Animate </h1>
+
+          <div className="controls animate">
+            <div className="animate-options">
+              <FormGroup row>
+                <Checkbox color="primary" checked={animationOptions.x.active} onChange={this.onAnimationOptionsUpdate('x', 'active', 'checked')} label="Active"/>
+                <div className="axis-option-container label"><span>X-axis</span></div>
+                <div className="axis-option-container"> <TextField label="Start" value={projectionAttributes.rotateX} size="small" onChange={this.onAnimationOptionsUpdate('x', 'start', 'value')}/> </div>
+                <div className="axis-option-container"> <TextField label="Increment" defaultValue="5" size="small" onChange={this.onAnimationOptionsUpdate('x', 'increment', 'value')} /> </div>
+                <div className="axis-option-container"> <TextField label="Total" defaultValue="360" size="small" onChange={this.onAnimationOptionsUpdate('x', 'total', 'value')} /> </div>
+              </FormGroup>
+
+              <FormGroup row>
+                <Checkbox color="primary" checked={animationOptions.y.active} onChange={this.onAnimationOptionsUpdate('y', 'active', 'checked')} label="Active"/>
+                <div className="axis-option-container label"><span>Y-axis</span></div>
+                <div className="axis-option-container"> <TextField label="Start" value={projectionAttributes.rotateY} size="small" onChange={this.onAnimationOptionsUpdate('y', 'start', 'value')}/> </div>
+                <div className="axis-option-container"> <TextField label="Increment" defaultValue="5" size="small" onChange={this.onAnimationOptionsUpdate('y', 'increment', 'value')} /> </div>
+                <div className="axis-option-container"> <TextField label="Total" defaultValue="360" size="small" onChange={this.onAnimationOptionsUpdate('y', 'total', 'value')} /> </div>
+              </FormGroup>
+
+              <FormGroup row>
+                <Checkbox color="primary" checked={animationOptions.z.active} onChange={this.onAnimationOptionsUpdate('z', 'active')} label="Active"/>
+                <div className="axis-option-container label"><span>Z-axis</span></div>
+                <div className="axis-option-container"> <TextField label="Start" value={projectionAttributes.rotateZ} size="small" onChange={this.onAnimationOptionsUpdate('z', 'start', 'value')} /> </div>
+                <div className="axis-option-container"> <TextField label="Increment" defaultValue="5" size="small" onChange={this.onAnimationOptionsUpdate('z', 'increment', 'value')} /> </div>
+                <div className="axis-option-container"> <TextField label="Total" defaultValue="360" size="small" onChange={this.onAnimationOptionsUpdate('z', 'total', 'value')} /> </div>
+              </FormGroup>
+
+            </div>
+
+            <div className="animate-button">
+              <a href="#" ref={(r) => {this._downloadButton = r}} onClick={this.onAnimateClick}>
+                <Button variant="outlined">
+                  Animate!
                 </Button>
               </a>
             </div>

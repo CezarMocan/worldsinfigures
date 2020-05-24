@@ -5,7 +5,7 @@ import { defaultLayers, layerTypes } from '../data/LayerData'
 import { duplicateOnHemispheres } from '../modules/GeoJsonHelper'
 import { prepareLayersForExport } from './MainContextHelper'
 
-const sleep = (s) => new Promise((res, rej) => setTimeout(res, s * 1000))
+export const sleep = (s) => new Promise((res, rej) => setTimeout(res, s * 1000))
 
 const MainContext = React.createContext()
 

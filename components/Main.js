@@ -4,15 +4,13 @@ import * as d3 from 'd3'
 import Dropzone from 'react-dropzone'
 import DeepDiff from 'deep-diff'
 import { MuiThemeProvider, createMuiTheme } from '@material-ui/core/styles';  
-import { withMainContext } from '../context/MainContext'
+import { withMainContext, sleep } from '../context/MainContext'
 import shortid from 'shortid'
-import cloneDeep from 'clone-deep'
 import * as EventsHelper from '../modules/MouseEventsHelper'
-import { projectionsList, projectionsMap } from '../modules/Projections'
-import { layerTypes } from '../data/LayerData'
-import { getImageData, projectImageData, drawGeoJsonCanvas, drawGeoJsonSvg } from './Renderer/RenderHelper'
+import { getImageData } from './Renderer/RenderHelper'
 import { createAndDownloadImage, createAndDownloadSvg, createAndDownloadText } from '../modules/DownloadHelper'
 import ControlPanel from '../components/ControlPanel'
+import { renderLayersToCanvas, renderLayersToSVG } from './Renderer'
 
 const theme = createMuiTheme({
     typography: { 
@@ -67,127 +65,25 @@ class Main extends React.PureComponent {
     get canvasWidth() { return this._canvas.width }
     get canvasHeight() { return this._canvas.height }
 
-    updateRasterData() {
-      this.rasterData = getImageData(this._image, this.secondaryCanvasContext, this.canvasWidth, this.canvasHeight)
-    }
-
-    renderLayersToCanvas(targetCanvas, bufferCanvas, projection, allProjections, rasterData, layers, renderOptions) {
-      const canvasWidth = targetCanvas.width, canvasHeight = targetCanvas.height      
-      const canvasContext = targetCanvas.getContext('2d')
-      const bufferContext = bufferCanvas.getContext('2d')
-
-      // Clear canvas
-      canvasContext.clearRect(0, 0, canvasWidth, canvasHeight);
-      canvasContext.save()
-
-      // Clip to earth bounds
-      if (renderOptions.clipToEarthBounds) {
-        const clipGenerator = d3.geoPath().projection(projection).context(canvasContext)
-        canvasContext.beginPath()
-        clipGenerator({type: "Sphere"}) 
-        canvasContext.clip()    
-      }
-
-      // Draw raster image
-      if (layers.mainImage.visible) {
-          const projectedImageData = projectImageData(rasterData, projection, canvasContext, canvasWidth, canvasHeight)            
-          bufferContext.clearRect(0, 0, canvasWidth, canvasHeight);
-          bufferContext.putImageData(projectedImageData, 0, 0);    
-          canvasContext.drawImage(bufferCanvas, 0, 0)
-      }
-
-      // Draw vector layers on top of raster image
-      Object.values(layers).forEach(l => {
-        if (l.type != layerTypes.VECTOR || !l.visible) return
-        this.drawGeoJsonTiledCanvas(allProjections, l.geojsonObject, canvasContext, l.style)
-      })
-
-      canvasContext.restore()
-    }
-
-    renderLayersToSVG(svgId, layers, allProjections) {
-      // Clear SVG
-      d3.select(`#${svgId}`).selectAll('*').remove()
-
-      Object.values(layers).forEach(l => {
-        if (l.type != layerTypes.VECTOR) return
-        if (!l.visible) return
-        this.drawGeoJsonTiledSVG(allProjections, l.geojsonObject, svgId, l.style)
-      })
-    }
-    drawGeoJsonTiledCanvas(projections, geoJson, context, drawingOptions) {
-        projections.forEach(projection => {
-          const { p, offsetX, offsetY } = projection
-          const newGeoJson = cloneDeep(geoJson)
-          const canvasGenerator = d3.geoPath().projection(p)
-          drawGeoJsonCanvas(newGeoJson, canvasGenerator, context, drawingOptions)
-        })
-    }
-    drawGeoJsonTiledSVG(projections, geoJson, svgId, drawingOptions) {
-      projections.forEach(projection => {
-        const { p, offsetX, offsetY } = projection
-        const newGeoJson = cloneDeep(geoJson)
-        const svgGenerator = d3.geoPath().projection(p)
-        const { svgId } = svgOptions
-        drawGeoJsonSvg(newGeoJson, svgGenerator, svgId, drawingOptions)
-      })
-    }
-
     // Layer rendering
-    renderMap(withCleanSurface = false) {
-      if (!this.rasterData || withCleanSurface) this.updateRasterData()
-      const { layers, renderOptions } = this.props
-      this.renderLayersToCanvas(this._canvas, this._canvas2, this.projection, this.projections, this.rasterData, layers, renderOptions)
-      this.renderLayersToSVG(SVG_ID, layers, this.projections)
+    renderMap = (withCleanSurface = false, optProjectionAttributes) => {
+      const projectionAttributes = optProjectionAttributes || this.props.projectionAttributes
+      const { layers, renderOptions } = this.props  
+
+      let canvasAttributes = {
+        canvasWidth: this.canvasWidth,
+        canvasHeight: this.canvasHeight,
+        canvasTX: this.canvasTranslate.dx,
+        canvasTY: this.canvasTranslate.dy
+      }
+    
+      if (!this.rasterData || withCleanSurface) {
+        this.rasterData = getImageData(this._image, this.secondaryCanvasContext, this.canvasWidth, this.canvasHeight)
+      }
+      renderLayersToCanvas(this._canvas, this._canvas2, this.rasterData, layers, projectionAttributes, canvasAttributes, renderOptions)
+      // renderLayersToSVG(SVG_ID, layers, this.projections)
     }
   
-    getProjectionFromState(projectionAttributes, canvasAttributes, offsetFactor) {
-        let { scale, rotateX, rotateY, rotateZ, translateX, translateY, projection } = projectionAttributes
-        const { canvasWidth, canvasHeight, canvasTX, canvasTY } = canvasAttributes
-        const tX = translateX + (canvasTX || 0)
-        const tY = translateY + (canvasTY || 0)
-        const offsetXValue = offsetFactor.x * (2 * Math.PI * scale)
-        const offsetYValue = offsetFactor.y * (Math.PI * scale)
-
-        let proj = projectionsMap[projection].fn()
-
-        if (proj.scale) proj = proj.scale(scale)
-        if (proj.translate) proj = proj.translate([offsetXValue + canvasWidth / 2 + canvasWidth * (tX - 50) / 50, offsetYValue + canvasHeight / 2 + canvasHeight * (tY - 50) / 50])
-        if (proj.rotate) proj = proj.rotate([rotateX, rotateY, rotateZ])
-        if (proj.precision) proj = proj.precision(0.01)
-
-        return proj
-    }
-    updateProjection() {
-        let { projectionAttributes } = this.props
-        let canvasAttributes = {
-          canvasWidth: this.canvasWidth,
-          canvasHeight: this.canvasHeight,
-          canvasTX: this.canvasTranslate.dx,
-          canvasTY: this.canvasTranslate.dy
-        }
-
-        this.projection = this.getProjectionFromState(projectionAttributes, canvasAttributes, { x: 0, y: 0 })
-        this.projections = []
-        let minX = 0, maxX = 0, minY = 0, maxY = 0        
-        
-        const { renderOptions } = this.props
-        if (renderOptions.tileVectors) {
-          minX = minY = -1
-          maxX = maxY = 1
-        }
-
-        for (let i = minX; i <= maxX; i++) {
-          for (let j = minY; j <= maxY; j++) {
-            let projection = this.getProjectionFromState(projectionAttributes, canvasAttributes, { x: i, y: j })
-            this.projections.push({
-              offsetX: i,
-              offsetY: j,
-              p: projection
-            })
-          }
-        }
-    }
     componentDidMount() {
         const { loadLayers } = this.props
         loadLayers()
@@ -210,11 +106,10 @@ class Main extends React.PureComponent {
       let needsReRender = (needsReRenderState || needsReRenderProps)
 
       if (needsReRender) {
-          setTimeout(() => {
-              this.updateProjection()
-              const withCleanSurface = (this.state.isCanvasResizing != oldState.isCanvasResizing)
-              this.renderMap(withCleanSurface)    
-          }, 0)        
+        setTimeout(() => {
+          const withCleanSurface = (this.state.isCanvasResizing != oldState.isCanvasResizing)
+          this.renderMap(withCleanSurface)
+        }, 0)        
       }
     }
 
@@ -227,6 +122,38 @@ class Main extends React.PureComponent {
         if (downloadOptions.png) createAndDownloadImage(`${projectionId}.png`, this._canvas)
         if (downloadOptions.svg) createAndDownloadSvg(`${projectionId}.svg`, this._svg)
         if (downloadOptions.config) createAndDownloadText(`${projectionId}.txt`, parseStateForDownload())
+    }
+
+    onAnimate = async (animationOptions) => {
+      const { updateStateObject, projectionAttributes } = this.props
+      let projAttr = { ...projectionAttributes }
+      console.log('sula:', projAttr, animationOptions)
+      projAttr.rotateX = animationOptions.x.start
+      projAttr.rotateY = animationOptions.y.start
+      projAttr.rotateZ = animationOptions.z.start
+      const mapping = { 'x': 'rotateX', 'y': 'rotateY', 'z': 'rotateZ' }
+      
+      console.log('this is: ', this)
+      console.log(projAttr)
+
+      for (let isDone = false; !isDone; isDone) {
+        isDone = true
+        this.renderMap(false, projAttr)
+        let axes = ['x', 'y', 'z']
+
+        axes.forEach(axis => {
+          if (!animationOptions[axis].active) return
+          let currAttr = mapping[axis]
+          projAttr[currAttr] += animationOptions[axis].increment
+          if (projAttr[currAttr] <= animationOptions[axis].start + animationOptions[axis].total)
+            isDone = false
+        })
+
+        await sleep(0.05)
+      }
+
+      // while (!done) {
+      // }
     }
 
     // Callback for a new image layer (when an image is dropped)
@@ -264,10 +191,9 @@ class Main extends React.PureComponent {
         this.canvasTranslate.dx += dx
         this.canvasTranslate.dy += dy
         setTimeout(() => {
-            this.updateProjection()
             this.renderMap()    
         }, 0)
-        this._canvas.style.cursor = 'grabbing'
+        // this._canvas.style.cursor = 'grabbing'
     } 
 
     onCanvasMouseUp = (evt) => {
@@ -406,7 +332,10 @@ class Main extends React.PureComponent {
                                     </div>
                                   </div>
 
-                                  <ControlPanel onDownload={this.onDownload}/>
+                                  <ControlPanel 
+                                    onDownload={this.onDownload}
+                                    onAnimate={this.onAnimate.bind(this)}
+                                  />
                                 </div>
                               </div>
                             </section>
