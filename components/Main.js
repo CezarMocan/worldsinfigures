@@ -81,7 +81,7 @@ class Main extends React.PureComponent {
         this.rasterData = getImageData(this._image, this.secondaryCanvasContext, this.canvasWidth, this.canvasHeight)
       }
       renderLayersToCanvas(this._canvas, this._canvas2, this.rasterData, layers, projectionAttributes, canvasAttributes, renderOptions)
-      // renderLayersToSVG(SVG_ID, layers, this.projections)
+      renderLayersToSVG(SVG_ID, layers, projectionAttributes, canvasAttributes, renderOptions)
     }
   
     componentDidMount() {
@@ -127,15 +127,11 @@ class Main extends React.PureComponent {
     onAnimate = async (animationOptions) => {
       const { updateStateObject, projectionAttributes } = this.props
       let projAttr = { ...projectionAttributes }
-      console.log('sula:', projAttr, animationOptions)
       projAttr.rotateX = animationOptions.x.start
       projAttr.rotateY = animationOptions.y.start
       projAttr.rotateZ = animationOptions.z.start
       const mapping = { 'x': 'rotateX', 'y': 'rotateY', 'z': 'rotateZ' }
       
-      console.log('this is: ', this)
-      console.log(projAttr)
-
       let zip = new Zipper()
       let filenameIndex = 0
 

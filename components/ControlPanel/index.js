@@ -75,9 +75,7 @@ class ControlPanel extends React.Component {
       const { projectionAttributes, renderOptions, downloadOptions, layers } = this.props        
       const { scale, rotateX, rotateY, rotateZ, translateX, translateY, projection } = projectionAttributes
       const { clipToEarthBounds, tileVectors } = renderOptions
-      const { animationOptions } = this.state
-
-      console.log('control panel projection attributes: ', projectionAttributes)
+      const { animationOptions } = this.state      
 
       return (
         <div className="all-controls-container">

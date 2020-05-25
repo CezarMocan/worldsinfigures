@@ -1,7 +1,7 @@
 import JSZip from 'jszip'
 import { saveAs } from 'file-saver'
 
-const blobToBase64 = (blob) => {
+const blobToDataURL = (blob) => {
   return new Promise((res, rej) => {
     var reader = new FileReader()
     reader.readAsDataURL(blob)
@@ -9,7 +9,7 @@ const blobToBase64 = (blob) => {
   })
 }
 
-const dataURLToBase64 = (dataURL) => dataURL.replace(/^data:image\/(png|jpg);base64,/, "");
+const dataURLToBase64 = (dataURL) => dataURL.replace(/^data:image\/(png|jpg|svg\+xml\;charset\=utf\-8);base64,/, "");
 
 export const downloadContent = (filename, href) => {
     let element = document.createElement('a')
@@ -54,8 +54,10 @@ export const Zipper = class Zipper {
     if (svgRef) {
       const data = '<?xml version="1.0" encoding="utf-8"?>' + svgRef.outerHTML        
       var svgBlob = new Blob([data], { type:"image/svg+xml;charset=utf-8" })
-      dataBase64 = await blobToBase64(svgBlob)
-      // this._svg.file(`${filename}.svg`, dataBase64, { base64: true })
+      let dataURL = await blobToDataURL(svgBlob)
+      dataBase64 = dataURLToBase64(dataURL)
+      console.log('dataBase64: ', dataBase64)
+      this._svg.file(`${filename}.svg`, dataBase64, { base64: true })
     }   
   }
   async complete() {

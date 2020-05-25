@@ -1,6 +1,7 @@
+import * as d3 from 'd3'
 import { layerTypes } from '../../data/LayerData'
 import { projectionsList, projectionsMap } from '../../modules/Projections'
-import { getImageData, projectImageData, drawGeoJsonTiledCanvas, drawGeoJsonTiledSvg } from './RenderHelper'
+import { getImageData, projectImageData, drawGeoJsonTiledCanvas, drawGeoJsonTiledSVG } from './RenderHelper'
 
 export const getProjectionFromState = (projectionAttributes, canvasAttributes, offsetFactor = { x: 0, y: 0 }) => {
   let { scale, rotateX, rotateY, rotateZ, translateX, translateY, projection } = projectionAttributes

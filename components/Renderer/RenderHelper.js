@@ -1,5 +1,7 @@
 import * as d3 from 'd3'
 import cloneDeep from 'clone-deep'
+import rgbToHex from 'rgb-hex'
+import colorParse from 'color'
 
 export const getImageData = (image, context, canvasWidth, canvasHeight) => {
     const dx = image.width
@@ -63,13 +65,19 @@ export const drawGeoJsonCanvas = (geoJson, geoGenerator, context, options) => {
 export const drawGeoJsonSvg = (geoJson, geoGenerator, svgId, options) => {
   const { lineWidth = 1, color = 'black', fillMode = false, dashed = false } = options
   const svg = d3.select(`#${svgId}`)
+  let hexColor = (color.indexOf('rgb') == 0) ? `#${rgbToHex(color).substring(0, 6)}` : color
+  let opacity = colorParse(color).alpha()
+
+  console.log('svg colors: ', color, hexColor, opacity)
+
   svg.append('path')
       .datum(geoJson)
       .attr("d", geoGenerator)
-      .attr("fill", fillMode ? color : "none")
-      .attr("stroke", fillMode ? "none" : color)
+      .attr("fill", fillMode ? hexColor : "none")
+      .attr("stroke", fillMode ? "none" : hexColor)
       .attr("stroke-dasharray", dashed ? "2, 2" : "")
       .attr("stroke-width", lineWidth)
+      .attr("opacity", opacity)
 }
 
 export const drawGeoJsonTiledCanvas = (projections, geoJson, context, drawingOptions) => {
