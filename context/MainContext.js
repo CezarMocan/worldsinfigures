@@ -44,7 +44,7 @@ export default class MainContextProvider extends React.Component {
         config: true
       },
 
-      renderer: RENDERERS.svg,
+      renderer: RENDERERS.canvas,
 
       ready: false
     }
