@@ -62,8 +62,8 @@ export const Zipper = class Zipper {
     console.log('completing...')
     return new Promise((res, rej) => {
       this._zipper.generateAsync({ type:"blob" }).then((blob) => {
-        console.log('generated blob...', blob)
-        saveAs(blob, "hello.zip");
+        const fileName = `${new Date().getTime()}.zip`
+        saveAs(blob, fileName);
         res()
       })
     })
