@@ -196,7 +196,7 @@ class ControlPanel extends React.Component {
               </FormGroup>
 
               <FormGroup row>
-                <Checkbox color="primary" checked={animationOptions.z.active} onChange={this.onAnimationOptionsUpdate('z', 'active')} label="Active"/>
+                <Checkbox color="primary" checked={animationOptions.z.active} onChange={this.onAnimationOptionsUpdate('z', 'active', 'checked')} label="Active"/>
                 <div className="axis-option-container label"><span>Z-axis</span></div>
                 <div className="axis-option-container"> <TextField label="Start" value={projectionAttributes.rotateZ} size="small" onChange={this.onAnimationOptionsUpdate('z', 'start', 'value')} /> </div>
                 <div className="axis-option-container"> <TextField label="Increment" defaultValue="5" size="small" onChange={this.onAnimationOptionsUpdate('z', 'increment', 'value')} /> </div>
