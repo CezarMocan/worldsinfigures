@@ -1,10 +1,11 @@
 import React from 'react'
 import Style from '../static/styles/main.less'
+import classnames from 'classnames'
 import * as d3 from 'd3'
 import Dropzone from 'react-dropzone'
 import DeepDiff from 'deep-diff'
 import { MuiThemeProvider, createMuiTheme } from '@material-ui/core/styles';  
-import { withMainContext, sleep } from '../context/MainContext'
+import { withMainContext, sleep, RENDERERS } from '../context/MainContext'
 import shortid from 'shortid'
 import * as EventsHelper from '../modules/MouseEventsHelper'
 import { getImageData } from './Renderer/RenderHelper'
@@ -32,15 +33,15 @@ const CANVAS_HEIGHT = 600
 const BORDER_HOVER_THRESHOLD = 10
 
 class Main extends React.PureComponent {
+    state = {
+      isCanvasResizing: RESIZING.NO,
+      canvasDisplayWidth: CANVAS_WIDTH,
+      canvasDisplayHeight: CANVAS_HEIGHT,
+      imageChanged: false
+    }
+
     constructor(props) {
       super(props)
-      this.state = {
-        isCanvasResizing: RESIZING.NO,
-        canvasDisplayWidth: CANVAS_WIDTH,
-        canvasDisplayHeight: CANVAS_HEIGHT,
-        imageChanged: false
-      }
-
       this.lastWindowTouch = { x: 0, y: 0 }
       this.isCanvasTouching = false
       this.lastCanvasTouch = { x: 0, y: 0 }
@@ -171,12 +172,14 @@ class Main extends React.PureComponent {
 
     // Mouse events on top of the canvas: dragging the image
     onCanvasMouseDown = (evt) => {
-        if (EventsHelper.eventOnLeftRightBorder(evt, this._canvas, BORDER_HOVER_THRESHOLD)) return
-        if (EventsHelper.eventOnTopBottomBorder(evt, this._canvas, BORDER_HOVER_THRESHOLD)) return
+        const { renderer } = this.props
+        const currCanvas = renderer == RENDERERS.canvas ? this._canvas : this._svg
+        if (EventsHelper.eventOnLeftRightBorder(evt, currCanvas, BORDER_HOVER_THRESHOLD)) return
+        if (EventsHelper.eventOnTopBottomBorder(evt, currCanvas, BORDER_HOVER_THRESHOLD)) return
         this.isCanvasTouching = true
         this.lastCanvasTouch = { x: evt.clientX, y: evt.clientY }
         this.canvasTranslate = { dx: 0, dy: 0 }
-        this._canvas.style.cursor = 'grabbing'
+        currCanvas.style.cursor = 'grabbing'
     }
 
     onCanvasMouseMove = (evt) => {
@@ -199,14 +202,15 @@ class Main extends React.PureComponent {
     onCanvasMouseUp = (evt) => {
         this.isCanvasTouching = false
         this.lastCanvasTouch = { x: evt.clientX, y: evt.clientY }
-        const { projectionAttributes, updateStateObject } = this.props
+        const { projectionAttributes, updateStateObject, renderer } = this.props
+        const currCanvas = renderer == RENDERERS.canvas ? this._canvas : this._svg
         updateStateObject(
           'projectionAttributes',
           { 
             translateX: projectionAttributes.translateX + this.canvasTranslate.dx,
             translateY: projectionAttributes.translateY + this.canvasTranslate.dy 
           })
-        this._canvas.style.cursor = 'grab'
+        currCanvas.style.cursor = 'grab'
         this.canvasTranslate = { dx: 0, dy: 0 }
     }
 
@@ -214,15 +218,17 @@ class Main extends React.PureComponent {
     // Mouse events related to resizing the canvas
 
     onWindowMouseDown = (evt) => {
+        const { renderer } = this.props
+        const currCanvas = renderer == RENDERERS.canvas ? this._canvas : this._svg
         evt.stopPropagation()
         this.lastWindowTouch = { x: evt.clientX, y: evt.clientY }
-        if (EventsHelper.eventOnLeftBorder(evt, this._canvas, BORDER_HOVER_THRESHOLD)) {
+        if (EventsHelper.eventOnLeftBorder(evt, currCanvas, BORDER_HOVER_THRESHOLD)) {
             this.setState({ isCanvasResizing: RESIZING.HORIZONTAL_LEFT })
-        } else if (EventsHelper.eventOnRightBorder(evt, this._canvas, BORDER_HOVER_THRESHOLD)) {
+        } else if (EventsHelper.eventOnRightBorder(evt, currCanvas, BORDER_HOVER_THRESHOLD)) {
             this.setState({ isCanvasResizing: RESIZING.HORIZONTAL_RIGHT })
-        } else if (EventsHelper.eventOnTopBorder(evt, this._canvas, BORDER_HOVER_THRESHOLD)) {
+        } else if (EventsHelper.eventOnTopBorder(evt, currCanvas, BORDER_HOVER_THRESHOLD)) {
             this.setState({ isCanvasResizing: RESIZING.VERTICAL_TOP })
-        } else if (EventsHelper.eventOnBottomBorder(evt, this._canvas, BORDER_HOVER_THRESHOLD)) {
+        } else if (EventsHelper.eventOnBottomBorder(evt, currCanvas, BORDER_HOVER_THRESHOLD)) {
             this.setState({ isCanvasResizing: RESIZING.VERTICAL_BOTTOM })
         } else {
         }
@@ -233,48 +239,50 @@ class Main extends React.PureComponent {
     }
     onWindowMouseMove = (evt) => {
         evt.stopPropagation()
+        const { renderer } = this.props
+        const currCanvas = renderer == RENDERERS.canvas ? this._canvas : this._svg
         const { isCanvasResizing } = this.state
 
         if (isCanvasResizing == RESIZING.NO) {
-            if (EventsHelper.eventOnLeftRightBorder(evt, this._canvas, 10)) {
-                this._canvas.style.cursor = 'ew-resize'
-            } else if (EventsHelper.eventOnTopBottomBorder(evt, this._canvas, 10)) {
-                this._canvas.style.cursor = 'ns-resize'
+            if (EventsHelper.eventOnLeftRightBorder(evt, currCanvas, 10)) {
+              currCanvas.style.cursor = 'ew-resize'
+            } else if (EventsHelper.eventOnTopBottomBorder(evt, currCanvas, 10)) {
+              currCanvas.style.cursor = 'ns-resize'
+            } else if (this.isCanvasTouching) {
+              currCanvas.style.cursor = 'grabbing'
             } else {
-                this._canvas.style.cursor = 'grab'
+              currCanvas.style.cursor = 'grab'
             }
             return
         }
 
+        let { canvasDisplayWidth, canvasDisplayHeight } = this.state
+
         if (isCanvasResizing == RESIZING.HORIZONTAL_LEFT || isCanvasResizing == RESIZING.HORIZONTAL_RIGHT) {
             const delta = evt.clientX - this.lastWindowTouch.x
             const sgn = (isCanvasResizing == RESIZING.HORIZONTAL_LEFT) ? -1 : 1
-            this._canvas.width += 2 * delta * sgn
+            canvasDisplayWidth += 2 * delta * sgn
         } else if (isCanvasResizing == RESIZING.VERTICAL_TOP || isCanvasResizing == RESIZING.VERTICAL_BOTTOM) {
             const delta = evt.clientY - this.lastWindowTouch.y
             const sgn = (isCanvasResizing == RESIZING.VERTICAL_TOP) ? -1 : 1
-            this._canvas.height += 2 * delta * sgn
+            canvasDisplayHeight += 2 * delta * sgn
         }
 
-        this._canvas2.width = this._canvas.width
-        this._canvas2.height = this._canvas.height
-
-        d3.select(`#${SVG_ID}`).attr("width", this._canvas.width)
-        d3.select(`#${SVG_ID}`).attr("height", this._canvas.height)
+        // d3.select(`#${SVG_ID}`).attr("width", this._canvas.width)
+        // d3.select(`#${SVG_ID}`).attr("height", this._canvas.height)
 
         this.lastWindowTouch = { x: evt.clientX, y: evt.clientY }
-
-        this.setState({
-            canvasDisplayWidth: this._canvas.width,
-            canvasDisplayHeight: this._canvas.height
-        })
+        this.setState({ canvasDisplayWidth, canvasDisplayHeight })
     }
     render() {    
         const { imageChanged } = this.state
         const { canvasDisplayHeight, canvasDisplayWidth } = this.state
-        const { ready } = this.props
+        const { ready, renderer } = this.props
 
         if (!ready) return null
+
+        const canvasCls = classnames({ 'main-canvas': true, 'hidden': renderer != RENDERERS.canvas })
+        const svgCls = classnames({ 'svg-canvas': true, 'hidden': renderer != RENDERERS.svg })
 
         return (
             <MuiThemeProvider theme={theme}>
@@ -303,31 +311,36 @@ class Main extends React.PureComponent {
                                     <div className="canvas-container" {...getRootProps()}>
                                       <div className="hidden-elements">
                                         <input {...getInputProps()} />
-                                        <img ref={this.onImageRef} onLoad={this.onImageLoad} style={{display: 'none'}}/>
-                                        <canvas width={CANVAS_WIDTH} height={CANVAS_HEIGHT} ref={this.onSecondaryCanvasRef} className="secondary-canvas"></canvas>
-                                        <div id="svgContainer" className="svg-container">
-                                          <svg
-                                            ref={this.onSvgRef}
-                                            id={SVG_ID}
-                                            width={CANVAS_WIDTH}
-                                            height={CANVAS_HEIGHT}
-                                            version="1.1" 
-                                            xmlns="http://www.w3.org/2000/svg" >
-                                          </svg>
-                                        </div>
+                                        <img ref={this.onImageRef} onLoad={this.onImageLoad} className="hidden"/>
+                                        <canvas width={canvasDisplayWidth} height={canvasDisplayHeight} ref={this.onSecondaryCanvasRef} className="secondary-canvas hidden"></canvas>
                                       </div>
 
                                       <div className="main-canvas-and-size-container">
                                         <div className="canvas-size-container"> {canvasDisplayWidth} x {canvasDisplayHeight} </div>
-                                        <canvas 
-                                          width={CANVAS_WIDTH}
-                                          height={CANVAS_HEIGHT}
-                                          ref={this.onCanvasRef}
-                                          className="main-canvas"
-                                          onMouseDown={this.onCanvasMouseDown}
-                                          onMouseUp={this.onCanvasMouseUp}
-                                          onMouseMove={this.onCanvasMouseMove}>
-                                        </canvas>
+                                        <div>
+                                          <canvas 
+                                            width={canvasDisplayWidth}
+                                            height={canvasDisplayHeight}
+                                            ref={this.onCanvasRef}
+                                            className={canvasCls}
+                                            onMouseDown={this.onCanvasMouseDown}
+                                            onMouseUp={this.onCanvasMouseUp}
+                                            onMouseMove={this.onCanvasMouseMove}>
+                                          </canvas>                                        
+                                          <svg
+                                            ref={this.onSvgRef}
+                                            className={svgCls}
+                                            id={SVG_ID}
+                                            width={canvasDisplayWidth}
+                                            height={canvasDisplayHeight}
+                                            onMouseDown={this.onCanvasMouseDown}
+                                            onMouseUp={this.onCanvasMouseUp}
+                                            onMouseMove={this.onCanvasMouseMove}  
+                                            version="1.1" 
+                                            xmlns="http://www.w3.org/2000/svg" >
+                                          </svg>
+                                        </div>
+                                        
                                       </div>
                                     </div>
                                   </div>
@@ -353,6 +366,7 @@ export default withMainContext((context, props) => ({
     renderOptions: context.renderOptions,
     downloadOptions: context.downloadOptions,
     layers: context.layers,
+    renderer: context.renderer,
     ready: context.ready,
 
     // Actions

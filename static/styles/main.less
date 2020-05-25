@@ -1,6 +1,7 @@
 @header-height: 0px;
 
 @border-color: rgba(0, 0, 0, 0.25);
+@border-color-svg: rgba(0, 0, 255, 0.5);
 
 body {
     margin: 0;
@@ -68,9 +69,13 @@ a {
     display: none;    
 }
 
-.svg-container svg {
-    border: 2px solid blue;
+.hidden {
     display: none;
+}
+
+.svg-canvas {
+    border: 1px solid @border-color-svg;
+    background-color: rgba(52, 52, 42, 0.2);
 }
 
 .checkerboard-background {
@@ -111,7 +116,6 @@ a {
             .main-canvas {
                 cursor: grab;
                 border: 1px solid @border-color;
-                margin-bottom: 15px;
                 background-color: rgba(52, 52, 42, 0.2);
             }    
         }        

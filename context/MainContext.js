@@ -12,6 +12,10 @@ const MainContext = React.createContext()
 export const PROJECTION_ATTRIBUTES = 'projectionAttributes'
 export const RENDER_OPTIONS = 'renderOptions'
 export const DOWNLOAD_OPTIONS = 'downloadOptions'
+export const RENDERERS = {
+  canvas: 'CANVAS',
+  svg: 'SVG'
+}
 
 export default class MainContextProvider extends React.Component {
     state = {
@@ -39,6 +43,8 @@ export default class MainContextProvider extends React.Component {
         svg: true,
         config: true
       },
+
+      renderer: RENDERERS.svg,
 
       ready: false
     }
