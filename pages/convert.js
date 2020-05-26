@@ -43,10 +43,8 @@ export default class Convert extends React.Component {
   generateSVG = () => {
     // let node = $('svg')[0]
     let node = this._svgContainer.children[0]
-    // let bounds = [[90, 180], [-90, -180]]
-    let bounds = [[0, 1000], [500, 0]]
     const { projection } = this.state
-    let geojson = svgToGeoJson(bounds, node, projection, 20)
+    let geojson = svgToGeoJson(node, projection, 50)
 
     createAndDownloadText(this.state.filename, JSON.stringify(geojson))
   }

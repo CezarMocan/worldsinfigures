@@ -134,6 +134,32 @@ export const defaultLayers = {
        dashed: false
       },
       duplicateHemispheres: false
+     },
+    flag2: { // You can replace this ID with something legible, as long as it's different from all others in the file.
+      visible: false,
+      type: layerTypes.VECTOR,
+      url: '/static/geo/flag-2.geojson',
+      displayName: 'flag-2', // Or however you want to see it in the layer list.
+      style: {
+       lineWidth: 2,
+       color: 'rgba(255, 255, 255, 1)',
+       fillMode: false,
+       dashed: false
+      },
+      duplicateHemispheres: false
+     },
+    flag3: { // You can replace this ID with something legible, as long as it's different from all others in the file.
+      visible: false,
+      type: layerTypes.VECTOR,
+      url: '/static/geo/flag-3.geojson',
+      displayName: 'flag-3', // Or however you want to see it in the layer list.
+      style: {
+       lineWidth: 2,
+       color: 'rgba(255, 0, 255, 1)',
+       fillMode: false,
+       dashed: false
+      },
+      duplicateHemispheres: false
      }
 }
 

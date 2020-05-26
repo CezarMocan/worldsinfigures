@@ -6,6 +6,10 @@ import { applyPolyfill } from '../modules/PathDataPolyfill'
 import { scaleLinear } from 'd3-scale'
 import { projectionsList, projectionsMap } from '../modules/Projections'
 
+const dist = (v1, v2) => {
+  return Math.sqrt(Math.pow(v1[0] - v2[0], 2) + Math.pow(v1[1] - v2[1], 2))
+}
+
 export const reducePathSegCurveComplexity = (pathSegList = [], complexity = 5) => {
   const newSegs = [];
   let lastSeg;
@@ -68,9 +72,29 @@ export const reducePathSegCurveComplexity = (pathSegList = [], complexity = 5) =
                   seg.values[5],
               ],
           });
+      } else if (seg.type === 'L') {
+        tmpPathLength = dist(seg.values, lastSeg.values)
+        lengthStep = Math.ceil(tmpPathLength / complexity);
+
+        for (d = lengthStep, len = tmpPathLength; d <= len; d += lengthStep) {
+          const frac = d / tmpPathLength
+          point = {
+            x: (seg.values[0] - lastSeg.values[0]) * frac + lastSeg.values[0],
+            y: (seg.values[1] - lastSeg.values[1]) * frac + lastSeg.values[1]
+          }
+
+          newSegs.push({
+              type: 'L',
+              values: [
+                  point.x,
+                  point.y,
+              ],
+          });
+        }
       } else {
           // We don't care about non-curve commands.
           newSegs.push(seg);
+          console.log('seg: ', seg)
       }
 
       /**
@@ -114,32 +138,34 @@ export const getSVGDimensions = (svgNode) => {
 * @param  {DOM Node} svgNode
 * @return {GeoJson Object}
 */
-export const svgToGeoJson = (bounds, svgNode, projectionId, complexity = 5, attributes = [], multiplier = 1) => {
+export const svgToGeoJson = (svgNode, projectionId, complexity = 5, attributes = [], multiplier = 1) => {
   applyPolyfill()
   const geoJson = {
       type: 'FeatureCollection',
       features: [],
   };
 
+  const pBounds = projectionsMap[projectionId].fn()
   // Split bounds into nw/se to create d3 scale of NESW maximum values
-  const ne = bounds[0];
-  const sw = bounds[1];
-
-  const mapX = scaleLinear().range([parseFloat(sw[1]), parseFloat(ne[1])]);
-  const mapY = scaleLinear().range([parseFloat(ne[0]), parseFloat(sw[0])]);
-  // const mapX = scaleLinear().range([-10, 10]);
-  // const mapY = scaleLinear().range([-10, 10]);
+  const ne = pBounds([165, 85])
+  const sw = pBounds([-165, -85])
 
   const svgDims = getSVGDimensions(svgNode);
+  const mapX = scaleLinear().domain([0, svgDims.width]).range([parseFloat(sw[0]), parseFloat(ne[0])]);
+  const mapY = scaleLinear().domain([0, svgDims.height]).range([parseFloat(ne[1]), parseFloat(sw[1])]);
+  // const mapX = scaleLinear().range([-10, 10]);
+  // const mapY = scaleLinear().range([-10, 10]);
 
   // Limit the elements we're interested in. We don't want 'defs' or 'g' for example
   const elems = svgNode.querySelectorAll('path, rect, polygon, circle, ellipse, polyline');
 
   // Set SVG's width/height as d3 scale's domain,
-  mapX.domain([0, svgDims.width]);
-  mapY.domain([0, svgDims.height]);
+//   mapX.domain([0, svgDims.width]);
+//   mapY.domain([0, svgDims.height]);
 
-[].forEach.call(elems, (elem) => {
+[].forEach.call(elems, (elem, index) => {
+      // if (index != 2) return
+      console.log('index: ', index)
       const mappedCoords = [];
       /**
        * Normalize element path: get path in array of X/Y absolute coords.
@@ -154,6 +180,8 @@ export const svgToGeoJson = (bounds, svgNode, projectionId, complexity = 5, attr
           elem.getPathData({ normalize: true }), complexity
       );
 
+      console.log('pathData: ', pathData)
+
       const coords = pathData.map((pathitem) => {
           if (pathitem.type === 'Z') {
               /**
@@ -165,20 +193,34 @@ export const svgToGeoJson = (bounds, svgNode, projectionId, complexity = 5, attr
           }
 
           return [pathitem.values[0], pathitem.values[1]];
-      });
+      })//.slice(0, 2);
 
-      const projection = projectionsMap[projectionId].fn()
+      console.log('Coords: ', coords)
 
-      coords.forEach((coord) => {          
+      const projection = projectionsMap[projectionId].fn()//.fitExtent([ [ 0, 0 ], [ 1000, 500 ] ])
+    //   console.log(projection([-180, 90]))
+      // for (let i = 0; i < 1000; i += 200) {
+      //   for (let j = 0; j < 500; j += 100) {
+      //     let coord = [i, j]
+      //     const newCoords = projection.invert(coord)
+      //     console.log('****', coord, ' -> ', newCoords)
+      //       mappedCoords.push(newCoords);
+      //   }
+      // }
+      console.log('New element: ', elem)
+      coords.forEach((coord) => {        
           coord[0] = mapX(coord[0])
           coord[1] = mapY(coord[1])
           const newCoords = projection.invert(coord)
-          if (newCoords[0] < -180) newCoords[0] = -180
-          if (newCoords[0] > 180) newCoords[0] = 180
-          if (newCoords[1] < -90) newCoords[1] = -90
-          if (newCoords[1] > 90) newCoords[1] = 90
+          // console.log('****', coord, ' -> ', newCoords)
+          // if (newCoords[0] < -180) newCoords[0] = -180
+          // if (newCoords[0] > 180) newCoords[0] = 180
+          // if (newCoords[1] < -90) newCoords[1] = -90
+          // if (newCoords[1] > 90) newCoords[1] = 90
           mappedCoords.push(newCoords);
       });
+
+      console.log('Mapped coords: ', mappedCoords)
 
       var properties = {};
 
@@ -199,6 +241,8 @@ export const svgToGeoJson = (bounds, svgNode, projectionId, complexity = 5, attr
               coordinates: isLineString ? mappedCoords : [mappedCoords],
           },
       });
+
+      console.log(geoJson)
   });
 
   return geoJson;
