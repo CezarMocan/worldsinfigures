@@ -7,9 +7,7 @@ import MenuItem from '@material-ui/core/MenuItem'
 import FormControl from '@material-ui/core/FormControl'
 import Select from '@material-ui/core/Select'
 import { svgToGeoJson } from '../modules/SvgToGeojson'
-import { createAndDownloadText } from '../modules/DownloadHelper'
 import { drawGeoJsonSvg } from '../components/Renderer/RenderHelper'
-import shortid from 'shortid'
 import { projectionsList, projectionsMap } from '../modules/Projections'
 import ProjectionItem from '../components/ProjectionItem'
 
@@ -47,24 +45,15 @@ export default class Convert extends React.Component {
   }
 
   generateSVG = () => {
-    // let node = $('svg')[0]
     let node = this._svgContainer.children[0]
-    // let bounds = [[90, 180], [-90, -180]]
     const { projection, projectionTo } = this.state
     let geojson = svgToGeoJson(node, projection, 500)
-
-    // createAndDownloadText(this.state.filename, JSON.stringify(geojson))
 
     const newGeoJson = cloneDeep(geojson)
     const p = projectionsMap[projectionTo].fn()
     const svgGenerator = d3.geoPath().projection(p)
     d3.select(`#${SVG_ID}`).selectAll('*').remove()
     drawGeoJsonSvg(newGeoJson, svgGenerator, SVG_ID, {lineWidth: 2, color: 'black'})
-
-  }
-
-  generateLayerData = () => {
-
   }
 
   onProjectionSelectionUpdate = (event) => {
@@ -85,7 +74,7 @@ export default class Convert extends React.Component {
   }
 
   render() {
-    const { hasFile, filename, projection, projectionTo } = this.state
+    const { projection, projectionTo } = this.state
     return (
       <div className="convert-page-container">
         <div className="convert-title">

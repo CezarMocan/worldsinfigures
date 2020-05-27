@@ -72,6 +72,24 @@ export default class MainContextProvider extends React.Component {
       this.setState({ layers: loadedLayers, ready: true })
     }
 
+    addLayer = (name, layerType, geojson) => {
+      const layer = {
+        visible: true,
+        type: layerType,
+        duplicateHemispheres: false,
+        displayName: name,
+        style: { lineWidth: 2, color: 'blue' },
+        geojsonObject: geojson
+      }
+      const { layers } = this.state
+      this.setState({ 
+        layers: {
+          ...layers,
+          [name]: layer
+        }
+      })
+    }
+
 
     updateStateObject = (itemName, newAttributes) => {
       let attributes = { ...this.state[itemName]}

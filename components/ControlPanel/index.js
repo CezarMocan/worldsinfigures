@@ -1,4 +1,5 @@
 import React from 'react'
+import { makeStyles } from '@material-ui/core/styles'
 import Input from '@material-ui/core/Input'
 import TextField from '@material-ui/core/TextField';
 import MenuItem from '@material-ui/core/MenuItem'
@@ -8,11 +9,17 @@ import FormControlLabel from '@material-ui/core/FormControlLabel'
 import Select from '@material-ui/core/Select'
 import Button from '@material-ui/core/Button'
 import Checkbox from '@material-ui/core/Checkbox'
+import Modal from '@material-ui/core/Modal'
+import Backdrop from '@material-ui/core/Backdrop'
+import Fade from '@material-ui/core/Fade'
 import { projectionsList } from '../../modules/Projections'
 import { withMainContext } from '../../context/MainContext'
 import SliderWithInput from '../../components/SliderWithInput'
 import ProjectionItem from '../../components/ProjectionItem'
 import LayerItem from '../../components/LayerItem'
+import { layerTypes } from '../../data/LayerData'
+import AddLayerDialog from './AddLayerDialog'
+import ProjectionsDropdown from './ProjectionsDropdown'
 
 class ControlPanel extends React.Component {
     state = {
@@ -21,6 +28,7 @@ class ControlPanel extends React.Component {
         y: { active: true, start: 0, increment: 5, total: 360 },
         z: { active: true, start: 0, increment: 5, total: 360 },
       },
+      addLayerModalOpen: false
     }
     onProjectionSelectionUpdate = (event) => {
       const { updateStateObject } = this.props
@@ -71,31 +79,33 @@ class ControlPanel extends React.Component {
       const { animationOptions } = this.state
       onAnimate(animationOptions)
     }
+    onAddLayerModalOpen = () => {
+      this.setState({ addLayerModalOpen: true })
+    }
+    onAddLayerModalClose = () => {
+      this.setState({ addLayerModalOpen: false })
+    }
     render() {
       const { projectionAttributes, renderOptions, downloadOptions, layers } = this.props        
       const { scale, rotateX, rotateY, rotateZ, translateX, translateY, projection } = projectionAttributes
       const { clipToEarthBounds, tileVectors } = renderOptions
-      const { animationOptions } = this.state      
+      const { animationOptions, addLayerModalOpen } = this.state
+
+      const rasterLayers = Object.keys(layers).reduce((acc, k) => { 
+        if (layers[k].type == layerTypes.RASTER) acc[k] = layers[k]
+        return acc
+      }, {})
+      const vectorLayers = Object.keys(layers).reduce((acc, k) => { 
+        if (layers[k].type == layerTypes.VECTOR) acc[k] = layers[k]
+        return acc
+      }, {})
+
+      console.log('vector layers: ', vectorLayers)
 
       return (
         <div className="all-controls-container">
           <h1> Projection </h1>
-
-          <div className="controls projection">
-            <FormControl className="form-control projection-form">
-              <Select
-                value={projection}
-                onChange={this.onProjectionSelectionUpdate}
-              >
-                { projectionsList.map(p => (
-                  <MenuItem key={p.id} value={p.id}>
-                    <ProjectionItem displayName={p.displayName} flagEmoji={p.flagEmoji} genderEmoji={p.genderEmoji} year={p.year}/>
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </div>
-
+          <ProjectionsDropdown value={projection} onChange={this.onProjectionSelectionUpdate}/>
 
           <h1> Parameters </h1>
 
@@ -125,11 +135,11 @@ class ControlPanel extends React.Component {
           </div>
 
 
-          <h1> Layers </h1>
+          <h1> Raster Layers </h1>
 
           <div className="controls checkboxes">
-            { Object.keys(layers).map(k => {
-              const l = layers[k]
+            { Object.keys(rasterLayers).map(k => {
+              const l = rasterLayers[k]
               return (
                 <LayerItem
                   key={`layer-${k}`}
@@ -143,6 +153,28 @@ class ControlPanel extends React.Component {
             })}
           </div>
 
+          <h1> Vector Layers </h1>
+
+          <div className="controls checkboxes">
+            { Object.keys(vectorLayers).map(k => {
+              const l = vectorLayers[k]
+              return (
+                <LayerItem
+                  key={`layer-${k}`}
+                  visible={l.visible}
+                  color={l.style && l.style.color}                                                            
+                  onVisibilityUpdate={this.onLayerToggleUpdate(k)}
+                  onColorChange={this.onLayerColorUpdate(k)}
+                  label={l.displayName}
+                />
+              )
+            })}
+          </div>
+          <a href="#" onClick={this.onAddLayerModalOpen}>
+            <Button variant="outlined">
+              Add vector layer
+            </Button>
+          </a>
 
           <h1> Export </h1>
 
@@ -221,6 +253,21 @@ class ControlPanel extends React.Component {
               </Button>
             </a>
           </div>
+
+          <Modal
+            aria-labelledby="transition-modal-title"
+            aria-describedby="transition-modal-description"
+            open={addLayerModalOpen}
+            onClose={this.onAddLayerModalClose}
+            closeAfterTransition
+            BackdropComponent={Backdrop}
+            BackdropProps={{ timeout: 500 }}
+            style={{display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          >
+            <Fade in={addLayerModalOpen}>
+              <AddLayerDialog/>
+            </Fade>
+          </Modal>
 
         </div>
       )

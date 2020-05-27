@@ -68,8 +68,6 @@ export const drawGeoJsonSvg = (geoJson, geoGenerator, svgId, options) => {
   let hexColor = (color.indexOf('rgb') == 0) ? `#${rgbToHex(color).substring(0, 6)}` : color
   let opacity = colorParse(color).alpha()
 
-  console.log('datum: ', geoJson, 'd: ', geoGenerator)
-
   svg.append('path')
       .datum(geoJson)
       .attr("d", geoGenerator)
