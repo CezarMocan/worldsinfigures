@@ -68,14 +68,27 @@ export const drawGeoJsonSvg = (geoJson, geoGenerator, svgId, options) => {
   let hexColor = (color.indexOf('rgb') == 0) ? `#${rgbToHex(color).substring(0, 6)}` : color
   let opacity = colorParse(color).alpha()
 
-  svg.append('path')
-      .datum(geoJson)
-      .attr("d", geoGenerator)
-      .attr("fill", fillMode ? hexColor : "none")
-      .attr("stroke", fillMode ? "none" : hexColor)
-      .attr("stroke-dasharray", dashed ? "2, 2" : "")
-      .attr("stroke-width", lineWidth)
-      .attr("opacity", opacity)
+  if (geoJson.features) {
+    geoJson.features.forEach(feature => {
+      svg.append('path')
+        .datum(feature)
+        .attr("d", geoGenerator)
+        .attr("fill", fillMode ? hexColor : "none")
+        .attr("stroke", fillMode ? "none" : hexColor)
+        .attr("stroke-dasharray", dashed ? "2, 2" : "")
+        .attr("stroke-width", lineWidth)
+        .attr("opacity", opacity)
+    })  
+  } else {
+    svg.append('path')
+        .datum(geoJson)
+        .attr("d", geoGenerator)
+        .attr("fill", fillMode ? hexColor : "none")
+        .attr("stroke", fillMode ? "none" : hexColor)
+        .attr("stroke-dasharray", dashed ? "2, 2" : "")
+        .attr("stroke-width", lineWidth)
+        .attr("opacity", opacity)
+  }
 }
 
 export const drawGeoJsonTiledCanvas = (projections, geoJson, context, drawingOptions) => {

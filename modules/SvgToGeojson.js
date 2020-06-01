@@ -94,7 +94,6 @@ export const reducePathSegCurveComplexity = (pathSegList = [], complexity = 5) =
       } else {
           // We don't care about non-curve commands.
           newSegs.push(seg);
-          console.log('seg: ', seg)
       }
 
       /**
@@ -165,8 +164,9 @@ export const svgToGeoJson = (svgNode, projectionId, complexity = 5, attributes =
 
 [].forEach.call(elems, (elem, index) => {
       // if (index != 2) return
-      console.log('index: ', index)
       const mappedCoords = [];
+      
+      console.log('elem is: ', elem, window.getComputedStyle(elem))
       /**
        * Normalize element path: get path in array of X/Y absolute coords.
        * This uses a polyfill for SVG 2 getPathData() which was recently
@@ -180,8 +180,6 @@ export const svgToGeoJson = (svgNode, projectionId, complexity = 5, attributes =
           elem.getPathData({ normalize: true }), complexity
       );
 
-      console.log('pathData: ', pathData)
-
       const coords = pathData.map((pathitem) => {
           if (pathitem.type === 'Z') {
               /**
@@ -193,41 +191,21 @@ export const svgToGeoJson = (svgNode, projectionId, complexity = 5, attributes =
           }
 
           return [pathitem.values[0], pathitem.values[1]];
-      })//.slice(0, 2);
+      })
 
-      console.log('Coords: ', coords)
-
-      const projection = projectionsMap[projectionId].fn()//.fitExtent([ [ 0, 0 ], [ 1000, 500 ] ])
-    //   console.log(projection([-180, 90]))
-      // for (let i = 0; i < 1000; i += 200) {
-      //   for (let j = 0; j < 500; j += 100) {
-      //     let coord = [i, j]
-      //     const newCoords = projection.invert(coord)
-      //     console.log('****', coord, ' -> ', newCoords)
-      //       mappedCoords.push(newCoords);
-      //   }
-      // }
-      console.log('New element: ', elem)
+      const projection = projectionsMap[projectionId].fn()
       coords.forEach((coord) => {        
           coord[0] = mapX(coord[0])
           coord[1] = mapY(coord[1])
           const newCoords = projection.invert(coord)
-          // console.log('****', coord, ' -> ', newCoords)
-          // if (newCoords[0] < -180) newCoords[0] = -180
-          // if (newCoords[0] > 180) newCoords[0] = 180
-          // if (newCoords[1] < -90) newCoords[1] = -90
-          // if (newCoords[1] > 90) newCoords[1] = 90
           mappedCoords.push(newCoords);
       });
 
-      console.log('Mapped coords: ', mappedCoords)
-
       var properties = {};
-
-      attributes.forEach(function (attr) {
-          var value = elem.getAttribute(attr);
-          if (value)
-              properties[attr] = value;
+      const computedStyles = window.getComputedStyle(elem)
+      attributes.forEach((attr) => {
+          var value = computedStyles[attr]
+          if (value) properties[attr] = value;
       });
 
     //   let isLineString = elem.tagName === 'polyline'

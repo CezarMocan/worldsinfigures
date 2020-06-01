@@ -52,6 +52,9 @@ class AddLayerDialog extends React.Component {
     const svgGenerator = d3.geoPath().projection(p)
     d3.select(`#${SVG_ID}`).selectAll('*').remove()
     drawGeoJsonSvg(newGeoJson, svgGenerator, SVG_ID, {lineWidth: 2, color: 'black'})
+    
+    const newSVG = d3.select(`#${SVG_ID}`).selectAll('*')
+    console.log('newSVG: ', newSVG, newSVG.style)
   }
 
   onAddLayer = () => {
