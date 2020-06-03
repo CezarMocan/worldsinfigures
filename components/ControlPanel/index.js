@@ -62,14 +62,14 @@ class ControlPanel extends React.Component {
       const { updateStateObject } = this.props
       if (propertyName == 'start') {
         const mapping = { 'x': 'rotateX', 'y': 'rotateY', 'z': 'rotateZ' }
-        updateStateObject('projectionAttributes', { [mapping[axisName]]: parseInt(event.target[eventProp]) })
+        updateStateObject('projectionAttributes', { [mapping[axisName]]: parseFloat(event.target[eventProp]) })
       }
       this.setState({
         animationOptions: {
           ...this.state.animationOptions,
           [axisName]: {
             ...this.state.animationOptions[axisName],
-            [propertyName]: eventProp == 'value' ? parseInt(event.target[eventProp]) : event.target[eventProp]
+            [propertyName]: eventProp == 'value' ? parseFloat(event.target[eventProp]) : event.target[eventProp]
           }
         }
       })

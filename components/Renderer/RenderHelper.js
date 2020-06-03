@@ -48,18 +48,33 @@ export const projectImageData = (sourceData, projection, context, canvasWidth, c
 export const drawGeoJsonCanvas = (geoJson, geoGenerator, context, options) => {
   const { lineWidth = 1, color = 'black', fillMode = false, dashed = false } = options
 
-  context.save()
-  context.lineWidth = lineWidth;
-  context.strokeStyle = color;
-  context.fillStyle = color;
-  if (dashed) context.setLineDash([2, 2])
-  context.beginPath()
-  geoGenerator.context(context)(geoJson)
-  if (fillMode)
-      context.fill()
-  else
-      context.stroke()
-  context.restore()
+  if (geoJson.features) {
+    geoJson.features.forEach(feature => {
+      context.save()
+      context.lineWidth = lineWidth;
+      context.strokeStyle = feature.properties.stroke ? feature.properties.stroke : color;
+      context.fillStyle = feature.properties.fill ? feature.properties.fill : color;
+      if (dashed) context.setLineDash([2, 2])
+      context.beginPath()
+      geoGenerator.context(context)(feature)
+      if (feature.properties.fill && feature.properties.fill != 'none' || fillMode) context.fill()
+      if (feature.properties.stroke && feature.properties.stroke != 'none' || !fillMode) context.stroke()
+      context.restore()    
+    })
+  } else {
+    context.save()
+    context.lineWidth = lineWidth;
+    context.strokeStyle = color;
+    context.fillStyle = color;
+    if (dashed) context.setLineDash([2, 2])
+    context.beginPath()
+    geoGenerator.context(context)(geoJson)
+    if (fillMode)
+        context.fill()
+    else
+        context.stroke()
+    context.restore()  
+  }
 }
 
 export const drawGeoJsonSvg = (geoJson, geoGenerator, svgId, options) => {
@@ -73,8 +88,8 @@ export const drawGeoJsonSvg = (geoJson, geoGenerator, svgId, options) => {
       svg.append('path')
         .datum(feature)
         .attr("d", geoGenerator)
-        .attr("fill", fillMode ? hexColor : "none")
-        .attr("stroke", fillMode ? "none" : hexColor)
+        .attr("fill", feature.properties.fill ? feature.properties.fill : (fillMode ? hexColor : "none"))
+        .attr("stroke", feature.properties.stroke ? feature.properties.stroke : (fillMode ? "none" : hexColor))
         .attr("stroke-dasharray", dashed ? "2, 2" : "")
         .attr("stroke-width", lineWidth)
         .attr("opacity", opacity)

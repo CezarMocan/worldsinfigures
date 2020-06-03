@@ -137,17 +137,24 @@ export const getSVGDimensions = (svgNode) => {
 * @param  {DOM Node} svgNode
 * @return {GeoJson Object}
 */
-export const svgToGeoJson = (svgNode, projectionId, complexity = 5, attributes = [], multiplier = 1) => {
+export const svgToGeoJson = (svgNode, projectionId, scale, padding, complexity = 5, attributes = [], multiplier = 1) => {
   applyPolyfill()
   const geoJson = {
       type: 'FeatureCollection',
       features: [],
   };
 
-  const pBounds = projectionsMap[projectionId].fn()
+  const pBounds = projectionsMap[projectionId].fn().scale(scale)
   // Split bounds into nw/se to create d3 scale of NESW maximum values
-  const ne = pBounds([165, 85])
-  const sw = pBounds([-165, -85])
+  const ne = pBounds([165, 80])
+  const sw = pBounds([-165, -80])
+
+  console.log('Bounds width: ', sw[0], ne[0])
+  console.log('Bounds height: ', ne[1], sw[1])
+  sw[0] = padding
+  ne[0] = 1000 - padding
+  ne[1] = padding
+  sw[1] = 500 - padding
 
   const svgDims = getSVGDimensions(svgNode);
   const mapX = scaleLinear().domain([0, svgDims.width]).range([parseFloat(sw[0]), parseFloat(ne[0])]);
@@ -193,7 +200,7 @@ export const svgToGeoJson = (svgNode, projectionId, complexity = 5, attributes =
           return [pathitem.values[0], pathitem.values[1]];
       })
 
-      const projection = projectionsMap[projectionId].fn()
+      const projection = projectionsMap[projectionId].fn().scale(scale)
       coords.forEach((coord) => {        
           coord[0] = mapX(coord[0])
           coord[1] = mapY(coord[1])

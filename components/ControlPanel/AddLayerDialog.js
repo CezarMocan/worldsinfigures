@@ -15,6 +15,7 @@ import { layerTypes } from '../../data/LayerData'
 
 const SVG_ID = 'projected-svg'
 const ACCURACY = 2
+const STYLE_ATTRIBUTES = ['stroke', 'lineWidth', 'fill', 'fillMode']
 
 class AddLayerDialog extends React.Component {
   state = {
@@ -23,7 +24,9 @@ class AddLayerDialog extends React.Component {
     originalName: '__empty__',
     projection: 'geoEquirectangular',
     projectionTo: 'geoEquirectangular',
-    lineDivisions: 100
+    lineDivisions: 100,
+    scale: 100,
+    padding: 10
   }
 
   uploadSVG = (files) => {
@@ -44,27 +47,24 @@ class AddLayerDialog extends React.Component {
   generateSVG = () => {
     let node = this._svgContainer.children[0]
     if (!node) return
-    const { projection, projectionTo, lineDivisions } = this.state
-    let geojson = svgToGeoJson(node, projection, lineDivisions)
+    const { projection, projectionTo, lineDivisions, scale, padding } = this.state
+    this.geojson = svgToGeoJson(node, projection, scale, padding, lineDivisions, STYLE_ATTRIBUTES)
 
-    const newGeoJson = cloneDeep(geojson)
     const p = projectionsMap[projectionTo].fn()
     const svgGenerator = d3.geoPath().projection(p)
     d3.select(`#${SVG_ID}`).selectAll('*').remove()
-    drawGeoJsonSvg(newGeoJson, svgGenerator, SVG_ID, {lineWidth: 2, color: 'black'})
+    drawGeoJsonSvg(this.geojson, svgGenerator, SVG_ID, {lineWidth: 2, color: 'black'})
+    drawGeoJsonSvg(d3.geoGraticule()(), svgGenerator, SVG_ID, {lineWidth: 0.5, color: 'red'})
     
     const newSVG = d3.select(`#${SVG_ID}`).selectAll('*')
-    console.log('newSVG: ', newSVG, newSVG.style)
   }
 
   onAddLayer = () => {
     let node = this._svgContainer.children[0]
     if (!node) return
-    const { projection, originalName, lineDivisions } = this.state
-    let geojson = svgToGeoJson(node, projection, lineDivisions)
-
+    const { originalName } = this.state
     const { addLayer } = this.props
-    addLayer(originalName, layerTypes.VECTOR, geojson)
+    addLayer(originalName, layerTypes.VECTOR, this.geojson)
   }
 
   onProjectionSelectionUpdate = (event) => {
@@ -84,6 +84,15 @@ class AddLayerDialog extends React.Component {
     this.setState({ lineDivisions: newValue })
   }
 
+  onScaleChange = (newValue) => {
+    this.setState({ scale: newValue })
+  }
+
+  onPaddingChange = (newValue) => {
+    this.setState({ padding: newValue })
+  }
+
+
   onSvgRef = (p) => {
     this._svg = p
   }
@@ -93,7 +102,7 @@ class AddLayerDialog extends React.Component {
   }
 
   render() {
-    const { projection, projectionTo, lineDivisions } = this.state
+    const { projection, projectionTo, lineDivisions, scale, padding } = this.state
     return (
       <div className="add-layer-container">
         <div className="convert-title">
@@ -126,6 +135,8 @@ class AddLayerDialog extends React.Component {
         </div>
         <div className="sliders">
           <SliderWithInput label="Divisions" min={2} max={500} initialValue={lineDivisions} onValueChange={this.onLineDivisionsChange}/>
+          <SliderWithInput label="Scale" min={25} max={750} initialValue={scale} onValueChange={this.onScaleChange}/>
+          <SliderWithInput label="Padding" min={0} max={500} initialValue={padding} onValueChange={this.onPaddingChange}/>
         </div>
         <div className="convert-page-svg-container">
           <svg

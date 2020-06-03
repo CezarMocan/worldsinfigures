@@ -79,10 +79,10 @@ class Main extends React.PureComponent {
       }
     
       // Canvas rendering
-      // if (!this.rasterData || withCleanSurface) {
-      //   this.rasterData = getImageData(this._image, this.secondaryCanvasContext, this.canvasWidth, this.canvasHeight)
-      // }
-      // renderLayersToCanvas(this._canvas, this._canvas2, this.rasterData, layers, projectionAttributes, canvasAttributes, renderOptions)
+      if (!this.rasterData || withCleanSurface) {
+        this.rasterData = getImageData(this._image, this.secondaryCanvasContext, this.canvasWidth, this.canvasHeight)
+      }
+      renderLayersToCanvas(this._canvas, this._canvas2, this.rasterData, layers, projectionAttributes, canvasAttributes, renderOptions)
 
       // SVG rendering
       renderLayersToSVG(SVG_ID, layers, projectionAttributes, canvasAttributes, renderOptions)
