@@ -68,7 +68,7 @@ export const defaultLayers = {
         }
     },
     allRedLine: {
-        visible: false,
+        visible: true,
         type: layerTypes.VECTOR,
         url: '/static/geo/all-red-line-geo.geojson',
         geojsonObject: null,
@@ -125,11 +125,76 @@ export const defaultLayers = {
     Gy0lx8IQ8: { // You can replace this ID with something legible, as long as it's different from all others in the file.
       visible: false,
       type: layerTypes.VECTOR,
-      url: '/static/geo/michele-bottom-edge-1.svg.geojson',
-      displayName: 'michele-bottom-edge-1', // Or however you want to see it in the layer list.
+      url: '/static/geo/michele-ver-29.svg-geoLittrow.geojson',
+      displayName: 'michele-ver-29.svg-geoLittrow', // Or however you want to see it in the layer list.
       style: {
-       lineWidth: 2,
+       lineWidth: 1,
        color: 'rgba(255, 255, 255, 1)',
+       fillMode: false,
+       dashed: false
+      },
+      duplicateHemispheres: false
+     },
+    Gy0lx8IQ8b: { // You can replace this ID with something legible, as long as it's different from all others in the file.
+      visible: false,
+      type: layerTypes.VECTOR,
+      url: '/static/geo/michele-ver-29.svg-geoRobinson.geojson',
+      displayName: 'michele-ver-29.svg-geoRobinson', // Or however you want to see it in the layer list.
+      style: {
+       lineWidth: 1,
+       color: 'rgba(255, 255, 255, 1)',
+       fillMode: false,
+       dashed: false
+      },
+      duplicateHemispheres: false
+     },
+     Gy0lx8IQ8e: { // You can replace this ID with something legible, as long as it's different from all others in the file.
+      visible: false,
+      type: layerTypes.VECTOR,
+      url: '/static/geo/michele-ver-29.svg-geoBoggs.geojson',
+      displayName: 'michele-ver-29.svg-geoBoggs', // Or however you want to see it in the layer list.
+      style: {
+       lineWidth: 1,
+       color: 'rgba(255, 255, 255, 1)',
+       fillMode: false,
+       dashed: false
+      },
+      duplicateHemispheres: false
+     },
+    Gy0lx8IQ8f: { // You can replace this ID with something legible, as long as it's different from all others in the file.
+      visible: false,
+      type: layerTypes.VECTOR,
+      url: '/static/geo/michele-ver-29.svg-geoMercator.geojson',
+      displayName: 'michele-ver-29.svg-geoMercator', // Or however you want to see it in the layer list.
+      style: {
+       lineWidth: 1,
+       color: 'rgba(255, 255, 255, 1)',
+       fillMode: false,
+       dashed: false
+      },
+      duplicateHemispheres: false
+     },
+    Gy0lx8IQ8g: { // You can replace this ID with something legible, as long as it's different from all others in the file.
+      visible: true,
+      type: layerTypes.VECTOR,
+      url: '/static/geo/michele-ver-29.svg-geoEquirectangular.geojson',
+      displayName: 'michele-ver-29.svg-geoEquirectangular', // Or however you want to see it in the layer list.
+      style: {
+       lineWidth: 1,
+       color: 'rgba(255, 255, 255, 1)',
+       fillMode: false,
+       dashed: false
+      },
+      duplicateHemispheres: false
+     },
+    Gy0lx8IQ8h: { // You can replace this ID with something legible, as long as it's different from all others in the file.
+      visible: true,
+      type: layerTypes.VECTOR,
+      url: '/static/geo/michele-double-ver-29.svg-geoEquirectangular.geojson',
+      displayName: 'michele-double-ver-29.svg-geoEquirectangular', // Or however you want to see it in the layer list.
+      style: {
+       lineWidth: 1,
+       color: 'rgba(255, 255, 0, 1)',
        fillMode: false,
        dashed: false
       },
