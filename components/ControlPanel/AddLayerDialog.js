@@ -51,7 +51,7 @@ class AddLayerDialog extends React.Component {
     const p = projectionsMap[projectionTo].fn()
     const svgGenerator = d3.geoPath().projection(p)
     d3.select(`#${SVG_ID}`).selectAll('*').remove()
-    drawGeoJsonSvg(this.geojson, svgGenerator, SVG_ID, {lineWidth: 2, color: 'black'})
+    drawGeoJsonSvg(this.geojson, svgGenerator, SVG_ID, {lineWidth: 2, color: 'black'}, true)
     drawGeoJsonSvg(d3.geoGraticule()(), svgGenerator, SVG_ID, {lineWidth: 0.5, color: 'red'})
   }
 
