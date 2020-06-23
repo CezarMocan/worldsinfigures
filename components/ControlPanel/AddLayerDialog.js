@@ -1,10 +1,7 @@
 import React from 'react'
 import * as d3 from 'd3'
 import Dropzone from 'react-dropzone'
-import cloneDeep from 'clone-deep'
-import MenuItem from '@material-ui/core/MenuItem'
-import FormControl from '@material-ui/core/FormControl'
-import Select from '@material-ui/core/Select'
+import Button from '@material-ui/core/Button'
 import SliderWithInput from '../../components/SliderWithInput'
 import { withMainContext } from '../../context/MainContext'
 import { svgToGeoJson } from '../../modules/SvgToGeojson'
@@ -25,8 +22,9 @@ class AddLayerDialog extends React.Component {
     projection: 'geoEquirectangular',
     projectionTo: 'geoEquirectangular',
     lineDivisions: 100,
-    scale: 100,
-    padding: 10
+    scale: 200,
+    paddingX: 10,
+    paddingY: 10
   }
 
   uploadSVG = (files) => {
@@ -47,16 +45,14 @@ class AddLayerDialog extends React.Component {
   generateSVG = () => {
     let node = this._svgContainer.children[0]
     if (!node) return
-    const { projection, projectionTo, lineDivisions, scale, padding } = this.state
-    this.geojson = svgToGeoJson(node, projection, scale, padding, lineDivisions, STYLE_ATTRIBUTES)
+    const { projection, projectionTo, lineDivisions, scale, paddingX, paddingY } = this.state
+    this.geojson = svgToGeoJson(node, projection, scale, {x: paddingX, y: paddingY }, lineDivisions, STYLE_ATTRIBUTES)
 
     const p = projectionsMap[projectionTo].fn()
     const svgGenerator = d3.geoPath().projection(p)
     d3.select(`#${SVG_ID}`).selectAll('*').remove()
     drawGeoJsonSvg(this.geojson, svgGenerator, SVG_ID, {lineWidth: 2, color: 'black'})
     drawGeoJsonSvg(d3.geoGraticule()(), svgGenerator, SVG_ID, {lineWidth: 0.5, color: 'red'})
-    
-    const newSVG = d3.select(`#${SVG_ID}`).selectAll('*')
   }
 
   onAddLayer = () => {
@@ -65,6 +61,9 @@ class AddLayerDialog extends React.Component {
     const { originalName } = this.state
     const { addLayer } = this.props
     addLayer(originalName, layerTypes.VECTOR, this.geojson)
+    const { onClose } = this.props
+    console.log('on close: ', onClose)
+    if (onClose) onClose()
   }
 
   onProjectionSelectionUpdate = (event) => {
@@ -88,10 +87,13 @@ class AddLayerDialog extends React.Component {
     this.setState({ scale: newValue })
   }
 
-  onPaddingChange = (newValue) => {
-    this.setState({ padding: newValue })
+  onPaddingXChange = (newValue) => {
+    this.setState({ paddingX: newValue })
   }
 
+  onPaddingYChange = (newValue) => {
+    this.setState({ paddingY: newValue })
+  }
 
   onSvgRef = (p) => {
     this._svg = p
@@ -102,24 +104,21 @@ class AddLayerDialog extends React.Component {
   }
 
   render() {
-    const { projection, projectionTo, lineDivisions, scale, padding } = this.state
+    const { projection, projectionTo, lineDivisions, scale, paddingX, paddingY } = this.state
     return (
       <div className="add-layer-container">
-        <div className="convert-title">
-          <h2>Add SVG layer</h2>
-        </div>
-        <h3 className="convert-step-title">Step 1: Upload a file</h3> 
+        <h3 className="convert-first-step-title">Upload a file</h3> 
         <p className="convert-instructions">Before uploading, make sure to run <span className="code">Object -> Path -> Clean-up</span> in Illustrator, in order to avoid rendering bugs.</p>
         <Dropzone onDrop={this.uploadSVG} multiple={false}>
           {({getRootProps, getInputProps}) => (
             <div className="convert-dropzone" {...getRootProps()}>
-              <input {...getInputProps()} />
+              <input {...getInputProps()} accept=".svg"/>
               <div>Drop SVG file here, or click to open the upload dialog</div>  
             </div>
           )}
         </Dropzone>
         
-        <h3 className="convert-step-title">Step 2: Preview the SVG</h3>
+        <h3 className="convert-step-title">Preview the SVG</h3>
         <div className="convert-page-svg-container">
           <span ref={p => this._svgContainer = p} id="svg"></span>
         </div>
@@ -136,7 +135,8 @@ class AddLayerDialog extends React.Component {
         <div className="sliders">
           <SliderWithInput label="Divisions" min={2} max={500} initialValue={lineDivisions} onValueChange={this.onLineDivisionsChange}/>
           <SliderWithInput label="Scale" min={25} max={750} initialValue={scale} onValueChange={this.onScaleChange}/>
-          <SliderWithInput label="Padding" min={0} max={500} initialValue={padding} onValueChange={this.onPaddingChange}/>
+          <SliderWithInput label="Bounds X" min={-500} max={500} initialValue={paddingX} onValueChange={this.onPaddingXChange}/>
+          <SliderWithInput label="Bounds Y" min={-500} max={500} initialValue={paddingY} onValueChange={this.onPaddingYChange}/>
         </div>
         <div className="convert-page-svg-container">
           <svg
@@ -148,12 +148,13 @@ class AddLayerDialog extends React.Component {
             
           </svg>
         </div>
-        <h3 className="convert-step-title">Step 5: Download</h3>
-
-        <div className="convert-button" onClick={this.onAddLayer}>
-          <div>Add layer</div>
-        </div>
         
+        <div className="convert-button-container">
+          <a href="#" onClick={this.onAddLayer}>
+            <Button variant="outlined"> Add layer </Button>
+          </a>                    
+        </div>
+
       </div>
     )
   }

@@ -71,7 +71,7 @@ export const renderLayersToCanvas = (targetCanvas, bufferCanvas, rasterData, lay
   // Draw vector layers on top of raster image
   Object.values(layers).forEach(l => {
     if (l.type != layerTypes.VECTOR || !l.visible) return
-    drawGeoJsonTiledCanvas(tiledProjections, l.geojsonObject, canvasContext, l.style)
+    drawGeoJsonTiledCanvas(tiledProjections, l.geojsonObject, canvasContext, l.style, l.preserveOriginalStyle)
   })
 
   canvasContext.restore()
@@ -86,6 +86,6 @@ export const renderLayersToSVG = (svgId, layers, projectionAttributes, canvasAtt
   Object.values(layers).forEach(l => {
     if (l.type != layerTypes.VECTOR) return
     if (!l.visible) return
-    drawGeoJsonTiledSVG(tiledProjections, l.geojsonObject, svgId, l.style)
+    drawGeoJsonTiledSVG(tiledProjections, l.geojsonObject, svgId, l.style, l.preserveOriginalStyle)
   })
 }

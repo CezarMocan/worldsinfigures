@@ -149,12 +149,10 @@ export const svgToGeoJson = (svgNode, projectionId, scale, padding, complexity =
   const ne = pBounds([165, 80])
   const sw = pBounds([-165, -80])
 
-  console.log('Bounds width: ', sw[0], ne[0])
-  console.log('Bounds height: ', ne[1], sw[1])
-  sw[0] = padding
-  ne[0] = 1000 - padding
-  ne[1] = padding
-  sw[1] = 500 - padding
+  sw[0] = padding.x
+  ne[0] = 1000 - padding.x
+  ne[1] = padding.y
+  sw[1] = 500 - padding.y
 
   const svgDims = getSVGDimensions(svgNode);
   const mapX = scaleLinear().domain([0, svgDims.width]).range([parseFloat(sw[0]), parseFloat(ne[0])]);
@@ -173,7 +171,6 @@ export const svgToGeoJson = (svgNode, projectionId, scale, padding, complexity =
       // if (index != 2) return
       const mappedCoords = [];
       
-      console.log('elem is: ', elem, window.getComputedStyle(elem))
       /**
        * Normalize element path: get path in array of X/Y absolute coords.
        * This uses a polyfill for SVG 2 getPathData() which was recently
@@ -226,8 +223,6 @@ export const svgToGeoJson = (svgNode, projectionId, scale, padding, complexity =
               coordinates: isLineString ? mappedCoords : [mappedCoords],
           },
       });
-
-      console.log(geoJson)
   });
 
   return geoJson;

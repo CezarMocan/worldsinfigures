@@ -45,20 +45,25 @@ export const projectImageData = (sourceData, projection, context, canvasWidth, c
     return target
 }
 
-export const drawGeoJsonCanvas = (geoJson, geoGenerator, context, options) => {
-  const { lineWidth = 1, color = 'black', fillMode = false, dashed = false } = options
+export const drawGeoJsonCanvas = (geoJson, geoGenerator, context, options, preserveOriginalStyle) => {
+  const { lineWidth = 0, color = 'black', fillMode = false, dashed = false } = options
 
   if (geoJson.features) {
     geoJson.features.forEach(feature => {
       context.save()
       context.lineWidth = lineWidth;
-      context.strokeStyle = feature.properties.stroke ? feature.properties.stroke : color;
-      context.fillStyle = feature.properties.fill ? feature.properties.fill : color;
+      context.strokeStyle = (preserveOriginalStyle && feature.properties.stroke) ? feature.properties.stroke : color;
+      context.fillStyle = (preserveOriginalStyle && feature.properties.fill) ? feature.properties.fill : color;
       if (dashed) context.setLineDash([2, 2])
       context.beginPath()
       geoGenerator.context(context)(feature)
-      if (feature.properties.fill && feature.properties.fill != 'none' || fillMode) context.fill()
-      if (feature.properties.stroke && feature.properties.stroke != 'none' || !fillMode) context.stroke()
+      if (preserveOriginalStyle && (feature.properties.fill || feature.properties.stroke)) {
+        if (feature.properties.fill && feature.properties.fill != 'none') context.fill()
+        if (feature.properties.stroke && feature.properties.stroke != 'none') context.stroke()  
+      } else {
+        if (fillMode) context.fill()
+        else context.stroke()
+      }
       context.restore()    
     })
   } else {
@@ -77,7 +82,7 @@ export const drawGeoJsonCanvas = (geoJson, geoGenerator, context, options) => {
   }
 }
 
-export const drawGeoJsonSvg = (geoJson, geoGenerator, svgId, options) => {
+export const drawGeoJsonSvg = (geoJson, geoGenerator, svgId, options, preserveOriginalStyle) => {
   const { lineWidth = 1, color = 'black', fillMode = false, dashed = false } = options
   const svg = d3.select(`#${svgId}`)
   let hexColor = (color.indexOf('rgb') == 0) ? `#${rgbToHex(color).substring(0, 6)}` : color
@@ -88,8 +93,8 @@ export const drawGeoJsonSvg = (geoJson, geoGenerator, svgId, options) => {
       svg.append('path')
         .datum(feature)
         .attr("d", geoGenerator)
-        .attr("fill", feature.properties.fill ? feature.properties.fill : (fillMode ? hexColor : "none"))
-        .attr("stroke", feature.properties.stroke ? feature.properties.stroke : (fillMode ? "none" : hexColor))
+        .attr("fill", (preserveOriginalStyle && feature.properties.fill) ? feature.properties.fill : (fillMode ? hexColor : "none"))
+        .attr("stroke", (preserveOriginalStyle && feature.properties.stroke) ? feature.properties.stroke : (fillMode ? "none" : hexColor))
         .attr("stroke-dasharray", dashed ? "2, 2" : "")
         .attr("stroke-width", lineWidth)
         .attr("opacity", opacity)
@@ -106,20 +111,20 @@ export const drawGeoJsonSvg = (geoJson, geoGenerator, svgId, options) => {
   }
 }
 
-export const drawGeoJsonTiledCanvas = (projections, geoJson, context, drawingOptions) => {
+export const drawGeoJsonTiledCanvas = (projections, geoJson, context, drawingOptions, preserveOriginalStyle) => {
   projections.forEach(projection => {
     const { p, offsetX, offsetY } = projection
     const newGeoJson = cloneDeep(geoJson)
     const canvasGenerator = d3.geoPath().projection(p)
-    drawGeoJsonCanvas(newGeoJson, canvasGenerator, context, drawingOptions)
+    drawGeoJsonCanvas(newGeoJson, canvasGenerator, context, drawingOptions, preserveOriginalStyle)
   })
 }
 
-export const drawGeoJsonTiledSVG = (projections, geoJson, svgId, drawingOptions) => {
+export const drawGeoJsonTiledSVG = (projections, geoJson, svgId, drawingOptions, preserveOriginalStyle) => {
   projections.forEach(projection => {
     const { p, offsetX, offsetY } = projection
     const newGeoJson = cloneDeep(geoJson)
     const svgGenerator = d3.geoPath().projection(p)
-    drawGeoJsonSvg(newGeoJson, svgGenerator, svgId, drawingOptions)
+    drawGeoJsonSvg(newGeoJson, svgGenerator, svgId, drawingOptions, preserveOriginalStyle)
   })
 }

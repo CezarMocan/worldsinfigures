@@ -100,8 +100,6 @@ class ControlPanel extends React.Component {
         return acc
       }, {})
 
-      console.log('vector layers: ', vectorLayers)
-
       return (
         <div className="all-controls-container">
           <h1> Projection </h1>
@@ -144,7 +142,7 @@ class ControlPanel extends React.Component {
                 <LayerItem
                   key={`layer-${k}`}
                   visible={l.visible}
-                  color={l.style && l.style.color}                                                            
+                  color={l.style && l.style.color}                                                     
                   onVisibilityUpdate={this.onLayerToggleUpdate(k)}
                   onColorChange={this.onLayerColorUpdate(k)}
                   label={l.displayName}
@@ -162,7 +160,8 @@ class ControlPanel extends React.Component {
                 <LayerItem
                   key={`layer-${k}`}
                   visible={l.visible}
-                  color={l.style && l.style.color}                                                            
+                  color={l.style && l.style.color}     
+                  preserveOriginalStyle={l.preserveOriginalStyle}                                                         
                   onVisibilityUpdate={this.onLayerToggleUpdate(k)}
                   onColorChange={this.onLayerColorUpdate(k)}
                   label={l.displayName}
@@ -265,7 +264,7 @@ class ControlPanel extends React.Component {
             style={{display: 'flex', alignItems: 'center', justifyContent: 'center' }}
           >
             <Fade in={addLayerModalOpen}>
-              <AddLayerDialog/>
+              <AddLayerDialog onClose={this.onAddLayerModalClose}/>
             </Fade>
           </Modal>
 
