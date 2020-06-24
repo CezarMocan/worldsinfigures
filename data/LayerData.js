@@ -19,6 +19,7 @@ export const defaultLayers = {
         geojsonObject: null,
         generatorFunction: d3.geoGraticule(),
         displayName: 'Graticule',
+        preserveOriginalStyle: false,
         style: {
             lineWidth: 1,
             color: '#ccc',
@@ -33,6 +34,7 @@ export const defaultLayers = {
         jsonToGeojsonFn: (json) => topojson.feature(json, json.objects.tissot),
         geojsonObject: null,
         displayName: 'Tissot Indicatrices',
+        preserveOriginalStyle: false,
         style: {
             lineWidth: 0.5,
             color: 'rgba(255, 230, 255, 0.2)',
@@ -47,6 +49,7 @@ export const defaultLayers = {
         jsonToGeojsonFn: (json) => topojson.feature(json, json.objects.countries),
         geojsonObject: null,
         displayName: 'World Map',
+        preserveOriginalStyle: false,
         style: {
             lineWidth: 0.5,
             color: 'rgba(255, 230, 220, 0.2)',
@@ -58,8 +61,9 @@ export const defaultLayers = {
         visible: false,
         type: layerTypes.VECTOR,
         url: '/static/geo/cable-geo.geojson',
-        geojsonObject: null,
+        geojsonObject: null,        
         displayName: 'Submarine Cables',
+        preserveOriginalStyle: false,
         style: {
             lineWidth: 0.5,
             color: '#fdd',
@@ -73,6 +77,7 @@ export const defaultLayers = {
         url: '/static/geo/all-red-line-geo.geojson',
         geojsonObject: null,
         displayName: 'All Red Line',
+        preserveOriginalStyle: false,
         style: {
             lineWidth: 2,
             color: 'rgba(255, 64, 64, 0.8)',
@@ -87,6 +92,7 @@ export const defaultLayers = {
         jsonToGeojsonFn: (json) => topojson.feature(json, json.objects.gedymin),
         geojsonObject: null,
         displayName: '[ORIGINAL] 2 Gedymin Heads',
+        preserveOriginalStyle: false,
         style: {
             lineWidth: 2,
             color: 'rgba(255, 255, 64, 0.8)',
@@ -100,6 +106,7 @@ export const defaultLayers = {
         url: '/static/geo/face-geo.geojson',
         geojsonObject: null,
         displayName: 'Gedymin Head',
+        preserveOriginalStyle: false,
         style: {
             lineWidth: 2,
             color: 'rgba(64, 64, 255, 0.8)',
@@ -112,6 +119,7 @@ export const defaultLayers = {
         visible: false,
         type: layerTypes.VECTOR,
         url: '/static/geo/face-geo.geojson',
+        preserveOriginalStyle: false,
         geojsonObject: null,
         displayName: '[**NEW**] Duplicated single Gedymin Head',
         style: {
@@ -127,6 +135,7 @@ export const defaultLayers = {
       type: layerTypes.VECTOR,
       url: '/static/geo/michele-ver-29.svg-geoLittrow.geojson',
       displayName: 'michele-ver-29.svg-geoLittrow', // Or however you want to see it in the layer list.
+        preserveOriginalStyle: false,
       style: {
        lineWidth: 1,
        color: 'rgba(255, 255, 255, 1)',
@@ -140,6 +149,7 @@ export const defaultLayers = {
       type: layerTypes.VECTOR,
       url: '/static/geo/michele-ver-29.svg-geoRobinson.geojson',
       displayName: 'michele-ver-29.svg-geoRobinson', // Or however you want to see it in the layer list.
+      preserveOriginalStyle: false,
       style: {
        lineWidth: 1,
        color: 'rgba(255, 255, 255, 1)',
@@ -153,6 +163,7 @@ export const defaultLayers = {
       type: layerTypes.VECTOR,
       url: '/static/geo/michele-ver-29.svg-geoBoggs.geojson',
       displayName: 'michele-ver-29.svg-geoBoggs', // Or however you want to see it in the layer list.
+      preserveOriginalStyle: false,
       style: {
        lineWidth: 1,
        color: 'rgba(255, 255, 255, 1)',
@@ -166,6 +177,7 @@ export const defaultLayers = {
       type: layerTypes.VECTOR,
       url: '/static/geo/michele-ver-29.svg-geoMercator.geojson',
       displayName: 'michele-ver-29.svg-geoMercator', // Or however you want to see it in the layer list.
+      preserveOriginalStyle: false,
       style: {
        lineWidth: 1,
        color: 'rgba(255, 255, 255, 1)',
@@ -179,6 +191,7 @@ export const defaultLayers = {
       type: layerTypes.VECTOR,
       url: '/static/geo/michele-ver-29.svg-geoEquirectangular.geojson',
       displayName: 'michele-ver-29.svg-geoEquirectangular', // Or however you want to see it in the layer list.
+      preserveOriginalStyle: false,
       style: {
        lineWidth: 1,
        color: 'rgba(255, 255, 255, 1)',
@@ -192,6 +205,7 @@ export const defaultLayers = {
       type: layerTypes.VECTOR,
       url: '/static/geo/michele-double-ver-29.svg-geoEquirectangular.geojson',
       displayName: 'michele-double-ver-29.svg-geoEquirectangular', // Or however you want to see it in the layer list.
+      preserveOriginalStyle: false,
       style: {
        lineWidth: 1,
        color: 'rgba(255, 255, 0, 1)',

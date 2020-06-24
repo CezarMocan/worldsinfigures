@@ -20,13 +20,13 @@ export default class LayerItem extends React.Component {
       if (onVisibilityUpdate) onVisibilityUpdate(!visible)
     }
     render() {
-        const { visible, label, color } = this.props
+        const { visible, label, color, preserveOriginalStyle } = this.props
         const { colorPickerOpen } = this.state
         return (
             <div className="layer-item">
               <div className="layer-item-label">{label}</div>
               <div className="layer-item-controls">
-              { color &&
+              { !preserveOriginalStyle && color &&
                 <div className="layer-items-control-fill" onClick={this.onColorClick} style={{ backgroundColor: color }}>
                   { colorPickerOpen && <div className="color-picker-container">
                     <GithubPicker colors={colors} onChangeComplete={this.onColorChange}/>

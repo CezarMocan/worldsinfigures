@@ -51,25 +51,60 @@ export default class MainContextProvider extends React.Component {
 
     // Loading raster and vector data
     loadLayers = async () => {
+      let errorKeys = []
       const loadedLayers = cloneDeep(this.state.layers)
 
       for (let key of Object.keys(loadedLayers)) {
         const l = loadedLayers[key]
+        let hasError = false
         if (l.type === layerTypes.VECTOR) {
           if (l.generatorFunction) {
             l.geojsonObject = l.generatorFunction()
           } else {
-            const loadedJson = await d3.json(l.url)
-            l.geojsonObject = l.jsonToGeojsonFn ? l.jsonToGeojsonFn(loadedJson) : loadedJson
+            let loadedJson
+            try {
+              loadedJson = await d3.json(l.url)
+            } catch (e) {
+              console.error('Caught an error in loading JSON: ', l.url)
+              console.error('Corresponding layer will not be shown.')
+              console.error(e)
+              hasError = true
+              errorKeys.push(key)
+            }
+            if (!hasError)
+              l.geojsonObject = l.jsonToGeojsonFn ? l.jsonToGeojsonFn(loadedJson) : loadedJson
           }
-          if (l.duplicateHemispheres) {
+          if (!hasError && l.duplicateHemispheres) {
             l.geojsonObject = duplicateOnHemispheres(l.geojsonObject)
           }
         } else if (l.type === layerTypes.RASTER) {
 
         }
       }
+
+      errorKeys.forEach(k => {
+        delete loadedLayers[k]
+      })
       this.setState({ layers: loadedLayers, ready: true })
+    }
+
+    addLayer = (name, layerType, geojson) => {
+      const layer = {
+        visible: true,
+        type: layerType,
+        duplicateHemispheres: false,
+        preserveOriginalStyle: true,
+        displayName: name,
+        style: { lineWidth: 2, color: 'blue' },
+        geojsonObject: geojson
+      }
+      const { layers } = this.state
+      this.setState({ 
+        layers: {
+          ...layers,
+          [name]: layer
+        }
+      })
     }
 
 

@@ -56,7 +56,6 @@ export const Zipper = class Zipper {
       var svgBlob = new Blob([data], { type:"image/svg+xml;charset=utf-8" })
       let dataURL = await blobToDataURL(svgBlob)
       dataBase64 = dataURLToBase64(dataURL)
-      console.log('dataBase64: ', dataBase64)
       this._svg.file(`${filename}.svg`, dataBase64, { base64: true })
     }   
   }

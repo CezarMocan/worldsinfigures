@@ -1,21 +1,40 @@
 import Style from '../static/styles/convert.less'
 import React from 'react'
 import Dropzone from 'react-dropzone'
+import * as d3 from 'd3'
 import MenuItem from '@material-ui/core/MenuItem'
 import FormControl from '@material-ui/core/FormControl'
 import Select from '@material-ui/core/Select'
+import SliderWithInput from '../components/SliderWithInput'
+import FormGroup from '@material-ui/core/FormGroup'
+import FormControlLabel from '@material-ui/core/FormControlLabel'
+import Checkbox from '@material-ui/core/Checkbox'
 import { svgToGeoJson } from '../modules/SvgToGeojson'
+import { drawGeoJsonSvg } from '../components/Renderer/RenderHelper'
 import { createAndDownloadText } from '../modules/DownloadHelper'
 import shortid from 'shortid'
 import { projectionsList, projectionsMap } from '../modules/Projections'
 import ProjectionItem from '../components/ProjectionItem'
+import ProjectionsDropdown from '../components/ControlPanel/ProjectionsDropdown'
+import { duplicateOnHemispheres } from '../modules/GeoJsonHelper'
+
+const SVG_ID = 'projected-svg'
+const ACCURACY = 2
+const STYLE_ATTRIBUTES = ['stroke', 'lineWidth', 'fill', 'fillMode']
 
 export default class Convert extends React.Component {
   state = {
     hasFile: false,
     filename: '__empty__',
     originalName: '__empty__',
-    projection: 'geoEquirectangular'
+    projection: 'geoEquirectangular',
+    projectionTo: 'geoEquirectangular',
+    lineDivisions: 100,
+    scale: 200,
+    paddingX: 10,
+    paddingY: 10,
+    preserveOriginalStyle: true,
+    duplicateHemispheres: false
   }
   constructor(props) {
     super(props)
@@ -42,23 +61,32 @@ export default class Convert extends React.Component {
 
   generateSVG = () => {
     // let node = $('svg')[0]
-    let node = this._svgContainer.children[0]
-    // let bounds = [[90, 180], [-90, -180]]
-    let bounds = [[0, 1000], [500, 0]]
-    const { projection } = this.state
-    let geojson = svgToGeoJson(bounds, node, projection, 20)
+    createAndDownloadText(this.state.filename, JSON.stringify(this.geojson))
+  }
 
-    createAndDownloadText(this.state.filename, JSON.stringify(geojson))
+  generateSVGPreview = () => {
+    let node = this._svgContainer.children[0]
+    if (!node) return
+    const { projection, projectionTo, lineDivisions, scale, paddingX, paddingY, preserveOriginalStyle, duplicateHemispheres } = this.state
+    const styleAttributes = preserveOriginalStyle ? STYLE_ATTRIBUTES : []
+    this.geojson = svgToGeoJson(node, projection, scale, {x: paddingX, y: paddingY }, lineDivisions, styleAttributes)
+    const geojsonToRender = duplicateHemispheres ? duplicateOnHemispheres(this.geojson) : this.geojson
+    const p = projectionsMap[projectionTo].fn()
+    const svgGenerator = d3.geoPath().projection(p)
+    d3.select(`#${SVG_ID}`).selectAll('*').remove()
+    drawGeoJsonSvg(geojsonToRender, svgGenerator, SVG_ID, {lineWidth: 2, color: 'black'}, preserveOriginalStyle)
+    drawGeoJsonSvg(d3.geoGraticule()(), svgGenerator, SVG_ID, {lineWidth: 0.5, color: 'red'}, preserveOriginalStyle)
   }
 
   generateLayerData = () => {
-    const { filename } = this.state
+    const { filename, preserveOriginalStyle, duplicateHemispheres } = this.state
     return {
       __html: `
       &emsp;${shortid().replace(/\W/g, "")}: { // You can replace this ID with something legible, as long as it's different from all others in the file.<br/>
       &emsp;&emsp;visible: false,<br/>
       &emsp;&emsp;type: layerTypes.VECTOR,<br/>
       &emsp;&emsp;url: '/static/geo/${filename}',<br/>
+      &emsp;&emsp;preserveOriginalStyle: ${preserveOriginalStyle},<br/>
       &emsp;&emsp;displayName: '${filename.substr(0, filename.indexOf('.'))}', // Or however you want to see it in the layer list.<br/>
       &emsp;&emsp;style: {<br/>
         &emsp;&emsp;&emsp;lineWidth: 2,<br/>
@@ -66,7 +94,7 @@ export default class Convert extends React.Component {
         &emsp;&emsp;&emsp;fillMode: false,<br/>
         &emsp;&emsp;&emsp;dashed: false<br/>
         &emsp;&emsp;},<br/>
-        &emsp;&emsp;duplicateHemispheres: false<br/>
+        &emsp;&emsp;duplicateHemispheres: ${duplicateHemispheres}<br/>
         &emsp;}`
     }
   }
@@ -78,8 +106,46 @@ export default class Convert extends React.Component {
     })
   }
 
+  onProjectionToSelectionUpdate = (event) => {
+    this.setState({ 
+      projectionTo: event.target.value,
+    })
+  }
+
+  onLineDivisionsChange = (newValue) => {
+    this.setState({ lineDivisions: newValue })
+  }
+
+  onScaleChange = (newValue) => {
+    this.setState({ scale: newValue })
+  }
+
+  onPaddingXChange = (newValue) => {
+    this.setState({ paddingX: newValue })
+  }
+
+  onPaddingYChange = (newValue) => {
+    this.setState({ paddingY: newValue })
+  }
+
+  onPreserveOriginalStyleChange = (event) => {
+    this.setState({ preserveOriginalStyle: event.target.checked })
+  }
+
+  onDuplicateHemispheresChange = (event) => {
+    this.setState({ duplicateHemispheres: event.target.checked })
+  }
+
+  onSvgRef = (p) => {
+    this._svg = p
+  }
+
+  componentDidUpdate() {
+    this.generateSVGPreview()
+  }
+
   render() {
-    const { hasFile, filename, projection } = this.state
+    const { hasFile, filename, projection, projectionTo, lineDivisions, scale, paddingX, paddingY, preserveOriginalStyle, duplicateHemispheres } = this.state
     return (
       <div className="convert-page-container">
         <div className="convert-title">
@@ -102,22 +168,51 @@ export default class Convert extends React.Component {
         </div>
         { hasFile && 
           <>
-            <h3 className="convert-step-title">Step 3: Choose base projection</h3> 
-              <div className="controls projection">
-                  <FormControl className="form-control projection-form">
-                      <Select
-                          value={projection}
-                          onChange={this.onProjectionSelectionUpdate}
-                      >
-                          { projectionsList.map(p => (
-                              <MenuItem key={p.id} value={p.id}>
-                                  <ProjectionItem displayName={p.displayName} flagEmoji={p.flagEmoji} genderEmoji={p.genderEmoji} year={p.year}/>
-                              </MenuItem>
-                              )) 
-                          }
-                      </Select>
-                  </FormControl>
+            <h3 className="convert-step-title">Step 3: Choose base projection and configure</h3> 
+            <div style={{display: 'flex', flexDirection: 'row', justifyContent: 'space-between', width: '100%' }}>
+              <div style={{marginRight: '20px'}}>
+                <h3 className="convert-step-title">Base Projection</h3> 
+                <ProjectionsDropdown value={projection} onChange={this.onProjectionSelectionUpdate}/>
               </div>
+              <div>
+                <h3 className="convert-step-title">Preview Projected With... </h3> 
+                <ProjectionsDropdown value={projectionTo} onChange={this.onProjectionToSelectionUpdate}/>
+              </div>
+            </div>
+            <div className="sliders" style={{ width: '100%' }}>
+              <SliderWithInput label="Divisions" min={2} max={500} initialValue={lineDivisions} onValueChange={this.onLineDivisionsChange}/>
+              <SliderWithInput label="Scale" min={25} max={750} initialValue={scale} onValueChange={this.onScaleChange}/>
+              <SliderWithInput label="Bounds X" min={-500} max={500} initialValue={paddingX} onValueChange={this.onPaddingXChange}/>
+              <SliderWithInput label="Bounds Y" min={-500} max={500} initialValue={paddingY} onValueChange={this.onPaddingYChange}/>
+              <FormGroup row>
+                <FormControlLabel
+                  control={ <Checkbox color="default" checked={preserveOriginalStyle} onChange={this.onPreserveOriginalStyleChange} /> }
+                  label="Preserve original style"
+                />        
+              </FormGroup>
+              <div style={{marginBottom: '20px'}}>
+                Choose whether you want to import the original style of the SVG, or apply a simple fill or stroke from the layer JSON configuration.
+                Preserving the original style currently works for simple fills and strokes, but makes the style non-editable from the main interface.
+                I recommend using this option for SVGs that have more complex shapes, or that use both fills and strokes. For line work (such as Gedymin heads),
+                it might be better to disable this option and control the line color from the software's interface.
+              </div>
+              <FormGroup row>
+                <FormControlLabel
+                  control={ <Checkbox color="default" checked={duplicateHemispheres} onChange={this.onDuplicateHemispheresChange} /> }
+                  label="Duplicate in hemispheres"
+                />        
+              </FormGroup>
+            </div>
+            <div className="convert-page-svg-container">
+              <svg
+                ref={this.onSvgRef}
+                id={SVG_ID}
+                version="1.1"
+                viewBox="0 0 1000 500"
+                xmlns="http://www.w3.org/2000/svg" >
+                
+              </svg>
+            </div>
           </>
         }
         { hasFile && <h3 className="convert-step-title">Step 4: Download</h3> }
