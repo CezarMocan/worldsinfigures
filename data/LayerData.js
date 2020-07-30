@@ -46,7 +46,7 @@ export const defaultLayers = {
         visible: false,
         type: layerTypes.VECTOR,
         url: '/static/geo/world-110m.topojson',
-        jsonToGeojsonFn: (json) => topojson.feature(json, json.objects.countries),
+        jsonToGeojsonFn: (json) => topojson.feature(json, json.objects.land),
         geojsonObject: null,
         displayName: 'World Map',
         preserveOriginalStyle: false,
