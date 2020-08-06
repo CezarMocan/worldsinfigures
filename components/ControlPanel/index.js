@@ -24,9 +24,9 @@ import ProjectionsDropdown from './ProjectionsDropdown'
 class ControlPanel extends React.Component {
     state = {
       animationOptions: {
-        x: { active: true, start: 0, increment: 5, total: 360 },
-        y: { active: true, start: 0, increment: 5, total: 360 },
-        z: { active: true, start: 0, increment: 5, total: 360 },
+        x: { active: true, increment: 5, total: 360 },
+        y: { active: true, increment: 5, total: 360 },
+        z: { active: true, increment: 5, total: 360 },
       },
       addLayerModalOpen: false
     }
@@ -77,6 +77,9 @@ class ControlPanel extends React.Component {
     onAnimateClick = () => {
       const { onAnimate } = this.props
       const { animationOptions } = this.state
+      animationOptions.x.start = this.props.projectionAttributes.rotateX
+      animationOptions.y.start = this.props.projectionAttributes.rotateY
+      animationOptions.z.start = this.props.projectionAttributes.rotateZ
       onAnimate(animationOptions)
     }
     onAddLayerModalOpen = () => {
@@ -86,7 +89,7 @@ class ControlPanel extends React.Component {
       this.setState({ addLayerModalOpen: false })
     }
     render() {
-      const { projectionAttributes, renderOptions, downloadOptions, layers } = this.props        
+      const { projectionAttributes, renderOptions, downloadOptions, layers } = this.props              
       const { scale, rotateX, rotateY, rotateZ, translateX, translateY, projection } = projectionAttributes
       const { clipToEarthBounds, tileVectors } = renderOptions
       const { animationOptions, addLayerModalOpen } = this.state
