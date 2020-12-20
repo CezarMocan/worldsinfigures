@@ -32,6 +32,7 @@
     "deep-diff": "^1.0.2",
     "fetch": "^1.1.0",
     "file-saver": "^2.0.2",
+    "gcd": "0.0.1",
     "imagetracerjs": "^1.2.6",
     "jquery": "^3.5.1",
     "jszip": "^3.4.0",

@@ -1,6 +1,7 @@
 import React from 'react'
 import * as d3 from 'd3'
 import cloneDeep from 'clone-deep'
+import gcd from 'gcd'
 import { defaultLayers, layerTypes } from '../data/LayerData'
 import { duplicateOnHemispheres } from '../modules/GeoJsonHelper'
 import { prepareLayersForExport } from './MainContextHelper'
@@ -16,10 +17,21 @@ export const RENDERERS = {
   canvas: 'CANVAS',
   svg: 'SVG'
 }
+export const INITIAL_CANVAS_WIDTH = 450
+export const INITIAL_CANVAS_HEIGHT = 600
 
 export default class MainContextProvider extends React.Component {
     state = {
       action: this,
+
+      canvasAttributes: {
+        canvasRatioLocked: true,
+        canvasRatioWidth: INITIAL_CANVAS_WIDTH / gcd(INITIAL_CANVAS_WIDTH, INITIAL_CANVAS_HEIGHT),
+        canvasRatioHeight: INITIAL_CANVAS_HEIGHT / gcd(INITIAL_CANVAS_WIDTH, INITIAL_CANVAS_HEIGHT),
+        canvasDisplayPercentage: 0.25,
+        canvasDisplayWidth: INITIAL_CANVAS_WIDTH,
+        canvasDisplayHeight: INITIAL_CANVAS_HEIGHT,  
+      },
 
       projectionAttributes: {
         scale: 100,
@@ -118,6 +130,60 @@ export default class MainContextProvider extends React.Component {
 
     updateStateItem = (itemName, newValue) => {
       this.setState({ [itemName]: newValue })
+    }
+
+    updateCanvasRatioLocked = (newLocked) => {
+      this.setState({
+        ...this.state,
+        canvasAttributes: {
+          ...this.state.canvasAttributes,
+          canvasRatioLocked: newLocked
+        }
+      })
+    }
+
+    updateCanvasWidth = (newWidth) => {
+      const { canvasRatioLocked, canvasRatioWidth, canvasRatioHeight, canvasDisplayHeight } = this.state.canvasAttributes
+      const g = gcd(canvasDisplayHeight, newWidth)
+      this.setState({
+        ...this.state,
+        canvasAttributes: {
+          ...this.state.canvasAttributes,
+          canvasDisplayWidth: newWidth,
+          canvasDisplayHeight: canvasRatioLocked ? (newWidth * canvasRatioHeight / canvasRatioWidth) : canvasDisplayHeight,
+          canvasRatioWidth: canvasRatioLocked ? canvasRatioWidth : (newWidth / g),
+          canvasRatioHeight: canvasRatioLocked ? canvasRatioHeight : (canvasDisplayHeight / g)
+        }
+      })
+    }
+
+    updateCanvasHeight = (newHeight) => {
+      const { canvasRatioLocked, canvasRatioWidth, canvasRatioHeight, canvasDisplayWidth } = this.state.canvasAttributes
+      const g = gcd(canvasDisplayWidth, newHeight)
+      this.setState({
+        ...this.state,
+        canvasAttributes: {
+          ...this.state.canvasAttributes,
+          canvasDisplayHeight: newHeight,
+          canvasDisplayWidth: canvasRatioLocked ? (newHeight * canvasRatioWidth / canvasRatioHeight) : canvasDisplayWidth,
+          canvasRatioWidth: canvasRatioLocked ? canvasRatioWidth : (canvasDisplayWidth / g),
+          canvasRatioHeight: canvasRatioLocked ? canvasRatioHeight : (newHeight / g)
+        }
+      })
+    }
+
+    updateCanvasRatio = (newRatioWidth, newRatioHeight) => {
+      const g = gcd(newRatioHeight, newRatioWidth)
+      const currHeight = this.state.canvasAttributes.canvasDisplayHeight
+      this.setState({
+        ...this.state,
+        canvasAttributes: {
+          ...this.state.canvasAttributes,
+          canvasRatioWidth: newRatioWidth / g,
+          canvasRatioHeight: newRatioHeight / g,
+          canvasDisplayWidth: currHeight * (newRatioWidth / newRatioHeight)
+        }
+      })
     }
 
     updateLayerVisibility = (layerName, visible) => {

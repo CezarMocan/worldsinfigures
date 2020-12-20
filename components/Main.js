@@ -4,6 +4,7 @@ import classnames from 'classnames'
 import * as d3 from 'd3'
 import Dropzone from 'react-dropzone'
 import DeepDiff from 'deep-diff'
+import gcd from 'gcd'
 import { MuiThemeProvider, createMuiTheme } from '@material-ui/core/styles';  
 import { withMainContext, sleep, RENDERERS } from '../context/MainContext'
 import shortid from 'shortid'
@@ -28,15 +29,11 @@ const RESIZING = {
 }
 
 const SVG_ID = 'svgProjection'
-const CANVAS_WIDTH = 450
-const CANVAS_HEIGHT = 600
 const BORDER_HOVER_THRESHOLD = 10
 
 class Main extends React.PureComponent {
     state = {
       isCanvasResizing: RESIZING.NO,
-      canvasDisplayWidth: CANVAS_WIDTH,
-      canvasDisplayHeight: CANVAS_HEIGHT,
       imageChanged: false
     }
 
@@ -111,7 +108,8 @@ class Main extends React.PureComponent {
 
       if (needsReRender) {
         setTimeout(() => {
-          const withCleanSurface = (this.state.isCanvasResizing != oldState.isCanvasResizing)
+          // const withCleanSurface = (this.state.isCanvasResizing != oldState.isCanvasResizing)
+          const withCleanSurface = true
           this.renderMap(withCleanSurface)
         }, 0)        
       }
@@ -220,7 +218,8 @@ class Main extends React.PureComponent {
 
     // Mouse events related to resizing the canvas
 
-    onWindowMouseDown = (evt) => {
+    /*
+    onWindowMouseDown = (evt) => {      
         const { renderer } = this.props
         const currCanvas = renderer == RENDERERS.canvas ? this._canvas : this._svg
         evt.stopPropagation()
@@ -259,27 +258,31 @@ class Main extends React.PureComponent {
             return
         }
 
-        let { canvasDisplayWidth, canvasDisplayHeight } = this.state
+        const { canvasAttributes, updateCanvasWidth, updateCanvasHeight } = this.props
+        let { canvasDisplayWidth, canvasDisplayHeight, canvasRatioLocked, canvasRatioWidth, canvasRatioHeight } = canvasAttributes
 
         if (isCanvasResizing == RESIZING.HORIZONTAL_LEFT || isCanvasResizing == RESIZING.HORIZONTAL_RIGHT) {
             const delta = evt.clientX - this.lastWindowTouch.x
             const sgn = (isCanvasResizing == RESIZING.HORIZONTAL_LEFT) ? -1 : 1
             canvasDisplayWidth += 2 * delta * sgn
+            updateCanvasWidth(canvasDisplayWidth)
         } else if (isCanvasResizing == RESIZING.VERTICAL_TOP || isCanvasResizing == RESIZING.VERTICAL_BOTTOM) {
             const delta = evt.clientY - this.lastWindowTouch.y
             const sgn = (isCanvasResizing == RESIZING.VERTICAL_TOP) ? -1 : 1
             canvasDisplayHeight += 2 * delta * sgn
+            updateCanvasHeight(canvasDisplayHeight)
         }
 
         // d3.select(`#${SVG_ID}`).attr("width", this._canvas.width)
         // d3.select(`#${SVG_ID}`).attr("height", this._canvas.height)
 
         this.lastWindowTouch = { x: evt.clientX, y: evt.clientY }
-        this.setState({ canvasDisplayWidth, canvasDisplayHeight })
     }
+    */
     render() {    
         const { imageChanged } = this.state
-        const { canvasDisplayHeight, canvasDisplayWidth } = this.state
+        const { canvasAttributes } = this.props
+        const { canvasDisplayHeight, canvasDisplayWidth, canvasRatioWidth, canvasRatioHeight } = canvasAttributes
         const { ready, renderer } = this.props
 
         if (!ready) return null
@@ -319,7 +322,7 @@ class Main extends React.PureComponent {
                                       </div>
 
                                       <div className="main-canvas-and-size-container">
-                                        <div className="canvas-size-container"> {canvasDisplayWidth} x {canvasDisplayHeight} </div>
+                                        <div className="canvas-size-container"> {canvasDisplayWidth} x {canvasDisplayHeight} (r: {canvasRatioWidth} x {canvasRatioHeight}) </div>
                                         <div>
                                           <canvas 
                                             width={canvasDisplayWidth}
@@ -366,6 +369,7 @@ class Main extends React.PureComponent {
 export default withMainContext((context, props) => ({
     // Properties
     projectionAttributes: context.projectionAttributes,
+    canvasAttributes: context.canvasAttributes,
     renderOptions: context.renderOptions,
     downloadOptions: context.downloadOptions,
     layers: context.layers,
@@ -374,6 +378,8 @@ export default withMainContext((context, props) => ({
 
     // Actions
     loadLayers: context.action.loadLayers,
+    updateCanvasWidth: context.action.updateCanvasWidth,
+    updateCanvasHeight: context.action.updateCanvasHeight,
     updateStateObject: context.action.updateStateObject,
     parseStateForDownload: context.action.parseStateForDownload
 }))(Main)

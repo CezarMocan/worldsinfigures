@@ -28,6 +28,7 @@ class ControlPanel extends React.Component {
         y: { active: true, increment: 5, total: 360 },
         z: { active: true, increment: 5, total: 360 },
       },
+      canvasAttributes: {},
       addLayerModalOpen: false
     }
     onProjectionSelectionUpdate = (event) => {
@@ -74,6 +75,64 @@ class ControlPanel extends React.Component {
         }
       })
     }
+    onCanvasWidthUpdate = (event) => {
+      if (event.target.value === this.state.canvasDisplayWidth) return
+      const isLocked = this.props.canvasAttributes.canvasRatioLocked
+      const ratio = this.props.canvasAttributes.canvasRatioWidth / this.props.canvasAttributes.canvasRatioHeight
+      this.setState({
+        canvasAttributes: {
+          ...this.state.canvasAttributes,
+          canvasDisplayWidth: event.target.value,
+          // canvasDisplayHeight: isLocked ? event.target.value * ratio : this.state.canvasAttributes.canvasDisplayHeight,
+        }
+      })
+    } 
+    onCanvasHeightUpdate = (event) => {
+      if (event.target.value === this.state.canvasDisplayHeight) return
+      const isLocked = this.props.canvasAttributes.canvasRatioLocked
+      const ratio = this.props.canvasAttributes.canvasRatioWidth / this.props.canvasAttributes.canvasRatioHeight
+      this.setState({
+        canvasAttributes: {
+          ...this.state.canvasAttributes,
+          // canvasDisplayWidth: isLocked ? event.target.value / ratio : this.state.canvasAttributes.canvasDisplayWidth,
+          canvasDisplayHeight: event.target.value
+        }
+      })
+    }
+    updateCanvasWidth = () => {
+      const { updateCanvasWidth } = this.props
+      updateCanvasWidth(this.state.canvasAttributes.canvasDisplayWidth)
+    }
+    updateCanvasHeight = () => {
+      const { updateCanvasHeight } = this.props
+      updateCanvasHeight(this.state.canvasAttributes.canvasDisplayHeight)
+    }
+    onCanvasRatioWidthUpdate = (event) => {
+      if (event.target.value === this.state.canvasRatioWidth) return
+      this.setState({
+        canvasAttributes: {
+          ...this.state.canvasAttributes,
+          canvasRatioWidth: event.target.value
+        }
+      })
+    }
+    onCanvasRatioHeightUpdate = (event) => {
+      if (event.target.value === this.state.canvasRatioHeight) return
+      this.setState({
+        canvasAttributes: {
+          ...this.state.canvasAttributes,
+          canvasRatioHeight: event.target.value
+        }
+      })
+    }
+    updateCanvasRatio = () => {
+      const { updateCanvasRatio } = this.props
+      updateCanvasRatio(this.state.canvasAttributes.canvasRatioWidth, this.state.canvasAttributes.canvasRatioHeight)
+    }
+    onCanvasRatioLockedUpdate = (event) => {
+      const { updateCanvasRatioLocked } = this.props
+      updateCanvasRatioLocked(event.target.checked)
+    }
     onAnimateClick = () => {
       const { onAnimate } = this.props
       const { animationOptions } = this.state
@@ -88,11 +147,21 @@ class ControlPanel extends React.Component {
     onAddLayerModalClose = () => {
       this.setState({ addLayerModalOpen: false })
     }
+    componentWillMount() {
+      this.setState({
+        canvasAttributes: { ...this.props.canvasAttributes }
+      })
+    }
+    componentWillReceiveProps(newProps) {
+      this.setState({
+        canvasAttributes: { ...newProps.canvasAttributes }
+      })      
+    }
     render() {
       const { projectionAttributes, renderOptions, downloadOptions, layers } = this.props              
       const { scale, rotateX, rotateY, rotateZ, translateX, translateY, projection } = projectionAttributes
       const { clipToEarthBounds, tileVectors } = renderOptions
-      const { animationOptions, addLayerModalOpen } = this.state
+      const { animationOptions, addLayerModalOpen, canvasAttributes } = this.state
 
       const rasterLayers = Object.keys(layers).reduce((acc, k) => { 
         if (layers[k].type == layerTypes.RASTER) acc[k] = layers[k]
@@ -105,6 +174,35 @@ class ControlPanel extends React.Component {
 
       return (
         <div className="all-controls-container">
+          <h1> Canvas Dimensions</h1>
+          <div className="controls canvas">
+            <div className="canvas-options">
+              <FormGroup row className="justify-space-between">
+                <FormGroup row className="align-items-center">
+                  <div className="item-option-container input-right-aligned"> <TextField label="Width" value={canvasAttributes.canvasDisplayWidth} size="small" onChange={this.onCanvasWidthUpdate} onBlur={this.updateCanvasWidth}/> </div>
+                  <div style={{display: 'flex', alignItems: 'center', margin: '0 10px 0 5px', paddingTop: '10px', fontSize: '6pt' }}>✕</div>
+                  <div className="item-option-container"> <TextField label="Height" value={canvasAttributes.canvasDisplayHeight} size="small" onChange={this.onCanvasHeightUpdate} onBlur={this.updateCanvasHeight} /> </div>
+                </FormGroup>
+
+                <FormGroup row className="align-items-center">
+                  <div className="item-option-container input-right-aligned"> <TextField disabled={!canvasAttributes.canvasRatioLocked} label="Ratio" value={canvasAttributes.canvasRatioWidth} size="small" onChange={this.onCanvasRatioWidthUpdate} /> </div>
+                  <div style={{display: 'flex', alignItems: 'center', margin: '0 10px 0 5px', paddingTop: '10px', fontSize: '9pt' }}>:</div>
+                  <div className="item-option-container"> <TextField disabled={!canvasAttributes.canvasRatioLocked} label="⠀" value={canvasAttributes.canvasRatioHeight} size="small" onChange={this.onCanvasRatioHeightUpdate} /> </div>
+                  <div className="set-ratio-button">
+                    <a href="#" onClick={this.updateCanvasRatio}> <Button disabled={!canvasAttributes.canvasRatioLocked} variant="outlined"> Set Ratio </Button> </a>
+                  </div>
+                </FormGroup>
+              </FormGroup>
+
+              <FormGroup row>
+                <FormControlLabel
+                  control={ <Checkbox color="primary" checked={canvasAttributes.canvasRatioLocked} onChange={this.onCanvasRatioLockedUpdate} /> }
+                  label="Lock Aspect Ratio"
+                />        
+              </FormGroup>
+            </div>
+          </div>
+
           <h1> Projection </h1>
           <ProjectionsDropdown value={projection} onChange={this.onProjectionSelectionUpdate}/>
 
@@ -278,6 +376,7 @@ class ControlPanel extends React.Component {
 
 export default withMainContext((context, props) => ({
     // Properties
+    canvasAttributes: context.canvasAttributes,
     projectionAttributes: context.projectionAttributes,
     renderOptions: context.renderOptions,
     downloadOptions: context.downloadOptions,
@@ -287,5 +386,9 @@ export default withMainContext((context, props) => ({
     updateStateObject: context.action.updateStateObject,
     updateLayerVisibility: context.action.updateLayerVisibility,
     updateLayerColor: context.action.updateLayerColor,
+    updateCanvasRatioLocked: context.action.updateCanvasRatioLocked,
+    updateCanvasWidth: context.action.updateCanvasWidth,
+    updateCanvasHeight: context.action.updateCanvasHeight,
+    updateCanvasRatio: context.action.updateCanvasRatio
 }))(ControlPanel)
 

@@ -92,6 +92,7 @@ a {
     height: 100%;
 
     .all-rendering-container {
+        overflow: scroll;
         flex: 3;
         display: flex;
         align-items: center;
@@ -193,6 +194,22 @@ a {
   }
 }
 
+.canvas-options {
+  .item-option-container {
+    width: 26px;   
+    padding: 10px 10px 10px 0;
+    &.label {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        width: auto;
+        padding-left: 0;
+        margin-left: -5px;
+    }   
+  } 
+}
+
 .add-layer-container {
   max-width: 50%;
   padding: 25px;
@@ -217,4 +234,18 @@ a {
         width: 100%;
     }
   }
+}
+
+.input-right-aligned {
+  input {
+    text-align: right;
+  }
+}
+
+.justify-space-between {
+  justify-content: space-between;
+}
+
+.align-items-center {
+  align-items: center;
 }
