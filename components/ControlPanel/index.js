@@ -9,6 +9,7 @@ import FormControlLabel from '@material-ui/core/FormControlLabel'
 import Select from '@material-ui/core/Select'
 import Button from '@material-ui/core/Button'
 import Checkbox from '@material-ui/core/Checkbox'
+import Typography from '@material-ui/core/Typography';
 import Modal from '@material-ui/core/Modal'
 import Backdrop from '@material-ui/core/Backdrop'
 import Fade from '@material-ui/core/Fade'
@@ -89,12 +90,9 @@ class ControlPanel extends React.Component {
     } 
     onCanvasHeightUpdate = (event) => {
       if (event.target.value === this.state.canvasDisplayHeight) return
-      const isLocked = this.props.canvasAttributes.canvasRatioLocked
-      const ratio = this.props.canvasAttributes.canvasRatioWidth / this.props.canvasAttributes.canvasRatioHeight
       this.setState({
         canvasAttributes: {
           ...this.state.canvasAttributes,
-          // canvasDisplayWidth: isLocked ? event.target.value / ratio : this.state.canvasAttributes.canvasDisplayWidth,
           canvasDisplayHeight: event.target.value
         }
       })
@@ -106,6 +104,18 @@ class ControlPanel extends React.Component {
     updateCanvasHeight = () => {
       const { updateCanvasHeight } = this.props
       updateCanvasHeight(this.state.canvasAttributes.canvasDisplayHeight)
+    }
+    onCanvasDisplayPercentageUpdate = (event) => {
+      this.setState({
+        canvasAttributes: {
+          ...this.state.canvasAttributes,
+          canvasDisplayPercentage: event.target.value
+        }
+      })
+    }
+    updateCanvasDisplayPercentage = () => {
+      const { updateCanvasDisplayPercentage } = this.props
+      updateCanvasDisplayPercentage(this.state.canvasAttributes.canvasDisplayPercentage)
     }
     onCanvasRatioWidthUpdate = (event) => {
       if (event.target.value === this.state.canvasRatioWidth) return
@@ -174,16 +184,30 @@ class ControlPanel extends React.Component {
 
       return (
         <div className="all-controls-container">
-          <h1> Canvas Dimensions</h1>
           <div className="controls canvas">
+            <h1> Canvas Dimensions</h1>
             <div className="canvas-options">
-              <FormGroup row className="justify-space-between">
-                <FormGroup row className="align-items-center">
-                  <div className="item-option-container input-right-aligned"> <TextField label="Width" value={canvasAttributes.canvasDisplayWidth} size="small" onChange={this.onCanvasWidthUpdate} onBlur={this.updateCanvasWidth}/> </div>
-                  <div style={{display: 'flex', alignItems: 'center', margin: '0 10px 0 5px', paddingTop: '10px', fontSize: '6pt' }}>✕</div>
-                  <div className="item-option-container"> <TextField label="Height" value={canvasAttributes.canvasDisplayHeight} size="small" onChange={this.onCanvasHeightUpdate} onBlur={this.updateCanvasHeight} /> </div>
+              <FormGroup>
+                <Typography variant="body2">Set the canvas width and height below, with the full resolution you need for exporting. Then, set the Display percentage to something lower than 100% in order to fit the canvas onto the screen, and achieve faster rendering.</Typography>
+                <FormGroup row className="justify-space-between">
+                  <FormGroup row className="align-items-center">
+                    <div className="item-option-container input-right-aligned"> <TextField label="Width" value={canvasAttributes.canvasDisplayWidth} size="small" onChange={this.onCanvasWidthUpdate} onBlur={this.updateCanvasWidth}/> </div>
+                    <div style={{display: 'flex', alignItems: 'center', margin: '0 10px 0 5px', paddingTop: '10px', fontSize: '6pt' }}>✕</div>
+                    <div className="item-option-container"> <TextField label="Height" value={canvasAttributes.canvasDisplayHeight} size="small" onChange={this.onCanvasHeightUpdate} onBlur={this.updateCanvasHeight} /> </div>
+                    <div style={{display: 'flex', alignItems: 'center', margin: '0 10px 0 5px', paddingTop: '10px', fontSize: '6pt' }}>@</div>
+                    <div className="item-option-container"> <TextField label="Display" value={canvasAttributes.canvasDisplayPercentage} size="small" onChange={this.onCanvasDisplayPercentageUpdate} onBlur={this.updateCanvasDisplayPercentage} /> </div>
+                    <div style={{display: 'flex', alignItems: 'center', margin: '0 10px 0 5px', paddingTop: '10px', fontSize: '6pt' }}>%</div>
+                  </FormGroup>
+                  <FormGroup row className="align-items-center">
+                    <FormControlLabel
+                      control={ <Checkbox color="primary" size="small" checked={canvasAttributes.canvasRatioLocked} onChange={this.onCanvasRatioLockedUpdate} /> }
+                      label="Lock Aspect Ratio"
+                    />        
+                  </FormGroup>
                 </FormGroup>
+              </FormGroup>
 
+              <FormGroup row className="justify-space-between"> 
                 <FormGroup row className="align-items-center">
                   <div className="item-option-container input-right-aligned"> <TextField disabled={!canvasAttributes.canvasRatioLocked} label="Ratio" value={canvasAttributes.canvasRatioWidth} size="small" onChange={this.onCanvasRatioWidthUpdate} /> </div>
                   <div style={{display: 'flex', alignItems: 'center', margin: '0 10px 0 5px', paddingTop: '10px', fontSize: '9pt' }}>:</div>
@@ -193,22 +217,12 @@ class ControlPanel extends React.Component {
                   </div>
                 </FormGroup>
               </FormGroup>
-
-              <FormGroup row>
-                <FormControlLabel
-                  control={ <Checkbox color="primary" checked={canvasAttributes.canvasRatioLocked} onChange={this.onCanvasRatioLockedUpdate} /> }
-                  label="Lock Aspect Ratio"
-                />        
-              </FormGroup>
             </div>
           </div>
 
-          <h1> Projection </h1>
-          <ProjectionsDropdown value={projection} onChange={this.onProjectionSelectionUpdate}/>
-
-          <h1> Parameters </h1>
-
           <div className="controls sliders">
+            <h1> Projection </h1>
+            <ProjectionsDropdown value={projection} onChange={this.onProjectionSelectionUpdate}/>
             <SliderWithInput label="Scale" min={3} max={500} initialValue={scale} onValueChange={this.onSliderProjectionAttributeUpdate('scale')}/>
             <SliderWithInput label="X Rotation" min={0} max={360} step={2.5} initialValue={rotateX} onValueChange={this.onSliderProjectionAttributeUpdate('rotateX')}/>
             <SliderWithInput label="Y Rotation" min={0} max={360} step={2.5} initialValue={rotateY} onValueChange={this.onSliderProjectionAttributeUpdate('rotateY')}/>
@@ -217,10 +231,8 @@ class ControlPanel extends React.Component {
             <SliderWithInput label="Y Offset" min={0} max={200} initialValue={translateY} onValueChange={this.onSliderProjectionAttributeUpdate('translateY')}/>
           </div>
 
-
-          <h1> Rendering </h1>
-
           <div className="controls rendering">
+            <h1> Rendering </h1>
             <FormGroup row>
               <FormControlLabel
                 control={ <Checkbox color="default" checked={clipToEarthBounds} onChange={this.onCheckboxRenderOptionsUpdate('clipToEarthBounds')} /> }
@@ -234,9 +246,8 @@ class ControlPanel extends React.Component {
           </div>
 
 
-          <h1> Raster Layers </h1>
-
           <div className="controls checkboxes">
+            <h1> Raster Layers </h1>
             { Object.keys(rasterLayers).map(k => {
               const l = rasterLayers[k]
               return (
@@ -252,9 +263,8 @@ class ControlPanel extends React.Component {
             })}
           </div>
 
-          <h1> Vector Layers </h1>
-
           <div className="controls checkboxes">
+            <h1> Vector Layers </h1>
             { Object.keys(vectorLayers).map(k => {
               const l = vectorLayers[k]
               return (
@@ -269,29 +279,28 @@ class ControlPanel extends React.Component {
                 />
               )
             })}
+            <a href="#" onClick={this.onAddLayerModalOpen}>
+              <Button variant="outlined" style={{ marginTop: '10px' }}>
+                Add vector layer
+              </Button>
+            </a>
           </div>
-          <a href="#" onClick={this.onAddLayerModalOpen}>
-            <Button variant="outlined">
-              Add vector layer
-            </Button>
-          </a>
-
-          <h1> Export </h1>
 
           <div className="controls download">
+            <h1> Export </h1>
             <div className="download-options">
               <FormGroup row>
                 <FormControlLabel
-                  control={ <Checkbox color="default" checked={downloadOptions.png} onChange={this.onDownloadOptionsUpdate('png')} /> }
+                  control={ <Checkbox color="default" size="small" checked={downloadOptions.png} onChange={this.onDownloadOptionsUpdate('png')} /> }
                   label="PNG"
                 />        
                 <FormControlLabel
-                  control={ <Checkbox color="primary" checked={downloadOptions.svg} onChange={this.onDownloadOptionsUpdate('svg')} /> }
+                  control={ <Checkbox color="primary" size="small" checked={downloadOptions.svg} onChange={this.onDownloadOptionsUpdate('svg')} /> }
                   label="SVG"
                 />        
                 <FormControlLabel
-                  control={ <Checkbox color="secondary" checked={downloadOptions.config} onChange={this.onDownloadOptionsUpdate('config')} /> }
-                  label="CONFIG"
+                  control={ <Checkbox color="secondary" size="small" checked={downloadOptions.config} onChange={this.onDownloadOptionsUpdate('config')} /> }
+                  label="CFG"
                 />        
               </FormGroup>
             </div>
@@ -305,9 +314,8 @@ class ControlPanel extends React.Component {
             </div>
           </div>
 
-          <h1> Animate </h1>
-
           <div className="controls animate">
+            <h1> Animate </h1>
             <div className="animate-options">
               <FormGroup row>
                 <Checkbox color="primary" checked={animationOptions.x.active} onChange={this.onAnimationOptionsUpdate('x', 'active', 'checked')} label="Active"/>
@@ -344,9 +352,8 @@ class ControlPanel extends React.Component {
             </div>
           </div>
 
-          <h1> Tools </h1>
-
           <div className="controls tools">
+            <h1> Tools </h1>
             <a href="/convert" target="__blank">
               <Button variant="outlined">
                 SVG to GeoJSON
@@ -389,6 +396,7 @@ export default withMainContext((context, props) => ({
     updateCanvasRatioLocked: context.action.updateCanvasRatioLocked,
     updateCanvasWidth: context.action.updateCanvasWidth,
     updateCanvasHeight: context.action.updateCanvasHeight,
+    updateCanvasDisplayPercentage: context.action.updateCanvasDisplayPercentage,
     updateCanvasRatio: context.action.updateCanvasRatio
 }))(ControlPanel)
 

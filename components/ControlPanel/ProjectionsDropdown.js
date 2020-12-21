@@ -13,7 +13,7 @@ export default class ProjectionsDropdown extends React.Component {
     render() {
         const { value } = this.props
         return (
-          <div className="controls projection">
+          <div className="projection-dropdown-container">
             <FormControl className="form-control projection-form">
                 <Select
                     value={value}

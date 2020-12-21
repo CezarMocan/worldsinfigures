@@ -51,9 +51,11 @@ class Main extends React.PureComponent {
         this._image = i
         this._image.src="/static/images/test.png" 
     }
-    onImageLoad = () => { this.renderMap(true) }
+    onImageLoad = () => { this.renderMap(this._canvas, this._canvas2, true) }
     onCanvasRef = (c) => { this._canvas = c }
     onSecondaryCanvasRef = (c) => { this._canvas2 = c }
+    onExportCanvasRef = (c) => { this._exportCanvas = c }
+    onExportBufferCanvasRef = (c) => { this._exportBufferCanvas = c }
     onSvgRef = (s) => { this._svg = s }
 
 
@@ -62,24 +64,26 @@ class Main extends React.PureComponent {
     get secondaryCanvasContext() { return this._canvas2.getContext('2d') }
     get canvasWidth() { return this._canvas.width }
     get canvasHeight() { return this._canvas.height }
+    get exportCanvasWidth() { return this._exportCanvas.width }
+    get exportCanvasHeight() { return this._exportCanvas.height }
 
     // Layer rendering
-    renderMap = (withCleanSurface = false, optProjectionAttributes) => {
+    renderMap = (canvas, bufferCanvas, withCleanSurface = false, optProjectionAttributes) => {
       const projectionAttributes = optProjectionAttributes || this.props.projectionAttributes
       const { layers, renderOptions } = this.props  
 
       let canvasAttributes = {
-        canvasWidth: this.canvasWidth,
-        canvasHeight: this.canvasHeight,
+        canvasWidth: canvas.width,
+        canvasHeight: canvas.height,
         canvasTX: this.canvasTranslate.dx,
         canvasTY: this.canvasTranslate.dy
       }
     
       // Canvas rendering
       if (!this.rasterData || withCleanSurface) {
-        this.rasterData = getImageData(this._image, this.secondaryCanvasContext, this.canvasWidth, this.canvasHeight)
+        this.rasterData = getImageData(this._image, bufferCanvas.getContext('2d'), canvas.width, canvas.height)
       }
-      renderLayersToCanvas(this._canvas, this._canvas2, this.rasterData, layers, projectionAttributes, canvasAttributes, renderOptions)
+      renderLayersToCanvas(canvas, bufferCanvas, this.rasterData, layers, projectionAttributes, canvasAttributes, renderOptions)
 
       // SVG rendering
       renderLayersToSVG(SVG_ID, layers, projectionAttributes, canvasAttributes, renderOptions)
@@ -110,7 +114,7 @@ class Main extends React.PureComponent {
         setTimeout(() => {
           // const withCleanSurface = (this.state.isCanvasResizing != oldState.isCanvasResizing)
           const withCleanSurface = true
-          this.renderMap(withCleanSurface)
+          this.renderMap(this._canvas, this._canvas2, withCleanSurface)
         }, 0)        
       }
     }
@@ -127,11 +131,13 @@ class Main extends React.PureComponent {
     }
 
     onAnimate = async (animationOptions) => {
-      const { updateStateObject, projectionAttributes } = this.props
+      const { updateStateObject, projectionAttributes, canvasAttributes } = this.props
       let projAttr = { ...projectionAttributes }
       projAttr.rotateX = animationOptions.x.start
       projAttr.rotateY = animationOptions.y.start
       projAttr.rotateZ = animationOptions.z.start
+
+      projAttr.scale *= (100 / canvasAttributes.canvasDisplayPercentage);
       const mapping = { 'x': 'rotateX', 'y': 'rotateY', 'z': 'rotateZ' }
       
       let zip = new Zipper()
@@ -139,8 +145,8 @@ class Main extends React.PureComponent {
 
       for (let isDone = false; !isDone; isDone) {
         isDone = true
-        this.renderMap(false, projAttr)
-        await zip.addImage(filenameIndex, this._canvas, this._svg)
+        this.renderMap(this._exportCanvas, this._exportBufferCanvas, true, projAttr)
+        await zip.addImage(filenameIndex, this._exportCanvas, this._svg)
 
         let axes = ['x', 'y', 'z']
         axes.forEach(axis => {
@@ -195,7 +201,7 @@ class Main extends React.PureComponent {
         this.canvasTranslate.dx += dx
         this.canvasTranslate.dy += dy
         setTimeout(() => {
-            this.renderMap()    
+            this.renderMap(this._canvas, this._canvas2, false)    
         }, 0)
         // this._canvas.style.cursor = 'grabbing'
     } 
@@ -282,7 +288,10 @@ class Main extends React.PureComponent {
     render() {    
         const { imageChanged } = this.state
         const { canvasAttributes } = this.props
-        const { canvasDisplayHeight, canvasDisplayWidth, canvasRatioWidth, canvasRatioHeight } = canvasAttributes
+        const { canvasDisplayHeight, canvasDisplayWidth, canvasRatioWidth, canvasRatioHeight, canvasDisplayPercentage } = canvasAttributes
+        const canvasRenderWidth = canvasDisplayWidth * canvasDisplayPercentage / 100
+        const canvasRenderHeight = canvasDisplayHeight * canvasDisplayPercentage / 100
+
         const { ready, renderer } = this.props
 
         if (!ready) return null
@@ -318,15 +327,18 @@ class Main extends React.PureComponent {
                                       <div className="hidden-elements">
                                         <input {...getInputProps()} />
                                         <img ref={this.onImageRef} onLoad={this.onImageLoad} className="hidden"/>
-                                        <canvas width={canvasDisplayWidth} height={canvasDisplayHeight} ref={this.onSecondaryCanvasRef} className="secondary-canvas hidden"></canvas>
+                                        <canvas width={canvasRenderWidth} height={canvasRenderHeight} ref={this.onSecondaryCanvasRef} className="secondary-canvas hidden"></canvas>
+
+                                        <canvas width={canvasDisplayWidth} height={canvasDisplayHeight} ref={this.onExportCanvasRef} className="export-render-canvas hidden"></canvas>
+                                        <canvas width={canvasDisplayWidth} height={canvasDisplayHeight} ref={this.onExportBufferCanvasRef} className="export-buffer-canvas hidden"></canvas>
                                       </div>
 
                                       <div className="main-canvas-and-size-container">
                                         <div className="canvas-size-container"> {canvasDisplayWidth} x {canvasDisplayHeight} (r: {canvasRatioWidth} x {canvasRatioHeight}) </div>
                                         <div>
                                           <canvas 
-                                            width={canvasDisplayWidth}
-                                            height={canvasDisplayHeight}
+                                            width={canvasRenderWidth}
+                                            height={canvasRenderHeight}
                                             ref={this.onCanvasRef}
                                             className={canvasCls}
                                             onMouseDown={this.onCanvasMouseDown}
@@ -337,8 +349,8 @@ class Main extends React.PureComponent {
                                             ref={this.onSvgRef}
                                             className={svgCls}
                                             id={SVG_ID}
-                                            width={canvasDisplayWidth}
-                                            height={canvasDisplayHeight}
+                                            width={canvasRenderWidth}
+                                            height={canvasRenderHeight}
                                             onMouseDown={this.onCanvasMouseDown}
                                             onMouseUp={this.onCanvasMouseUp}
                                             onMouseMove={this.onCanvasMouseMove}  

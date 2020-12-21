@@ -17,8 +17,8 @@ export const RENDERERS = {
   canvas: 'CANVAS',
   svg: 'SVG'
 }
-export const INITIAL_CANVAS_WIDTH = 450
-export const INITIAL_CANVAS_HEIGHT = 600
+export const INITIAL_CANVAS_WIDTH = 1920
+export const INITIAL_CANVAS_HEIGHT = 1080
 
 export default class MainContextProvider extends React.Component {
     state = {
@@ -28,7 +28,7 @@ export default class MainContextProvider extends React.Component {
         canvasRatioLocked: true,
         canvasRatioWidth: INITIAL_CANVAS_WIDTH / gcd(INITIAL_CANVAS_WIDTH, INITIAL_CANVAS_HEIGHT),
         canvasRatioHeight: INITIAL_CANVAS_HEIGHT / gcd(INITIAL_CANVAS_WIDTH, INITIAL_CANVAS_HEIGHT),
-        canvasDisplayPercentage: 0.25,
+        canvasDisplayPercentage: 50,
         canvasDisplayWidth: INITIAL_CANVAS_WIDTH,
         canvasDisplayHeight: INITIAL_CANVAS_HEIGHT,  
       },
@@ -138,6 +138,23 @@ export default class MainContextProvider extends React.Component {
         canvasAttributes: {
           ...this.state.canvasAttributes,
           canvasRatioLocked: newLocked
+        }
+      })
+    }
+
+    updateCanvasDisplayPercentage = (newPercentage) => {
+      const { canvasDisplayPercentage } = this.state.canvasAttributes
+      const ratio = newPercentage / canvasDisplayPercentage
+      const { scale } = this.state.projectionAttributes
+      this.setState({
+        ...this.state,
+        canvasAttributes: {
+          ...this.state.canvasAttributes,
+          canvasDisplayPercentage: newPercentage
+        },
+        projectionAttributes: {
+          ...this.state.projectionAttributes,
+          scale: scale * ratio
         }
       })
     }
