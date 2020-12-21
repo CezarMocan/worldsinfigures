@@ -334,7 +334,7 @@ class Main extends React.PureComponent {
                                       </div>
 
                                       <div className="main-canvas-and-size-container">
-                                        <div className="canvas-size-container"> {canvasDisplayWidth} x {canvasDisplayHeight} (r: {canvasRatioWidth} x {canvasRatioHeight}) </div>
+                                        <div className="canvas-size-container"> {canvasRenderWidth} x {canvasRenderHeight} ({canvasDisplayWidth} x {canvasDisplayHeight} @ {canvasDisplayPercentage}%) | Aspect ratio – {canvasRatioWidth}:{canvasRatioHeight} </div>
                                         <div>
                                           <canvas 
                                             width={canvasRenderWidth}
