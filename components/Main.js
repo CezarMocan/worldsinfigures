@@ -149,8 +149,7 @@ class Main extends React.PureComponent {
       if (animationOptions.x.active) totalSteps = Math.max(totalSteps, Math.ceil(animationOptions.x.total / animationOptions.x.increment))
       if (animationOptions.y.active) totalSteps = Math.max(totalSteps, Math.ceil(animationOptions.y.total / animationOptions.y.increment))
       if (animationOptions.z.active) totalSteps = Math.max(totalSteps, Math.ceil(animationOptions.z.total / animationOptions.z.increment))
-      totalSteps++
-      
+
       this.setState({
         renderingModalOpen: true,
         renderingTotalFrames: totalSteps

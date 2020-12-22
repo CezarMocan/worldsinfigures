@@ -4,7 +4,7 @@ export default class ExportDialog extends React.Component {
     render() {
         const { currentFrame, totalFrames, canvas } = this.props
         const src = canvas.toDataURL('image/png')
-        const isZipping = (currentFrame == totalFrames)
+        const isZipping = (currentFrame >= totalFrames)
         return (
           <div className="export-modal-container">
             <div>
