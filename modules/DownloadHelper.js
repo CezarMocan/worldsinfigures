@@ -45,6 +45,16 @@ export const Zipper = class Zipper {
     this._png = this._zipper.folder('png')
     this._svg = this._zipper.folder('svg')
   }
+  init() {
+    this._zipper = new JSZip()    
+    this._png = this._zipper.folder('png')
+    this._svg = this._zipper.folder('svg')    
+  }
+  clear() {
+    delete this._zipper
+    delete this._png
+    delete this._svg
+  }
   async addImage(filename, canvasRef, svgRef) {
     let dataBase64
     if (canvasRef) {
@@ -65,6 +75,8 @@ export const Zipper = class Zipper {
       this._zipper.generateAsync({ type:"blob" }).then((blob) => {
         const fileName = `${new Date().getTime()}.zip`
         saveAs(blob, fileName);
+        this.clear()
+        this.init()
         res()
       })
     })

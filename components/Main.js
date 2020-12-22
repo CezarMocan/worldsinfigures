@@ -1,10 +1,11 @@
 import React from 'react'
 import Style from '../static/styles/main.less'
 import classnames from 'classnames'
-import * as d3 from 'd3'
 import Dropzone from 'react-dropzone'
 import DeepDiff from 'deep-diff'
-import gcd from 'gcd'
+import Modal from '@material-ui/core/Modal'
+import Backdrop from '@material-ui/core/Backdrop'
+import Fade from '@material-ui/core/Fade'
 import { MuiThemeProvider, createMuiTheme } from '@material-ui/core/styles';  
 import { withMainContext, sleep, RENDERERS } from '../context/MainContext'
 import shortid from 'shortid'
@@ -13,6 +14,7 @@ import { getImageData } from './Renderer/RenderHelper'
 import { createAndDownloadImage, createAndDownloadSvg, createAndDownloadText, Zipper } from '../modules/DownloadHelper'
 import ControlPanel from '../components/ControlPanel'
 import { renderLayersToCanvas, renderLayersToSVG } from './Renderer'
+import ExportDialog from './ExportDialog'
 
 const theme = createMuiTheme({
     typography: { 
@@ -34,7 +36,10 @@ const BORDER_HOVER_THRESHOLD = 10
 class Main extends React.PureComponent {
     state = {
       isCanvasResizing: RESIZING.NO,
-      imageChanged: false
+      imageChanged: false,
+      renderingModalOpen: false,
+      renderingTotalFrames: 0,
+      renderingCurrentFrame: 0
     }
 
     constructor(props) {
@@ -140,13 +145,25 @@ class Main extends React.PureComponent {
       projAttr.scale *= (100 / canvasAttributes.canvasDisplayPercentage);
       const mapping = { 'x': 'rotateX', 'y': 'rotateY', 'z': 'rotateZ' }
       
+      let totalSteps = 0
+      if (animationOptions.x.active) totalSteps = Math.max(totalSteps, Math.ceil(animationOptions.x.total / animationOptions.x.increment))
+      if (animationOptions.y.active) totalSteps = Math.max(totalSteps, Math.ceil(animationOptions.y.total / animationOptions.y.increment))
+      if (animationOptions.z.active) totalSteps = Math.max(totalSteps, Math.ceil(animationOptions.z.total / animationOptions.z.increment))
+
+      this.setState({
+        renderingModalOpen: true,
+        renderingTotalFrames: totalSteps
+      })
+
       let zip = new Zipper()
-      let filenameIndex = 0
+      let filenameIndex = 0      
 
       for (let isDone = false; !isDone; isDone) {
         isDone = true
         this.renderMap(this._exportCanvas, this._exportBufferCanvas, true, projAttr)
         await zip.addImage(filenameIndex, this._exportCanvas, this._svg)
+
+        this.setState({ renderingCurrentFrame: filenameIndex + 1 })
 
         let axes = ['x', 'y', 'z']
         axes.forEach(axis => {
@@ -162,6 +179,13 @@ class Main extends React.PureComponent {
       }
 
       await zip.complete()
+    }
+
+    onRenderingModalOpen = () => {
+      this.setState({ renderingModalOpen: true })
+    }
+    onRenderingModalClose = () => {
+      this.setState({ renderingModalOpen: false })
     }
 
     // Callback for a new image layer (when an image is dropped)
@@ -286,7 +310,7 @@ class Main extends React.PureComponent {
     }
     */
     render() {    
-        const { imageChanged } = this.state
+        const { imageChanged, renderingModalOpen, renderingCurrentFrame, renderingTotalFrames } = this.state
         const { canvasAttributes } = this.props
         const { canvasDisplayHeight, canvasDisplayWidth, canvasRatioWidth, canvasRatioHeight, canvasDisplayPercentage } = canvasAttributes
         const canvasRenderWidth = canvasDisplayWidth * canvasDisplayPercentage / 100
@@ -372,6 +396,21 @@ class Main extends React.PureComponent {
                             </section>
                     )}
                     </Dropzone>
+                    <Modal
+                      aria-labelledby="transition-modal-title"
+                      aria-describedby="transition-modal-description"
+                      open={renderingModalOpen}
+                      onClose={this.onRenderingModalClose}
+                      closeAfterTransition
+                      BackdropComponent={Backdrop}
+                      BackdropProps={{ timeout: 500 }}
+                      style={{display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                    >
+                      <Fade in={renderingModalOpen}>
+                        <ExportDialog onClose={this.onRenderingModalClose} currentFrame={renderingCurrentFrame} totalFrames={renderingTotalFrames} canvas={this._exportCanvas}/>
+                      </Fade>
+                    </Modal>
+
                 </div>
             </MuiThemeProvider>
         )

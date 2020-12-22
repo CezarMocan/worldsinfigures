@@ -20,45 +20,80 @@ export const RENDERERS = {
 export const INITIAL_CANVAS_WIDTH = 1920
 export const INITIAL_CANVAS_HEIGHT = 1080
 
+const INITIAL_STORAGE_STATE = {
+  canvasAttributes: {
+    canvasRatioLocked: true,
+    canvasRatioWidth: INITIAL_CANVAS_WIDTH / gcd(INITIAL_CANVAS_WIDTH, INITIAL_CANVAS_HEIGHT),
+    canvasRatioHeight: INITIAL_CANVAS_HEIGHT / gcd(INITIAL_CANVAS_WIDTH, INITIAL_CANVAS_HEIGHT),
+    canvasDisplayPercentage: 50,
+    canvasDisplayWidth: INITIAL_CANVAS_WIDTH,
+    canvasDisplayHeight: INITIAL_CANVAS_HEIGHT,  
+  },
+
+  projectionAttributes: {
+    scale: 100,
+    rotateX: 0,
+    rotateY: 0,
+    rotateZ: 0,
+    translateX: 50,
+    translateY: 50,
+    projection: 'geoEquirectangular',
+  },
+
+  renderOptions: {
+    clipToEarthBounds: false,
+    tileVectors: false,
+  },
+
+  downloadOptions: {
+    png: true,
+    svg: true,
+    config: true
+  },
+
+  // layers: { ...defaultLayers  }
+}
+
+const STORAGE_KEY = '__WORLDVIEWS__'
+const getStoredState = () => {
+  if (process.browser) {
+    if (!window) return INITIAL_STORAGE_STATE
+
+    if (!window.localStorage.getItem(STORAGE_KEY)) {
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(INITIAL_STORAGE_STATE))
+    }
+    return JSON.parse(window.localStorage.getItem(STORAGE_KEY))  
+  } else {
+    return INITIAL_STORAGE_STATE
+  }
+}
+
+
 export default class MainContextProvider extends React.Component {
     state = {
+      ...getStoredState(),
       action: this,
-
-      canvasAttributes: {
-        canvasRatioLocked: true,
-        canvasRatioWidth: INITIAL_CANVAS_WIDTH / gcd(INITIAL_CANVAS_WIDTH, INITIAL_CANVAS_HEIGHT),
-        canvasRatioHeight: INITIAL_CANVAS_HEIGHT / gcd(INITIAL_CANVAS_WIDTH, INITIAL_CANVAS_HEIGHT),
-        canvasDisplayPercentage: 50,
-        canvasDisplayWidth: INITIAL_CANVAS_WIDTH,
-        canvasDisplayHeight: INITIAL_CANVAS_HEIGHT,  
-      },
-
-      projectionAttributes: {
-        scale: 100,
-        rotateX: 0,
-        rotateY: 0,
-        rotateZ: 0,
-        translateX: 50,
-        translateY: 50,
-        projection: 'geoEquirectangular',
-      },
-
-      renderOptions: {
-        clipToEarthBounds: false,
-        tileVectors: false,
-      },
-
       layers: { ...defaultLayers  },
-
-      downloadOptions: {
-        png: true,
-        svg: true,
-        config: true
-      },
-
       renderer: RENDERERS.canvas,
-
       ready: false
+    }
+
+    getStateItemsToStore = (state) => {
+      return {
+        canvasAttributes: state.canvasAttributes,
+        projectionAttributes: state.projectionAttributes,
+        renderOptions: state.renderOptions,
+        downloadOptions: state.downloadOptions,
+        // layers: state.layers
+      }
+    }
+
+    updateState = (newState) => {
+      this.setState(newState, () => {
+        if (process.browser) {
+          window.localStorage.setItem(STORAGE_KEY, JSON.stringify(this.getStateItemsToStore(this.state)))
+        }
+      })
     }
 
     // Loading raster and vector data
@@ -97,7 +132,7 @@ export default class MainContextProvider extends React.Component {
       errorKeys.forEach(k => {
         delete loadedLayers[k]
       })
-      this.setState({ layers: loadedLayers, ready: true })
+      this.updateState({ layers: loadedLayers, ready: true })
     }
 
     addLayer = (name, layerType, geojson) => {
@@ -111,7 +146,7 @@ export default class MainContextProvider extends React.Component {
         geojsonObject: geojson
       }
       const { layers } = this.state
-      this.setState({ 
+      this.updateState({ 
         layers: {
           ...layers,
           [name]: layer
@@ -125,15 +160,15 @@ export default class MainContextProvider extends React.Component {
       for (let k in newAttributes) {
         attributes[k] = newAttributes[k]
       }
-      this.setState({ [itemName]: { ...attributes } })
+      this.updateState({ [itemName]: { ...attributes } })
     }
 
     updateStateItem = (itemName, newValue) => {
-      this.setState({ [itemName]: newValue })
+      this.updateState({ [itemName]: newValue })
     }
 
     updateCanvasRatioLocked = (newLocked) => {
-      this.setState({
+      this.updateState({
         ...this.state,
         canvasAttributes: {
           ...this.state.canvasAttributes,
@@ -146,7 +181,7 @@ export default class MainContextProvider extends React.Component {
       const { canvasDisplayPercentage } = this.state.canvasAttributes
       const ratio = newPercentage / canvasDisplayPercentage
       const { scale } = this.state.projectionAttributes
-      this.setState({
+      this.updateState({
         ...this.state,
         canvasAttributes: {
           ...this.state.canvasAttributes,
@@ -162,7 +197,7 @@ export default class MainContextProvider extends React.Component {
     updateCanvasWidth = (newWidth) => {
       const { canvasRatioLocked, canvasRatioWidth, canvasRatioHeight, canvasDisplayHeight } = this.state.canvasAttributes
       const g = gcd(canvasDisplayHeight, newWidth)
-      this.setState({
+      this.updateState({
         ...this.state,
         canvasAttributes: {
           ...this.state.canvasAttributes,
@@ -177,7 +212,7 @@ export default class MainContextProvider extends React.Component {
     updateCanvasHeight = (newHeight) => {
       const { canvasRatioLocked, canvasRatioWidth, canvasRatioHeight, canvasDisplayWidth } = this.state.canvasAttributes
       const g = gcd(canvasDisplayWidth, newHeight)
-      this.setState({
+      this.updateState({
         ...this.state,
         canvasAttributes: {
           ...this.state.canvasAttributes,
@@ -192,7 +227,7 @@ export default class MainContextProvider extends React.Component {
     updateCanvasRatio = (newRatioWidth, newRatioHeight) => {
       const g = gcd(newRatioHeight, newRatioWidth)
       const currHeight = this.state.canvasAttributes.canvasDisplayHeight
-      this.setState({
+      this.updateState({
         ...this.state,
         canvasAttributes: {
           ...this.state.canvasAttributes,
@@ -204,7 +239,7 @@ export default class MainContextProvider extends React.Component {
     }
 
     updateLayerVisibility = (layerName, visible) => {
-      this.setState({
+      this.updateState({
         ...this.state,
         layers: {
           ...this.state.layers,
@@ -217,7 +252,7 @@ export default class MainContextProvider extends React.Component {
     }
 
     updateLayerColor = (layerName, color) => {
-      this.setState({
+      this.updateState({
         ...this.state,
         layers: {
           ...this.state.layers,
