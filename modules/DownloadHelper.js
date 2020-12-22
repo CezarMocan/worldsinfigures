@@ -58,8 +58,10 @@ export const Zipper = class Zipper {
   async addImage(filename, canvasRef, svgRef) {
     let dataBase64
     if (canvasRef) {
-      dataBase64 = dataURLToBase64(canvasRef.toDataURL('image/png'))
-      this._png.file(`${filename}.png`, dataBase64, { base64: true })
+      const blob = await new Promise((res, rej) => { canvasRef.toBlob((blob) => { res(blob) }, 'image/png') })
+      // dataBase64 = dataURLToBase64(canvasRef.toDataURL('image/png'))
+      // this._png.file(`${filename}.png`, dataBase64, { base64: true })
+      this._png.file(`${filename}.png`, blob)
     }
     if (svgRef) {
       const data = '<?xml version="1.0" encoding="utf-8"?>' + svgRef.outerHTML        
@@ -76,7 +78,7 @@ export const Zipper = class Zipper {
         const fileName = `${new Date().getTime()}.zip`
         saveAs(blob, fileName);
         this.clear()
-        this.init()
+        // this.init()
         res()
       })
     })

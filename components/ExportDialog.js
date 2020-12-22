@@ -1,9 +1,12 @@
 import React from 'react'
 
 export default class ExportDialog extends React.Component {
+    src = ''
     render() {
         const { currentFrame, totalFrames, canvas } = this.props
-        const src = canvas.toDataURL('image/png')
+        if (totalFrames < 200 || currentFrame % 10 == 0) {
+          this.src = canvas.toDataURL('image/png')
+        }
         const isZipping = (currentFrame >= totalFrames)
         return (
           <div className="export-modal-container">
@@ -16,7 +19,7 @@ export default class ExportDialog extends React.Component {
               }
             </div>
             <div>
-              <img src={src} style={{width: '300px', height: 'auto'}}/>
+              <img src={this.src} style={{width: '300px', height: 'auto'}}/>
             </div>
           </div>
         )

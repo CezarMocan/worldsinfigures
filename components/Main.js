@@ -142,7 +142,7 @@ class Main extends React.PureComponent {
     }
 
     onAnimate = async (animationOptions) => {
-      const { updateStateObject, projectionAttributes, canvasAttributes } = this.props
+      const { updateStateObject, projectionAttributes, canvasAttributes, animateOptions } = this.props
       let projAttr = { ...projectionAttributes }
       projAttr.rotateX = animationOptions.x.start
       projAttr.rotateY = animationOptions.y.start
@@ -182,9 +182,15 @@ class Main extends React.PureComponent {
 
         await sleep(0.05)
         filenameIndex++
+        if (filenameIndex % animateOptions.imagesPerArchive == 0) {
+          await zip.complete()
+          zip = new Zipper()
+        }
       }
 
       await zip.complete()
+
+      this.setState({ renderingModalOpen: false })
     }
 
     onRenderingModalOpen = () => {
@@ -429,6 +435,7 @@ export default withMainContext((context, props) => ({
     canvasAttributes: context.canvasAttributes,
     renderOptions: context.renderOptions,
     downloadOptions: context.downloadOptions,
+    animateOptions: context.animateOptions,
     layers: context.layers,
     renderer: context.renderer,
     ready: context.ready,

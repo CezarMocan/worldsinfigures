@@ -21,6 +21,8 @@ export const INITIAL_CANVAS_WIDTH = 1920
 export const INITIAL_CANVAS_HEIGHT = 1080
 
 const INITIAL_STORAGE_STATE = {
+  version: 1,
+
   canvasAttributes: {
     canvasRatioLocked: true,
     canvasRatioWidth: INITIAL_CANVAS_WIDTH / gcd(INITIAL_CANVAS_WIDTH, INITIAL_CANVAS_HEIGHT),
@@ -51,6 +53,10 @@ const INITIAL_STORAGE_STATE = {
     config: true
   },
 
+  animateOptions: {
+    imagesPerArchive: 250
+  }
+
   // layers: { ...defaultLayers  }
 }
 
@@ -62,10 +68,14 @@ const getStoredState = () => {
     if (!window.localStorage.getItem(STORAGE_KEY)) {
       window.localStorage.setItem(STORAGE_KEY, JSON.stringify(INITIAL_STORAGE_STATE))
     }
-    return JSON.parse(window.localStorage.getItem(STORAGE_KEY))  
-  } else {
-    return INITIAL_STORAGE_STATE
+
+    const state = JSON.parse(window.localStorage.getItem(STORAGE_KEY))
+    if (state.version == INITIAL_STORAGE_STATE.version) {
+      return state
+    }
   }
+  
+  return INITIAL_STORAGE_STATE
 }
 
 
@@ -80,10 +90,12 @@ export default class MainContextProvider extends React.Component {
 
     getStateItemsToStore = (state) => {
       return {
+        version: state.version,
         canvasAttributes: state.canvasAttributes,
         projectionAttributes: state.projectionAttributes,
         renderOptions: state.renderOptions,
         downloadOptions: state.downloadOptions,
+        animateOptions: state.animateOptions
         // layers: state.layers
       }
     }
