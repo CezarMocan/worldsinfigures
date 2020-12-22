@@ -125,12 +125,18 @@ class Main extends React.PureComponent {
     }
 
     // Image downloading
-    onDownload = () => {
+    onDownload = () => {        
+        const { projectionAttributes, canvasAttributes } = this.props
+        let projAttr = { ...projectionAttributes }
+        projAttr.scale *= (100 / canvasAttributes.canvasDisplayPercentage);
+
+        this.renderMap(this._exportCanvas, this._exportBufferCanvas, true, projAttr)
+
         const uid = shortid()
-        const { projectionAttributes, parseStateForDownload } = this.props
+        const { parseStateForDownload } = this.props
         const projectionId = `${projectionAttributes.projection}-${uid}`
         const { downloadOptions } = this.props
-        if (downloadOptions.png) createAndDownloadImage(`${projectionId}.png`, this._canvas)
+        if (downloadOptions.png) createAndDownloadImage(`${projectionId}.png`, this._exportCanvas)
         if (downloadOptions.svg) createAndDownloadSvg(`${projectionId}.svg`, this._svg)
         if (downloadOptions.config) createAndDownloadText(`${projectionId}.txt`, parseStateForDownload())
     }
