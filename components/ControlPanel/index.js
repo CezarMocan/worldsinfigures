@@ -317,6 +317,7 @@ class ControlPanel extends React.Component {
           <div className="controls animate">
             <h1> Animate </h1>
             <div className="animate-options">
+              <Typography variant="body2">If animating more than 250 frames, each batch of 250 will be split into its own archive, meaning that multiple browser download dialogues will show up throughout the rendering process.</Typography>
               <FormGroup row>
                 <Checkbox color="primary" checked={animationOptions.x.active} onChange={this.onAnimationOptionsUpdate('x', 'active', 'checked')} label="Active"/>
                 <div className="axis-option-container label"><span>X-axis</span></div>
