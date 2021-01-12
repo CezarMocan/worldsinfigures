@@ -43,7 +43,7 @@ export const defaultLayers = {
         } 
     },
     worldMap: {
-        visible: false,
+        visible: true,
         type: layerTypes.VECTOR,
         url: '/static/geo/world-110m.topojson',
         jsonToGeojsonFn: (json) => topojson.feature(json, json.objects.land),
@@ -52,7 +52,7 @@ export const defaultLayers = {
         preserveOriginalStyle: false,
         style: {
             lineWidth: 0.5,
-            color: 'rgba(255, 230, 220, 0.2)',
+            color: 'rgba(255, 255, 255, 0.2)',
             fillMode: true,
             dashed: false
         }
@@ -85,112 +85,12 @@ export const defaultLayers = {
             dashed: false
         }
     },
-    originalTwoGedymin: {
-        visible: false,
-        type: layerTypes.VECTOR,
-        url: '/static/geo/two-faces.topojson',
-        jsonToGeojsonFn: (json) => topojson.feature(json, json.objects.gedymin),
-        geojsonObject: null,
-        displayName: '[ORIGINAL] 2 Gedymin Heads',
-        preserveOriginalStyle: false,
-        style: {
-            lineWidth: 2,
-            color: 'rgba(255, 255, 64, 0.8)',
-            fillMode: false,
-            dashed: false
-        }
-    },
-    gedyminHead: {
-        visible: false,
-        type: layerTypes.VECTOR,
-        url: '/static/geo/face-geo.geojson',
-        geojsonObject: null,
-        displayName: 'Gedymin Head',
-        preserveOriginalStyle: false,
-        style: {
-            lineWidth: 2,
-            color: 'rgba(64, 64, 255, 0.8)',
-            fillMode: false,
-            dashed: false
-        },
-        duplicateHemispheres: false
-    },
-    duplicatedSingleGedyminHead: {
-        visible: false,
-        type: layerTypes.VECTOR,
-        url: '/static/geo/face-geo.geojson',
-        preserveOriginalStyle: false,
-        geojsonObject: null,
-        displayName: '[**NEW**] Duplicated single Gedymin Head',
-        style: {
-            lineWidth: 2,
-            color: 'rgba(255, 64, 255, 0.8)',
-            fillMode: false,
-            dashed: false
-        },
-        duplicateHemispheres: true
-    },
-    Gy0lx8IQ8: { // You can replace this ID with something legible, as long as it's different from all others in the file.
-      visible: false,
-      type: layerTypes.VECTOR,
-      url: '/static/geo/michele-ver-29.svg-geoLittrow.geojson',
-      displayName: 'michele-ver-29.svg-geoLittrow', // Or however you want to see it in the layer list.
-        preserveOriginalStyle: false,
-      style: {
-       lineWidth: 1,
-       color: 'rgba(255, 255, 255, 1)',
-       fillMode: false,
-       dashed: false
-      },
-      duplicateHemispheres: false
-     },
-    Gy0lx8IQ8b: { // You can replace this ID with something legible, as long as it's different from all others in the file.
-      visible: false,
-      type: layerTypes.VECTOR,
-      url: '/static/geo/michele-ver-29.svg-geoRobinson.geojson',
-      displayName: 'michele-ver-29.svg-geoRobinson', // Or however you want to see it in the layer list.
-      preserveOriginalStyle: false,
-      style: {
-       lineWidth: 1,
-       color: 'rgba(255, 255, 255, 1)',
-       fillMode: false,
-       dashed: false
-      },
-      duplicateHemispheres: false
-     },
-     Gy0lx8IQ8e: { // You can replace this ID with something legible, as long as it's different from all others in the file.
-      visible: false,
-      type: layerTypes.VECTOR,
-      url: '/static/geo/michele-ver-29.svg-geoBoggs.geojson',
-      displayName: 'michele-ver-29.svg-geoBoggs', // Or however you want to see it in the layer list.
-      preserveOriginalStyle: false,
-      style: {
-       lineWidth: 1,
-       color: 'rgba(255, 255, 255, 1)',
-       fillMode: false,
-       dashed: false
-      },
-      duplicateHemispheres: false
-     },
-    Gy0lx8IQ8f: { // You can replace this ID with something legible, as long as it's different from all others in the file.
-      visible: false,
-      type: layerTypes.VECTOR,
-      url: '/static/geo/michele-ver-29.svg-geoMercator.geojson',
-      displayName: 'michele-ver-29.svg-geoMercator', // Or however you want to see it in the layer list.
-      preserveOriginalStyle: false,
-      style: {
-       lineWidth: 1,
-       color: 'rgba(255, 255, 255, 1)',
-       fillMode: false,
-       dashed: false
-      },
-      duplicateHemispheres: false
-     },
+    //CENTERED HEAD (LEFT FACING)
     Gy0lx8IQ8g: { // You can replace this ID with something legible, as long as it's different from all others in the file.
       visible: true,
       type: layerTypes.VECTOR,
       url: '/static/geo/michele-ver-29.svg-geoEquirectangular.geojson',
-      displayName: 'michele-ver-29.svg-geoEquirectangular', // Or however you want to see it in the layer list.
+      displayName: 'Centered Head (left)', // michele-ver-29.svg-geoEquirectangular
       preserveOriginalStyle: false,
       style: {
        lineWidth: 1,
@@ -204,7 +104,7 @@ export const defaultLayers = {
       visible: true,
       type: layerTypes.VECTOR,
       url: '/static/geo/michele-double-ver-29.svg-geoEquirectangular.geojson',
-      displayName: 'michele-double-ver-29.svg-geoEquirectangular', // Or however you want to see it in the layer list.
+      displayName: 'Centered Head x 2 (left)', // michele-double-ver-29.svg-geoEquirectangular
       preserveOriginalStyle: false,
       style: {
        lineWidth: 1,
@@ -213,7 +113,152 @@ export const defaultLayers = {
        dashed: false
       },
       duplicateHemispheres: false
-     }
+     },
+    //CENTER HEAD (RIGHT FACING)
+	wBKu11Jm: { // You can replace this ID with something legible, as long as it's different from all others in the file.
+	  visible: false,
+	  type: layerTypes.VECTOR,
+	  url: '/static/geo/michele-ver-29-right-facing.svg-geoEquirectangular.geojson',
+	  preserveOriginalStyle: false,
+	  displayName: 'Center Head (right)', // michele-ver-29-right-facing
+	  style: {
+	   lineWidth: 1,
+	   color: 'rgba(255, 255, 255, 1)',
+	   fillMode: false,
+	   dashed: false
+	  },
+	  duplicateHemispheres: false
+	 },
+	t4E_Oi9YL6: { // You can replace this ID with something legible, as long as it's different from all others in the file.
+	  visible: false,
+	  type: layerTypes.VECTOR,
+	  url: '/static/geo/michele-double-ver-29-right-facing.svg-geoEquirectangular.geojson',
+	  preserveOriginalStyle: false,
+	  displayName: 'Center Head X 2 (right)', // michele-double-ver-29-right-facing
+	  style: {
+	   lineWidth: 1,
+	   color: 'rgba(255, 255, 0, 1)',
+	   fillMode: false,
+	   dashed: false
+	  },
+	  duplicateHemispheres: false
+	 },
+    //WEST HEAD (LEFT FACING)
+	AqO7s4VoA: { // You can replace this ID with something legible, as long as it's different from all others in the file.
+	  visible: false,
+	  type: layerTypes.VECTOR,
+	  url: '/static/geo/michele-single-ver-29-LEFT-7.svg-geoEquirectangular.geojson',
+	  preserveOriginalStyle: false,
+	  displayName: 'West Head (left)', // michele-single-ver-29-LEFT-7
+	  style: {
+	   lineWidth: 1,
+	   color: 'rgba(255, 255, 255, 1)',
+	   fillMode: false,
+	   dashed: false
+	  },
+	  duplicateHemispheres: false
+	 },
+	pGTjD4fL7: { // You can replace this ID with something legible, as long as it's different from all others in the file.
+	  visible: false,
+	  type: layerTypes.VECTOR,
+	  url: '/static/geo/michele-double-ver-29-LEFT-7.svg-geoEquirectangular.geojson',
+	  preserveOriginalStyle: false,
+	  displayName: 'West Head x 2 (left)', // michele-double-ver-29-LEFT-7
+	  style: {
+	   lineWidth: 1,
+	   color: 'rgba(255, 255, 0, 1)',
+	   fillMode: false,
+	   dashed: false
+	  },
+	  duplicateHemispheres: false
+	 },
+	//WEST HEAD (RIGHT FACING)
+	Aer8TGHnqG: { // You can replace this ID with something legible, as long as it's different from all others in the file.
+	  visible: false,
+	  type: layerTypes.VECTOR,
+	  url: '/static/geo/michele-single-ver-29-LEFT-7-RIGHT-FACING.svg-geoEquirectangular.geojson',
+	  preserveOriginalStyle: false,
+	  displayName: 'West Head (right)', // michele-single-ver-29-LEFT-7-RIGHT-FACING
+	  style: {
+	   lineWidth: 1,
+	   color: 'rgba(255, 255, 255, 1)',
+	   fillMode: false,
+	   dashed: false
+	  },
+	  duplicateHemispheres: false
+	 },
+	NNWWU_VlEs: { // You can replace this ID with something legible, as long as it's different from all others in the file.
+	  visible: false,
+	  type: layerTypes.VECTOR,
+	  url: '/static/geo/michele-double-ver-29-LEFT-7-right-facing.svg-geoEquirectangular.geojson',
+	  preserveOriginalStyle: false,
+	  displayName: 'West Head x 2 (right)', // michele-double-ver-29-LEFT-7-right-facing
+	  style: {
+	   lineWidth: 1,
+	   color: 'rgba(255, 255, 0, 1)',
+	   fillMode: false,
+	   dashed: false
+	  },
+	  duplicateHemispheres: false
+	 },
+	//EAST HEAD (LEFT FACING)
+	MDnprMLBe: { // You can replace this ID with something legible, as long as it's different from all others in the file.
+	  visible: false,
+	  type: layerTypes.VECTOR,
+	  url: '/static/geo/michele-single-ver-29-RIGHT-7.svg-geoEquirectangular.geojson',
+	  preserveOriginalStyle: false,
+	  displayName: 'East Head (left)', // michele-single-ver-29-RIGHT-7
+	  style: {
+	   lineWidth: 1,
+	   color: 'rgba(255, 255, 255, 1)',
+	   fillMode: false,
+	   dashed: false
+	  },
+	  duplicateHemispheres: false
+	 },
+	JA1ETIc1g: { // You can replace this ID with something legible, as long as it's different from all others in the file.
+	  visible: false,
+	  type: layerTypes.VECTOR,
+	  url: '/static/geo/michele-double-ver-29-RIGHT-7.svg-geoEquirectangular.geojson',
+	  preserveOriginalStyle: false,
+	  displayName: 'East Head x 2 (left)', // michele-double-ver-29-RIGHT-7
+	  style: {
+	   lineWidth: 1,
+	   color: 'rgba(255, 255, 0, 1)',
+	   fillMode: false,
+	   dashed: false
+	  },
+	  duplicateHemispheres: false
+	 },
+	//EAST HEAD (RIGHT FACING)
+	IOPcXaTZYO: { // You can replace this ID with something legible, as long as it's different from all others in the file.
+	  visible: false,
+	  type: layerTypes.VECTOR,
+	  url: '/static/geo/michele-single-ver-29-RIGHT-7-right-facing.svg-geoEquirectangular.geojson',
+	  preserveOriginalStyle: false,
+	  displayName: 'East Head (right)', // michele-single-ver-29-RIGHT-7-right-facing
+	  style: {
+	   lineWidth: 1,
+	   color: 'rgba(255, 255, 255, 1)',
+	   fillMode: false,
+	   dashed: false
+	  },
+	  duplicateHemispheres: false
+	 },
+	X4bAnXcIk1: { // You can replace this ID with something legible, as long as it's different from all others in the file.
+	  visible: false,
+	  type: layerTypes.VECTOR,
+	  url: '/static/geo/michele-double-ver-29-RIGHT-7-facing-right.svg-geoEquirectangular.geojson',
+	  preserveOriginalStyle: false,
+	  displayName: 'East Head x 2 (right)', // michele-double-ver-29-RIGHT-7-facing-right
+	  style: {
+	   lineWidth: 1,
+	   color: 'rgba(255, 255, 0, 1)',
+	   fillMode: false,
+	   dashed: false
+	  },
+	  duplicateHemispheres: false
+	 }
 }
 
 export const propertiesExcludedFromExport = ['jsonToGeojsonFn', 'geojsonObject', 'imageObject']
