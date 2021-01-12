@@ -33,6 +33,8 @@ export default class Convert extends React.Component {
     scale: 200,
     paddingX: 10,
     paddingY: 10,
+    translateX: 0,
+    translateY: 0,
     preserveOriginalStyle: true,
     duplicateHemispheres: false
   }
@@ -67,9 +69,20 @@ export default class Convert extends React.Component {
   generateSVGPreview = () => {
     let node = this._svgContainer.children[0]
     if (!node) return
-    const { projection, projectionTo, lineDivisions, scale, paddingX, paddingY, preserveOriginalStyle, duplicateHemispheres } = this.state
+    const { projection, projectionTo, lineDivisions, scale, paddingX, paddingY, translateX, translateY, preserveOriginalStyle, duplicateHemispheres } = this.state
     const styleAttributes = preserveOriginalStyle ? STYLE_ATTRIBUTES : []
-    this.geojson = svgToGeoJson(node, projection, scale, {x: paddingX, y: paddingY }, lineDivisions, styleAttributes)
+
+    const options = {
+      projectionId: projection,
+      scale,
+      padding: { x: paddingX, y: paddingY },
+      translate: { x: translateX, y: translateY },
+      lineDivisions,
+      attributes: styleAttributes
+    }
+
+    // this.geojson = svgToGeoJson(node, projection, scale, {x: paddingX, y: paddingY }, lineDivisions, styleAttributes)
+    this.geojson = svgToGeoJson(node, options)
     const geojsonToRender = duplicateHemispheres ? duplicateOnHemispheres(this.geojson) : this.geojson
     const p = projectionsMap[projectionTo].fn()
     const svgGenerator = d3.geoPath().projection(p)
@@ -128,6 +141,14 @@ export default class Convert extends React.Component {
     this.setState({ paddingY: newValue })
   }
 
+  onTranslateXChange = (newValue) => {
+    this.setState({ translateX: newValue })
+  }
+
+  onTranslateYChange = (newValue) => {
+    this.setState({ translateY: newValue })
+  }
+
   onPreserveOriginalStyleChange = (event) => {
     this.setState({ preserveOriginalStyle: event.target.checked })
   }
@@ -145,7 +166,7 @@ export default class Convert extends React.Component {
   }
 
   render() {
-    const { hasFile, filename, projection, projectionTo, lineDivisions, scale, paddingX, paddingY, preserveOriginalStyle, duplicateHemispheres } = this.state
+    const { hasFile, filename, projection, projectionTo, lineDivisions, scale, paddingX, paddingY, translateX, translateY, preserveOriginalStyle, duplicateHemispheres } = this.state
     return (
       <div className="convert-page-container">
         <div className="convert-title">
@@ -184,6 +205,8 @@ export default class Convert extends React.Component {
               <SliderWithInput label="Scale" min={25} max={750} initialValue={scale} onValueChange={this.onScaleChange}/>
               <SliderWithInput label="Bounds X" min={-500} max={500} initialValue={paddingX} onValueChange={this.onPaddingXChange}/>
               <SliderWithInput label="Bounds Y" min={-500} max={500} initialValue={paddingY} onValueChange={this.onPaddingYChange}/>
+              <SliderWithInput label="Translate X" min={-500} max={500} initialValue={translateX} onValueChange={this.onTranslateXChange}/>
+              <SliderWithInput label="Translate Y" min={-500} max={500} initialValue={translateY} onValueChange={this.onTranslateYChange}/>
               <FormGroup row>
                 <FormControlLabel
                   control={ <Checkbox color="default" checked={preserveOriginalStyle} onChange={this.onPreserveOriginalStyleChange} /> }

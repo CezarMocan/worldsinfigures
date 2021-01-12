@@ -137,8 +137,18 @@ export const getSVGDimensions = (svgNode) => {
 * @param  {DOM Node} svgNode
 * @return {GeoJson Object}
 */
-export const svgToGeoJson = (svgNode, projectionId, scale, padding, complexity = 5, attributes = [], multiplier = 1) => {
+export const svgToGeoJson = (svgNode, options) => {
   applyPolyfill()
+
+  const { 
+    projectionId = 'geoEquirectangular', 
+    scale = 200, 
+    padding = { x: 0, y: 0 }, 
+    translate = { x: 0, y: 0 }, 
+    complexity = 5, 
+    attributes = [] 
+  } = options
+
   const geoJson = {
       type: 'FeatureCollection',
       features: [],
@@ -149,10 +159,11 @@ export const svgToGeoJson = (svgNode, projectionId, scale, padding, complexity =
   const ne = pBounds([165, 80])
   const sw = pBounds([-165, -80])
 
-  sw[0] = padding.x
-  ne[0] = 1000 - padding.x
-  ne[1] = padding.y
-  sw[1] = 500 - padding.y
+  sw[0] = padding.x + translate.x
+  ne[0] = 1000 - padding.x + translate.x
+  ne[1] = padding.y + translate.y
+  sw[1] = 500 - padding.y + translate.y
+
 
   const svgDims = getSVGDimensions(svgNode);
   const mapX = scaleLinear().domain([0, svgDims.width]).range([parseFloat(sw[0]), parseFloat(ne[0])]);

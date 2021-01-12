@@ -24,7 +24,9 @@ class AddLayerDialog extends React.Component {
     lineDivisions: 100,
     scale: 200,
     paddingX: 10,
-    paddingY: 10
+    paddingY: 10,
+    translateX: 0,
+    translateY: 0
   }
 
   uploadSVG = (files) => {
@@ -45,8 +47,18 @@ class AddLayerDialog extends React.Component {
   generateSVG = () => {
     let node = this._svgContainer.children[0]
     if (!node) return
-    const { projection, projectionTo, lineDivisions, scale, paddingX, paddingY } = this.state
-    this.geojson = svgToGeoJson(node, projection, scale, {x: paddingX, y: paddingY }, lineDivisions, STYLE_ATTRIBUTES)
+    const { projection, projectionTo, lineDivisions, scale, paddingX, paddingY, translateX, translateY } = this.state
+
+    const options = {
+      projectionId: projection,
+      scale,
+      padding: { x: paddingX, y: paddingY },
+      translate: { x: translateX, y: translateY },
+      lineDivisions,
+      attributes: STYLE_ATTRIBUTES
+    }
+
+    this.geojson = svgToGeoJson(node, options)
 
     const p = projectionsMap[projectionTo].fn()
     const svgGenerator = d3.geoPath().projection(p)
@@ -95,6 +107,13 @@ class AddLayerDialog extends React.Component {
     this.setState({ paddingY: newValue })
   }
 
+  onTranslateXChange = (newValue) => {
+    this.setState({ translateX: newValue })
+  }
+
+  onTranslateYChange = (newValue) => {
+    this.setState({ translateY: newValue })
+  }
   onSvgRef = (p) => {
     this._svg = p
   }
@@ -104,7 +123,7 @@ class AddLayerDialog extends React.Component {
   }
 
   render() {
-    const { projection, projectionTo, lineDivisions, scale, paddingX, paddingY } = this.state
+    const { projection, projectionTo, lineDivisions, scale, paddingX, paddingY, translateX, translateY } = this.state
     return (
       <div className="add-layer-container">
         <h3 className="convert-first-step-title">Upload a file</h3> 
@@ -137,6 +156,8 @@ class AddLayerDialog extends React.Component {
           <SliderWithInput label="Scale" min={25} max={750} initialValue={scale} onValueChange={this.onScaleChange}/>
           <SliderWithInput label="Bounds X" min={-500} max={500} initialValue={paddingX} onValueChange={this.onPaddingXChange}/>
           <SliderWithInput label="Bounds Y" min={-500} max={500} initialValue={paddingY} onValueChange={this.onPaddingYChange}/>
+          <SliderWithInput label="Translate X" min={-500} max={500} initialValue={translateX} onValueChange={this.onTranslateXChange}/>
+          <SliderWithInput label="Translate Y" min={-500} max={500} initialValue={translateY} onValueChange={this.onTranslateYChange}/>
         </div>
         <div className="convert-page-svg-container">
           <svg
