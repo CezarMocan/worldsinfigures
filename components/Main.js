@@ -53,8 +53,9 @@ class Main extends React.PureComponent {
 
     // Callbacks for when DOM objects are created
     onImageRef = (i) => {
-        this._image = i
-        this._image.src="/static/images/test.png" 
+      if (!i) return
+      this._image = i
+      this._image.src="/static/images/test.png" 
     }
     onImageLoad = () => { this.renderMap(this._canvas, this._canvas2, true) }
     onCanvasRef = (c) => { this._canvas = c }
