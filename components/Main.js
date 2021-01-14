@@ -163,7 +163,12 @@ class Main extends React.PureComponent {
       })
 
       let zip = new Zipper()
-      let filenameIndex = 0      
+      let filenameIndex = 0
+      
+      const zipName = {
+        root: new Date().getTime(),
+        index: 1
+      }
 
       for (let isDone = false; !isDone; isDone) {
         isDone = true
@@ -184,12 +189,13 @@ class Main extends React.PureComponent {
         await sleep(0.05)
         filenameIndex++
         if (filenameIndex % animateOptions.imagesPerArchive == 0) {
-          await zip.complete()
+          await zip.complete(`anim-${zipName.root}-part-${zipName.index}`)
           zip = new Zipper()
+          zipName.index++
         }
       }
 
-      await zip.complete()
+      await zip.complete(`anim-${zipName.root}-part-${zipName.index}`)
 
       this.setState({ renderingModalOpen: false })
     }
@@ -258,70 +264,6 @@ class Main extends React.PureComponent {
         this.canvasTranslate = { dx: 0, dy: 0 }
     }
 
-
-    // Mouse events related to resizing the canvas
-
-    /*
-    onWindowMouseDown = (evt) => {      
-        const { renderer } = this.props
-        const currCanvas = renderer == RENDERERS.canvas ? this._canvas : this._svg
-        evt.stopPropagation()
-        this.lastWindowTouch = { x: evt.clientX, y: evt.clientY }
-        if (EventsHelper.eventOnLeftBorder(evt, currCanvas, BORDER_HOVER_THRESHOLD)) {
-            this.setState({ isCanvasResizing: RESIZING.HORIZONTAL_LEFT })
-        } else if (EventsHelper.eventOnRightBorder(evt, currCanvas, BORDER_HOVER_THRESHOLD)) {
-            this.setState({ isCanvasResizing: RESIZING.HORIZONTAL_RIGHT })
-        } else if (EventsHelper.eventOnTopBorder(evt, currCanvas, BORDER_HOVER_THRESHOLD)) {
-            this.setState({ isCanvasResizing: RESIZING.VERTICAL_TOP })
-        } else if (EventsHelper.eventOnBottomBorder(evt, currCanvas, BORDER_HOVER_THRESHOLD)) {
-            this.setState({ isCanvasResizing: RESIZING.VERTICAL_BOTTOM })
-        } else {
-        }
-    } 
-    onWindowMouseUp = (evt) => {
-        evt.stopPropagation()
-        this.setState({ isCanvasResizing: RESIZING.NO })
-    }
-    onWindowMouseMove = (evt) => {
-        evt.stopPropagation()
-        const { renderer } = this.props
-        const currCanvas = renderer == RENDERERS.canvas ? this._canvas : this._svg
-        const { isCanvasResizing } = this.state
-
-        if (isCanvasResizing == RESIZING.NO) {
-            if (EventsHelper.eventOnLeftRightBorder(evt, currCanvas, 10)) {
-              currCanvas.style.cursor = 'ew-resize'
-            } else if (EventsHelper.eventOnTopBottomBorder(evt, currCanvas, 10)) {
-              currCanvas.style.cursor = 'ns-resize'
-            } else if (this.isCanvasTouching) {
-              currCanvas.style.cursor = 'grabbing'
-            } else {
-              currCanvas.style.cursor = 'grab'
-            }
-            return
-        }
-
-        const { canvasAttributes, updateCanvasWidth, updateCanvasHeight } = this.props
-        let { canvasDisplayWidth, canvasDisplayHeight, canvasRatioLocked, canvasRatioWidth, canvasRatioHeight } = canvasAttributes
-
-        if (isCanvasResizing == RESIZING.HORIZONTAL_LEFT || isCanvasResizing == RESIZING.HORIZONTAL_RIGHT) {
-            const delta = evt.clientX - this.lastWindowTouch.x
-            const sgn = (isCanvasResizing == RESIZING.HORIZONTAL_LEFT) ? -1 : 1
-            canvasDisplayWidth += 2 * delta * sgn
-            updateCanvasWidth(canvasDisplayWidth)
-        } else if (isCanvasResizing == RESIZING.VERTICAL_TOP || isCanvasResizing == RESIZING.VERTICAL_BOTTOM) {
-            const delta = evt.clientY - this.lastWindowTouch.y
-            const sgn = (isCanvasResizing == RESIZING.VERTICAL_TOP) ? -1 : 1
-            canvasDisplayHeight += 2 * delta * sgn
-            updateCanvasHeight(canvasDisplayHeight)
-        }
-
-        // d3.select(`#${SVG_ID}`).attr("width", this._canvas.width)
-        // d3.select(`#${SVG_ID}`).attr("height", this._canvas.height)
-
-        this.lastWindowTouch = { x: evt.clientX, y: evt.clientY }
-    }
-    */
     render() {    
         const { imageChanged, renderingModalOpen, renderingCurrentFrame, renderingTotalFrames } = this.state
         const { canvasAttributes } = this.props

@@ -71,11 +71,12 @@ export const Zipper = class Zipper {
       this._svg.file(`${filename}.svg`, dataBase64, { base64: true })
     }   
   }
-  async complete() {
+  async complete(archiveName) {
+    archiveName = (archiveName || new Date().getTime())
     console.log('completing...')
     return new Promise((res, rej) => {
       this._zipper.generateAsync({ type:"blob" }).then((blob) => {
-        const fileName = `${new Date().getTime()}.zip`
+        const fileName = `${archiveName}.zip`
         saveAs(blob, fileName);
         this.clear()
         // this.init()
