@@ -362,6 +362,18 @@ class ControlPanel extends React.Component {
             </a>
           </div>
 
+          <div className="controls tools">
+            <h1> Credits </h1>
+            <div style={{display: 'flex', flexDirection: 'row', justifyContent: 'space-between'}}>
+              <div><Typography variant="body2">Evan Roth (concept and creative direction)</Typography></div>
+              <div><Typography variant="body2">👨🏼 🇺🇸 </Typography></div>              
+            </div>
+            <div style={{display: 'flex', flexDirection: 'row', justifyContent: 'space-between'}}>
+              <div><Typography variant="body2">Cezar Mocan (software development)</Typography></div>
+              <div><Typography variant="body2">👨🏼 🇷🇴 </Typography></div>              
+            </div>
+          </div>
+
           <Modal
             aria-labelledby="transition-modal-title"
             aria-describedby="transition-modal-description"
