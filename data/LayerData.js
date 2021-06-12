@@ -57,6 +57,20 @@ export const defaultLayers = {
             dashed: false
         }
     },
+		greatLakes: {
+				visible: true,
+				type: layerTypes.VECTOR,
+				url: '/static/geo/greatlakes.geojson',
+				geojsonObject: null,        
+				displayName: 'Great Lakes',
+				preserveOriginalStyle: false,
+				style: {
+						lineWidth: 0.5,
+						color: '#88f',
+						fillMode: true,
+						dashed: false        
+				}
+		},
     submarineCables: {
         visible: false,
         type: layerTypes.VECTOR,
