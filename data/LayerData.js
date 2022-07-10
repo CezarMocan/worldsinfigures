@@ -21,7 +21,7 @@ export const defaultLayers = {
         displayName: 'Graticule',
         preserveOriginalStyle: false,
         style: {
-            lineWidth: 1,
+            lineWidth: 0.5,
             color: '#ccc',
             fillMode: false,
             dashed: true        
@@ -66,7 +66,7 @@ export const defaultLayers = {
 				preserveOriginalStyle: false,
 				style: {
 						lineWidth: 0.5,
-						color: '#88f',
+						color: 'rgba(255, 255, 255, 0.15)',
 						fillMode: true,
 						dashed: false        
 				}

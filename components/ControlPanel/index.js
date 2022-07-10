@@ -61,6 +61,17 @@ class ControlPanel extends React.Component {
       const { onDownload } = this.props
       onDownload()
     }
+    resetProjectionAttributes = () => {
+      const { updateStateObject } = this.props
+      updateStateObject('projectionAttributes', {           
+        scale: 200 * this.state.canvasAttributes.canvasDisplayPercentage / 100,
+        rotateX: 0,
+        rotateY: 0,
+        rotateZ: 0,
+        translateX: 50,
+        translateY: 50
+      })
+    }
     onAnimationOptionsUpdate = (axisName, propertyName, eventProp) => event => {
       const { updateStateObject } = this.props
       if (propertyName == 'start') {
@@ -267,25 +278,25 @@ class ControlPanel extends React.Component {
             <SliderWithInput label="Z Rotation" min={0} max={360} step={2.5} initialValue={rotateZ} onValueChange={this.onSliderProjectionAttributeUpdate('rotateZ')}/>
             <SliderWithInput label="X Offset" min={0} max={200} initialValue={translateX} onValueChange={this.onSliderProjectionAttributeUpdate('translateX')}/>
             <SliderWithInput label="Y Offset" min={0} max={200} initialValue={translateY} onValueChange={this.onSliderProjectionAttributeUpdate('translateY')}/>
+            <Typography variant="body2" style={{ marginBottom: '10px', marginTop: '10px' }}>Reset the projection settings to their defaults by pressing the button below.</Typography>
+            <a href="#" onClick={this.resetProjectionAttributes}> <Button variant="outlined"> Reset Parameters </Button> </a>
           </div>
 
-          <div className="controls rendering">
+          {/* <div className="controls rendering">
             <h1> Rendering </h1>
             <FormGroup row>
-              <FormControlLabel
-                control={ <Checkbox color="default" checked={clipToEarthBounds} onChange={this.onCheckboxRenderOptionsUpdate('clipToEarthBounds')} /> }
-                label="Clipping"
-              />        
+              
               <FormControlLabel
                 control={ <Checkbox color="primary" checked={tileVectors} onChange={this.onCheckboxRenderOptionsUpdate('tileVectors')} /> }
                 label="Vector Tiling (experimental)"
               />
             </FormGroup>
-          </div>
+          </div> */}
 
 
           <div className="controls checkboxes">
-            <h1> Raster Layer </h1>
+            <h1> Custom Image </h1>
+            <Typography variant="body2" style={{ marginBottom: '10px' }}>Set the canvas width and height below, with the full resolution you need for exporting. Then, set the Display percentage to something lower than 100% in order to fit the canvas onto the screen, and achieve faster rendering.</Typography>
             { Object.keys(rasterLayers).map(k => {
               const l = rasterLayers[k]
               return (
@@ -299,10 +310,16 @@ class ControlPanel extends React.Component {
                 />
               )
             })}
+             <Typography variant="body2" style={{ marginBottom: '5px', marginTop: '5px' }}>Upload your own image by dragging and dropping a new one on top of the canvas.</Typography>
+             <FormControlLabel
+                control={ <Checkbox color="default" checked={clipToEarthBounds} onChange={this.onCheckboxRenderOptionsUpdate('clipToEarthBounds')} /> }
+                label="Clip image to Earth bounds"
+              />
           </div>
 
           <div className="controls checkboxes">
-            <h1> Vector Layers </h1>
+            <h1> Visualization </h1>
+            <Typography variant="body2" style={{ marginBottom: '10px' }}>Set the canvas width and height below, with the full resolution you need for exporting. Then, set the Display percentage to something lower than 100% in order to fit the canvas onto the screen, and achieve faster rendering.</Typography>            
             { Object.keys(vectorLayers).map(k => {
               const l = vectorLayers[k]
               return (
@@ -317,11 +334,11 @@ class ControlPanel extends React.Component {
                 />
               )
             })}
-            <a href="#" onClick={this.onAddLayerModalOpen}>
+            {/* <a href="#" onClick={this.onAddLayerModalOpen}>
               <Button variant="outlined" style={{ marginTop: '10px' }}>
                 Add vector layer
               </Button>
-            </a>
+            </a> */}
           </div>
 
           <div className="controls download">
@@ -391,23 +408,23 @@ class ControlPanel extends React.Component {
             </div>
           </div>
 
-          <div className="controls tools">
+          {/* <div className="controls tools">
             <h1> Tools </h1>
             <a href="/convert" target="__blank">
               <Button variant="outlined">
                 SVG to GeoJSON
               </Button>
             </a>
-          </div>
+          </div> */}
 
           <div className="controls tools">
             <h1> Credits </h1>
             <div style={{display: 'flex', flexDirection: 'row', justifyContent: 'space-between'}}>
-              <div><Typography variant="body2">Evan Roth (concept and creative direction)</Typography></div>
+              <div><Typography variant="body2"><a href="https://evan-roth.com/" target="_blank">Evan Roth</a> (concept and creative direction)</Typography></div>
               <div><Typography variant="body2">👨🏼 🇺🇸 </Typography></div>              
             </div>
-            <div style={{display: 'flex', flexDirection: 'row', justifyContent: 'space-between'}}>
-              <div><Typography variant="body2">Cezar Mocan (software development)</Typography></div>
+            <div style={{display: 'flex', flexDirection: 'row', justifyContent: 'space-between', marginBottom: '10px'}}>
+              <div><Typography variant="body2"><a href="https://cezar.io/" target="_blank">Cezar Mocan</a> (software development)</Typography></div>
               <div><Typography variant="body2">👨🏼 🇷🇴 </Typography></div>              
             </div>
           </div>

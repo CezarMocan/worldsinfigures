@@ -19,7 +19,7 @@ export default class ExportDialog extends React.Component {
               }
             </div>
             <div>
-              <img src={this.src} style={{width: '300px', height: 'auto'}}/>
+              <img src={this.src} style={{width: '50%', height: 'auto'}}/>
             </div>
           </div>
         )

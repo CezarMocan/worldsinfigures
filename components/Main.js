@@ -297,11 +297,6 @@ class Main extends React.PureComponent {
                                     <a href="http://www.kopimi.com/" target="__blank">                                        
                                       <img className="kopimi-logo" src="static/images/kopimi.png"/>
                                     </a>
-                                    { !imageChanged &&
-                                      <div className="canvas-instructions">
-                                        Change the image by dragging and dropping a new one on top of the canvas.
-                                      </div>
-                                    }
                                     <div className="canvas-container" {...getRootProps()}>
                                       <div className="hidden-elements">
                                         <input {...getInputProps()} />
