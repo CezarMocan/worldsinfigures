@@ -21,6 +21,7 @@ import LayerItem from '../../components/LayerItem'
 import { layerTypes } from '../../data/LayerData'
 import AddLayerDialog from './AddLayerDialog'
 import ProjectionsDropdown from './ProjectionsDropdown'
+import AspectRatiosDropdown from './AspectRatiosDropdown'
 
 class ControlPanel extends React.Component {
     state = {
@@ -29,7 +30,7 @@ class ControlPanel extends React.Component {
         y: { active: true, increment: 5, total: 360 },
         z: { active: true, increment: 5, total: 360 },
       },
-      canvasAttributes: {},
+      canvasAttributes: { canvasRatioIndex: 1000 },      
       addLayerModalOpen: false
     }
     onProjectionSelectionUpdate = (event) => {
@@ -137,11 +138,26 @@ class ControlPanel extends React.Component {
     }
     updateCanvasRatio = () => {
       const { updateCanvasRatio } = this.props
-      updateCanvasRatio(this.state.canvasAttributes.canvasRatioWidth, this.state.canvasAttributes.canvasRatioHeight)
+      updateCanvasRatio(this.state.canvasAttributes.canvasRatioWidth, this.state.canvasAttributes.canvasRatioHeight, this.state.canvasAttributes.canvasRatioIndex)
     }
     onCanvasRatioLockedUpdate = (event) => {
       const { updateCanvasRatioLocked } = this.props
       updateCanvasRatioLocked(event.target.checked)
+    }
+    onCanvasRatioDropdownSelect = (ratio) => {
+      let newState = { canvasRatioIndex: ratio.index }
+      if (ratio.w != null && ratio.h != null) {
+        newState.canvasRatioWidth = ratio.w
+        newState.canvasRatioHeight = ratio.h
+      }
+      this.setState({
+        canvasAttributes: {
+          ...this.state.canvasAttributes,
+          ...newState
+        }
+      }, () => {
+        this.updateCanvasRatio()
+      })
     }
     onAnimateClick = () => {
       const { onAnimate } = this.props
@@ -184,10 +200,18 @@ class ControlPanel extends React.Component {
 
       return (
         <div className="all-controls-container">
+          <div className="controls canvas" style={{ marginTop: '10px' }}>
+            <Typography variant="body2" style={{ fontSize: '14pt', marginLeft: '-3px' }}>🏁</Typography>
+            <h1 style={{ fontSize: '24pt'}}> Worlds In Figures </h1>
+            <div className="canvas-options">
+                <Typography variant="body2" style={{ fontSize: '11pt' }}>Set the canvas width and height below, with the full resolution you need for exporting. Then, set the Display percentage to something lower than 100% in order to fit the canvas onto the screen, and achieve faster rendering.</Typography>
+            </div>
+            <Typography variant="body2" style={{ fontSize: '14pt', marginTop: '10px', marginLeft: '-3px' }}>🏁</Typography>
+          </div>          
           <div className="controls canvas">
             <h1> Canvas Dimensions</h1>
             <div className="canvas-options">
-              <FormGroup>
+              <FormGroup style={{marginBottom: '15px'}}>
                 <Typography variant="body2">Set the canvas width and height below, with the full resolution you need for exporting. Then, set the Display percentage to something lower than 100% in order to fit the canvas onto the screen, and achieve faster rendering.</Typography>
                 <FormGroup row className="justify-space-between">
                   <FormGroup row className="align-items-center">
@@ -198,23 +222,35 @@ class ControlPanel extends React.Component {
                     <div className="item-option-container"> <TextField label="Display" value={canvasAttributes.canvasDisplayPercentage} size="small" onChange={this.onCanvasDisplayPercentageUpdate} onBlur={this.updateCanvasDisplayPercentage} /> </div>
                     <div style={{display: 'flex', alignItems: 'center', margin: '0 10px 0 5px', paddingTop: '10px', fontSize: '6pt' }}>%</div>
                   </FormGroup>
+                </FormGroup>
+              </FormGroup>
+
+              <FormGroup>
+                <div>
+                  <Typography variant="body2" disabled={!canvasAttributes.canvasRatioLocked}>You can select a pre-defined aspect ratio below.</Typography>
+                </div>
+
+                <div className="aspect-ratios-dropdown" style={{marginBottom: '5px'}}>
                   <FormGroup row className="align-items-center">
                     <FormControlLabel
                       control={ <Checkbox color="primary" size="small" checked={canvasAttributes.canvasRatioLocked} onChange={this.onCanvasRatioLockedUpdate} /> }
                       label="Lock Aspect Ratio"
                     />        
-                  </FormGroup>
-                </FormGroup>
-              </FormGroup>
+                    <AspectRatiosDropdown value={canvasAttributes.canvasRatioIndex} disabled={!canvasAttributes.canvasRatioLocked} onChange={this.onCanvasRatioDropdownSelect}/>
+                  </FormGroup>                  
+                </div>
 
-              <FormGroup row className="justify-space-between"> 
-                <FormGroup row className="align-items-center">
-                  <div className="item-option-container input-right-aligned"> <TextField disabled={!canvasAttributes.canvasRatioLocked} label="Ratio" value={canvasAttributes.canvasRatioWidth} size="small" onChange={this.onCanvasRatioWidthUpdate} /> </div>
+                <div>
+                  <Typography variant="body2">Or set a custom one.</Typography>
+                </div>
+
+                <FormGroup row className="align-items-center">                 
+                  <div className="item-option-container input-right-aligned"> <TextField disabled={!canvasAttributes.canvasRatioLocked} value={canvasAttributes.canvasRatioWidth} size="small" onChange={this.onCanvasRatioWidthUpdate} /> </div>
                   <div style={{display: 'flex', alignItems: 'center', margin: '0 10px 0 5px', paddingTop: '10px', fontSize: '9pt' }}>:</div>
-                  <div className="item-option-container"> <TextField disabled={!canvasAttributes.canvasRatioLocked} label="⠀" value={canvasAttributes.canvasRatioHeight} size="small" onChange={this.onCanvasRatioHeightUpdate} /> </div>
+                  <div className="item-option-container"> <TextField disabled={!canvasAttributes.canvasRatioLocked} value={canvasAttributes.canvasRatioHeight} size="small" onChange={this.onCanvasRatioHeightUpdate} /> </div>
                   <div className="set-ratio-button">
-                    <a href="#" onClick={this.updateCanvasRatio}> <Button disabled={!canvasAttributes.canvasRatioLocked} variant="outlined"> Set Ratio </Button> </a>
-                  </div>
+                    <a href="#" onClick={this.updateCanvasRatio}> <Button disabled={!canvasAttributes.canvasRatioLocked} variant="outlined"> Set Custom Aspect Ratio </Button> </a>
+                  </div>                 
                 </FormGroup>
               </FormGroup>
             </div>
@@ -222,7 +258,9 @@ class ControlPanel extends React.Component {
 
           <div className="controls sliders">
             <h1> Projection </h1>
+            <Typography variant="body2" style={{ marginBottom: '5px' }}>Set the canvas width and height below, with the full resolution you need for exporting. Then, set the Display percentage to something lower than 100% in order to fit the canvas onto the screen, and achieve faster rendering.</Typography>
             <ProjectionsDropdown value={projection} onChange={this.onProjectionSelectionUpdate}/>
+            <Typography variant="body2" style={{ marginBottom: '5px' }}>Set the canvas width and height below, with the full resolution you need for exporting. Then, set the Display percentage to something lower than 100% in order to fit the canvas onto the screen, and achieve faster rendering.</Typography>
             <SliderWithInput label="Scale" min={3} max={500} initialValue={scale} onValueChange={this.onSliderProjectionAttributeUpdate('scale')}/>
             <SliderWithInput label="X Rotation" min={0} max={360} step={2.5} initialValue={rotateX} onValueChange={this.onSliderProjectionAttributeUpdate('rotateX')}/>
             <SliderWithInput label="Y Rotation" min={0} max={360} step={2.5} initialValue={rotateY} onValueChange={this.onSliderProjectionAttributeUpdate('rotateY')}/>
@@ -247,7 +285,7 @@ class ControlPanel extends React.Component {
 
 
           <div className="controls checkboxes">
-            <h1> Raster Layers </h1>
+            <h1> Raster Layer </h1>
             { Object.keys(rasterLayers).map(k => {
               const l = rasterLayers[k]
               return (

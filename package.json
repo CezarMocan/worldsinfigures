@@ -46,6 +46,7 @@
     "react-dom": "^16.14.0",
     "react-dropzone": "^10.2.2",
     "react-load-script": "0.0.6",
+    "react-player": "^2.10.1",
     "react-router-dom": "^6.3.0",
     "rgb-hex": "^3.0.0",
     "shortid": "^2.2.16",

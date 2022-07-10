@@ -29,7 +29,8 @@ const INITIAL_STORAGE_STATE = {
     canvasRatioHeight: INITIAL_CANVAS_HEIGHT / gcd(INITIAL_CANVAS_WIDTH, INITIAL_CANVAS_HEIGHT),
     canvasDisplayPercentage: 50,
     canvasDisplayWidth: INITIAL_CANVAS_WIDTH,
-    canvasDisplayHeight: INITIAL_CANVAS_HEIGHT,  
+    canvasDisplayHeight: INITIAL_CANVAS_HEIGHT,
+    canvasRatioIndex: 1000
   },
 
   projectionAttributes: {
@@ -236,7 +237,7 @@ export default class MainContextProvider extends React.Component {
       })
     }
 
-    updateCanvasRatio = (newRatioWidth, newRatioHeight) => {
+    updateCanvasRatio = (newRatioWidth, newRatioHeight, newRatioIndex) => {
       const g = gcd(newRatioHeight, newRatioWidth)
       const currHeight = this.state.canvasAttributes.canvasDisplayHeight
       this.updateState({
@@ -245,7 +246,8 @@ export default class MainContextProvider extends React.Component {
           ...this.state.canvasAttributes,
           canvasRatioWidth: newRatioWidth / g,
           canvasRatioHeight: newRatioHeight / g,
-          canvasDisplayWidth: currHeight * (newRatioWidth / newRatioHeight)
+          canvasDisplayWidth: currHeight * (newRatioWidth / newRatioHeight),
+          canvasRatioIndex: newRatioIndex
         }
       })
     }
