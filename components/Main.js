@@ -294,7 +294,7 @@ class Main extends React.PureComponent {
                                 <div className="all-screen-container">
 
                                   <div className="all-rendering-container checkerboard-background">
-                                    <a href="http://www.kopimi.com/" target="__blank">                                        
+                                    <a href="https://en.wikipedia.org/wiki/Piratbyrån#Kopimi" target="__blank">                                        
                                       <img className="kopimi-logo" src="static/images/kopimi.png"/>
                                     </a>
                                     <div className="canvas-container" {...getRootProps()}>

@@ -212,12 +212,12 @@ class ControlPanel extends React.Component {
       return (
         <div className="all-controls-container">
           <div className="controls canvas" style={{ marginTop: '10px' }}>
-            <Typography variant="body2" style={{ fontSize: '14pt', marginLeft: '-3px' }}>🏁</Typography>
-            <h1 style={{ fontSize: '24pt'}}> Worlds In Figures </h1>
+            {/* <Typography variant="body2" style={{ fontSize: '14pt', marginLeft: '-3px' }}>🏁</Typography> */}
+            <h1 style={{ fontSize: '24pt', marginTop: '20px'}}> Worlds In Figures </h1>
             <div className="canvas-options">
-                <Typography variant="body2" style={{ fontSize: '11pt' }}>Set the canvas width and height below, with the full resolution you need for exporting. Then, set the Display percentage to something lower than 100% in order to fit the canvas onto the screen, and achieve faster rendering.</Typography>
+                {/* <Typography variant="body2" style={{ fontSize: '11pt' }}>Set the canvas width and height below, with the full resolution you need for exporting. Then, set the Display percentage to something lower than 100% in order to fit the canvas onto the screen, and achieve faster rendering.</Typography> */}
             </div>
-            <Typography variant="body2" style={{ fontSize: '14pt', marginTop: '10px', marginLeft: '-3px' }}>🏁</Typography>
+            {/* <Typography variant="body2" style={{ fontSize: '14pt', marginTop: '10px', marginLeft: '-3px' }}>🏁</Typography> */}
           </div>          
           <div className="controls canvas">
             <h1> Canvas Dimensions</h1>
@@ -269,9 +269,9 @@ class ControlPanel extends React.Component {
 
           <div className="controls sliders">
             <h1> Projection </h1>
-            <Typography variant="body2" style={{ marginBottom: '5px' }}>Set the canvas width and height below, with the full resolution you need for exporting. Then, set the Display percentage to something lower than 100% in order to fit the canvas onto the screen, and achieve faster rendering.</Typography>
+            {/* <Typography variant="body2" style={{ marginBottom: '5px' }}>Choose your desired projection from the dropdown below.</Typography> */}
             <ProjectionsDropdown value={projection} onChange={this.onProjectionSelectionUpdate}/>
-            <Typography variant="body2" style={{ marginBottom: '5px' }}>Set the canvas width and height below, with the full resolution you need for exporting. Then, set the Display percentage to something lower than 100% in order to fit the canvas onto the screen, and achieve faster rendering.</Typography>
+            {/* <Typography variant="body2" style={{ marginBottom: '5px' }}>Set the canvas width and height below, with the full resolution you need for exporting. Then, set the Display percentage to something lower than 100% in order to fit the canvas onto the screen, and achieve faster rendering.</Typography> */}
             <SliderWithInput label="Scale" min={3} max={500} initialValue={scale} onValueChange={this.onSliderProjectionAttributeUpdate('scale')}/>
             <SliderWithInput label="X Rotation" min={0} max={360} step={2.5} initialValue={rotateX} onValueChange={this.onSliderProjectionAttributeUpdate('rotateX')}/>
             <SliderWithInput label="Y Rotation" min={0} max={360} step={2.5} initialValue={rotateY} onValueChange={this.onSliderProjectionAttributeUpdate('rotateY')}/>
@@ -296,7 +296,7 @@ class ControlPanel extends React.Component {
 
           <div className="controls checkboxes">
             <h1> Custom Image </h1>
-            <Typography variant="body2" style={{ marginBottom: '10px' }}>Set the canvas width and height below, with the full resolution you need for exporting. Then, set the Display percentage to something lower than 100% in order to fit the canvas onto the screen, and achieve faster rendering.</Typography>
+            {/* <Typography variant="body2" style={{ marginBottom: '10px' }}>Set the canvas width and height below, with the full resolution you need for exporting. Then, set the Display percentage to something lower than 100% in order to fit the canvas onto the screen, and achieve faster rendering.</Typography> */}
             { Object.keys(rasterLayers).map(k => {
               const l = rasterLayers[k]
               return (
@@ -319,7 +319,7 @@ class ControlPanel extends React.Component {
 
           <div className="controls checkboxes">
             <h1> Visualization </h1>
-            <Typography variant="body2" style={{ marginBottom: '10px' }}>Set the canvas width and height below, with the full resolution you need for exporting. Then, set the Display percentage to something lower than 100% in order to fit the canvas onto the screen, and achieve faster rendering.</Typography>            
+            <Typography variant="body2" style={{ marginBottom: '10px' }}>Toggle pre-defined vector layers below, or add your own.</Typography>            
             { Object.keys(vectorLayers).map(k => {
               const l = vectorLayers[k]
               return (
@@ -334,11 +334,22 @@ class ControlPanel extends React.Component {
                 />
               )
             })}
-            {/* <a href="#" onClick={this.onAddLayerModalOpen}>
+
+            <Typography variant="body2" style={{ marginTop: '10px' }}>You can add your own vector layer. Note that this feature is still experimental, while it might work well for simple .svg files, the import might behave unexpectedly for more complex ones.</Typography>            
+            <a href="#" onClick={this.onAddLayerModalOpen}>
               <Button variant="outlined" style={{ marginTop: '10px' }}>
-                Add vector layer
+                Add vector layer (experimental)
               </Button>
-            </a> */}
+            </a>
+
+            <Typography variant="body2" style={{ marginTop: '10px' }}>By default, vector layers are clipped to the Earth bounds. You can disable this clipping by checking below (feature is experimental.)</Typography>
+            <FormGroup row>              
+              <FormControlLabel
+                control={ <Checkbox color="primary" checked={tileVectors} onChange={this.onCheckboxRenderOptionsUpdate('tileVectors')} /> }
+                label="Vector Tiling (experimental)"
+              />
+            </FormGroup>   
+
           </div>
 
           <div className="controls download">
@@ -408,14 +419,15 @@ class ControlPanel extends React.Component {
             </div>
           </div>
 
-          {/* <div className="controls tools">
+          <div className="controls tools">
             <h1> Tools </h1>
+            <Typography variant="body2" style={{ marginTop: '10px', marginBottom: '7px' }}>Tool for converting SVG files into the GeoJSON format. This feature is experimental and might not work as expected.</Typography>            
             <a href="/convert" target="__blank">
               <Button variant="outlined">
-                SVG to GeoJSON
+                SVG to GeoJSON (experimental)
               </Button>
             </a>
-          </div> */}
+          </div>
 
           <div className="controls tools">
             <h1> Credits </h1>
