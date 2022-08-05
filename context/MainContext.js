@@ -84,7 +84,8 @@ export default class MainContextProvider extends React.Component {
     state = {
       ...getStoredState(),
       action: this,
-      layers: { ...defaultLayers  },
+      // layers: { ...defaultLayers  },
+      layers: {},
       renderer: RENDERERS.canvas,
       ready: false
     }
@@ -112,7 +113,7 @@ export default class MainContextProvider extends React.Component {
     // Loading raster and vector data
     loadLayers = async () => {
       let errorKeys = []
-      const loadedLayers = cloneDeep(this.state.layers)
+      const loadedLayers = { ...defaultLayers } //cloneDeep(this.state.layers)
 
       for (let key of Object.keys(loadedLayers)) {
         const l = loadedLayers[key]

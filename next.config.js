@@ -14,4 +14,18 @@ module.exports = withLess({
     // For example get the latest git commit hash here
     return 'constant-build-id'
   },
+  exportPathMap: async function (
+    defaultPathMap,
+    { dev, dir, outDir, distDir, buildId }
+  ) {
+    return {
+      '/': { page: '/' },
+      '/software': { page: '/software' },
+      '/software/index': { page: '/software' },
+      '/tutorial': { page: '/tutorial' },
+      '/tutorial/index': { page: '/tutorial' },
+      '/convert': { page: '/convert' },
+      '/convert/index': { page: '/convert' },
+    }
+  },  
 })

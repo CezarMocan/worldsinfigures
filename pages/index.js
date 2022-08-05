@@ -23,8 +23,8 @@ const NO_COLORS = COLORS.length
 
 export default class Index extends React.PureComponent {
     state = {
-      color1: 0,
-      color2: 1
+      color1: -1,
+      color2: -1
     }
 
     getRandomColor() {
@@ -34,7 +34,8 @@ export default class Index extends React.PureComponent {
       return color
     }
 
-    componentWillMount() {
+    componentDidMount() {
+      if (this.state.color1 >= 0) return
       let color1 = this.getRandomColor()
       let color2 = this.getRandomColor()
       while (color2 == color1) color2 = this.getRandomColor()
@@ -43,15 +44,16 @@ export default class Index extends React.PureComponent {
 
     render() {
       const { color1, color2 } = this.state
+      if (color1 < 0) return null
         return (
           <>
             <Header/>
             <div className='container'>
               <div className='section' style={{backgroundColor: COLORS[color1][0] }}>
-                <a href="/software" style={{color: COLORS[color1][1] }}>Software</a>
+                <Link href="/software"><a style={{color: COLORS[color1][1] }}>Software</a></Link>
               </div>
               <div className='section' style={{backgroundColor: COLORS[color2][0]}}>
-                <a href="/tutorial" style={{color: COLORS[color2][1] }}>Tutorial</a>
+                <Link href="/tutorial" ><a style={{color: COLORS[color2][1] }}>Tutorial</a></Link>
               </div>
             </div>
           </>

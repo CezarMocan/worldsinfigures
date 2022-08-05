@@ -16,6 +16,30 @@ import ControlPanel from '../components/ControlPanel'
 import { renderLayersToCanvas, renderLayersToSVG } from './Renderer'
 import ExportDialog from './ExportDialog'
 
+const FORBIDDEN_COLORS = [5, 7]
+const COLORS = [
+  ['#2531f5', 'white'],
+  ['#ef8732', 'black'],
+  ['#75fb4c', 'black'],
+  ['#964b00', 'black'],
+  ['#737f8f', 'black'],
+  ['#ffffff', 'black'],
+  ['#e93423', 'white'],
+  ['#000000', 'white'],
+  ['#ffff55', 'black'],
+  ['#8218f6', 'white'],
+  ['#ed72b1', 'black'],
+  ['#75fbfe', 'black']
+]
+const NO_COLORS = COLORS.length
+
+const getRandomColor = () => {
+  let color = parseInt(Math.floor(Math.random() * NO_COLORS))
+  while (FORBIDDEN_COLORS.includes(color))
+    color = parseInt(Math.floor(Math.random() * NO_COLORS))
+  return color
+}
+
 const theme = createMuiTheme({
     typography: { 
        fontSize: 10
@@ -273,7 +297,14 @@ class Main extends React.PureComponent {
 
         const { ready, renderer } = this.props
 
-        if (!ready) return null
+        if (!ready) {
+          let colorId = getRandomColor()
+          return (
+            <div className="loading-screen" style={{ backgroundColor: COLORS[colorId][0], color: COLORS[colorId][1] }}>
+              <h1> Loading... </h1>
+            </div>
+          )
+        }
 
         const canvasCls = classnames({ 'main-canvas': true, 'hidden': renderer != RENDERERS.canvas })
         const svgCls = classnames({ 'svg-canvas': true, 'hidden': renderer != RENDERERS.svg })
@@ -295,7 +326,7 @@ class Main extends React.PureComponent {
 
                                   <div className="all-rendering-container checkerboard-background">
                                     <a href="https://en.wikipedia.org/wiki/Piratbyrån#Kopimi" target="__blank">                                        
-                                      <img className="kopimi-logo" src="static/images/kopimi.png"/>
+                                      <img className="kopimi-logo" src="/static/images/kopimi.png"/>
                                     </a>
                                     <div className="canvas-container" {...getRootProps()}>
                                       <div className="hidden-elements">

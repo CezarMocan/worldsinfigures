@@ -7,10 +7,12 @@ import Header from '../components/Head'
 export default class Index extends React.PureComponent {
     render() {
         return (
-          <MainContextProvider>    
-            <Header/>      
-            <Main/>                     
-          </MainContextProvider>
+          <>
+            <MainContextProvider>            
+              <Header/>      
+              <Main/>                     
+            </MainContextProvider>
+          </>
         )
     }
 }

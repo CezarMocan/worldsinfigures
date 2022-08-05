@@ -42,7 +42,6 @@ export default class AspectRatiosDropdown extends React.Component {
     }
     render() {
         let { value, disabled = false } = this.props
-        console.log('Value is: ', value)
         if (value > aspectRatiosList.length) value = aspectRatiosList.length - 1
         return (
           <div className="aspect-ratio-dropdown-container">
