@@ -1,4 +1,4 @@
-# worldsinfigures.net
+# worldsinfigures.com
 
 ## Initial setup
 
