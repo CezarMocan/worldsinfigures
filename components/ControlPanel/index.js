@@ -439,6 +439,9 @@ class ControlPanel extends React.Component {
               <div><Typography variant="body2"><a href="https://cezar.io/" target="_blank">Cezar Mocan</a> (software development)</Typography></div>
               <div><Typography variant="body2">👨🏼 🇷🇴 </Typography></div>              
             </div>
+            <div style={{marginBottom: '10px'}}>
+              <div><Typography variant="body2">Source code available on <a href="https://github.com/CezarMocan/worldsinfigures" target="_blank">Github</a></Typography></div>              
+            </div>
           </div>
 
           <Modal
