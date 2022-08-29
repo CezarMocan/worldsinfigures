@@ -43,7 +43,7 @@ export default class Convert extends React.Component {
   }
 
   componentDidMount() {
-    
+    document.body.style.overflow = "scroll"
   }
 
   uploadSVG = (files) => {
@@ -248,7 +248,7 @@ export default class Convert extends React.Component {
         { hasFile && 
           <>
             <h3 className="convert-step-title"> Step 5 (optional): Test the result</h3> 
-            <p className="convert-instructions">You can use a tool like <a href="http://geojson.io" target="__blank">geojson.io</a> to try rendering the downloaded <span class="code">{filename}</span> file on a map and see if the conversion was done properly.</p>
+            <p className="convert-instructions">You can use a tool like <a href="http://geojson.io" target="__blank">geojson.io</a> to try rendering the downloaded <span className="code">{filename}</span> file on a map and see if the conversion was done properly.</p>
           </>
         }
 
@@ -256,7 +256,7 @@ export default class Convert extends React.Component {
         { hasFile && 
           <>
             <h3 className="convert-step-title"> Step 6: Move the file</h3> 
-            <p className="convert-instructions">Place the downloaded <span class="code">{filename}</span> file inside the <span class="code">static/geo/</span> folder of the website repository.</p>
+            <p className="convert-instructions">Place the downloaded <span  className="code">{filename}</span> file inside the <span className="code">static/geo/</span> folder of the website repository.</p>
           </>
         }
 

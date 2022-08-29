@@ -5,14 +5,17 @@ import Header from '../components/Head'
 
 
 export default class Index extends React.PureComponent {
-    render() {
-        return (
-          <>
-            <MainContextProvider>            
-              <Header/>      
-              <Main/>                     
-            </MainContextProvider>
-          </>
-        )
-    }
+  componentDidMount() {
+    document.body.style.overflow = "hidden"
+  }
+  render() {
+      return (
+        <>
+          <MainContextProvider>            
+            <Header/>      
+            <Main/>                     
+          </MainContextProvider>
+        </>
+      )
+  }
 }

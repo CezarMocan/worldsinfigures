@@ -39,7 +39,7 @@ export default class Index extends React.PureComponent {
       let color1 = this.getRandomColor()
       let color2 = this.getRandomColor()
       while (color2 == color1) color2 = this.getRandomColor()
-      this.setState({ color1, color2 })
+      this.setState({ color1, color2 })      
     }
 
     render() {
