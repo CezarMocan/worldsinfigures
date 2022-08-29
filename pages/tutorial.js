@@ -13,14 +13,14 @@ export default class Index extends React.PureComponent {
                 tracks: [
                   {
                     kind: "subtitles",
-                    src: "https://www.evan-roth.com/transfer/worlds-in-figures/english.vtt",
+                    src: "/static/video/english.vtt",
                     srcLang: "en",
                     label: "English",
                     default: true
                   },
                   {
                     kind: "subtitles",
-                    src: "https://www.evan-roth.com/transfer/worlds-in-figures/german.vtt",
+                    src: "/static/video/german.vtt",
                     srcLang: "de",
                     label: "Deutsch"
                   },

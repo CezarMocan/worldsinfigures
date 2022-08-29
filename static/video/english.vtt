@@ -1,0 +1,462 @@
+WEBVTT
+
+1
+00:00:07.120 --> 00:00:10.080
+There is a long relationship between maps and flags,
+
+2
+00:00:10.100 --> 00:00:13.500
+and they are often printed on the same page.
+
+3
+00:00:13.500 --> 00:00:16.500
+The canvas proportions are based on common flag ratios,
+
+4
+00:00:16.500 --> 00:00:21.220
+forming an initial link between maps, software, bias, and ideology.
+
+5
+00:00:23.700 --> 00:00:26.040
+It is only within the last few hundred years
+
+6
+00:00:26.040 --> 00:00:29.560
+that north has been consistently at the top of maps.
+
+7
+00:00:29.600 --> 00:00:32.660
+Early Chinese compasses were oriented to point south,
+
+8
+00:00:32.660 --> 00:00:36.200
+leading to maps with south at the top of the page.
+
+9
+00:00:36.200 --> 00:00:38.980
+This orientation was switched to north facing up maps
+
+10
+00:00:38.980 --> 00:00:41.480
+by an emperor, living in the north of the country,
+
+11
+00:00:41.480 --> 00:00:44.220
+who wanted to place others in a position of subjection,
+
+12
+00:00:44.220 --> 00:00:46.420
+looking up to his power.
+
+13
+00:00:46.920 --> 00:00:49.880
+Up, like many other aspects of maps,
+
+14
+00:00:49.880 --> 00:00:53.480
+is a human construct based on power, history, and bias
+
+15
+00:00:53.480 --> 00:00:55.480
+rather than anything to do with nature.
+
+16
+00:00:58.180 --> 00:01:00.280
+Mapping projections are ways of taking
+
+17
+00:01:00.320 --> 00:01:02.680
+a spherical set of data like the globe
+
+18
+00:01:02.720 --> 00:01:05.000
+and collapsing it to a flattened image that can
+
+19
+00:01:05.020 --> 00:01:07.560
+be printed on a page or rendered to a screen.
+
+20
+00:01:08.900 --> 00:01:11.320
+Perfectly flattening the three dimensional globe
+
+21
+00:01:11.320 --> 00:01:13.020
+into a two dimensional image
+
+22
+00:01:13.020 --> 00:01:15.180
+is an impossible proposition that always
+
+23
+00:01:15.220 --> 00:01:18.320
+leads to distortions in proportion and scale.
+
+24
+00:01:20.220 --> 00:01:23.300
+These distortions, intentionally or unintentionally,
+
+25
+00:01:23.300 --> 00:01:27.040
+are influenced by the biases of the map maker.
+
+26
+00:01:27.200 --> 00:01:30.140
+Notions of center, scale, up, and down
+
+27
+00:01:30.140 --> 00:01:33.520
+influence the way the world is communicated to us through maps
+
+28
+00:01:33.520 --> 00:01:36.260
+and influences the way we see the world.
+
+29
+00:01:38.780 --> 00:01:43.080
+‘Worlds in Figures’ contains 121 different mapping projections
+
+30
+00:01:43.080 --> 00:01:47.160
+ranging from the year 150 AD to 2018.
+
+31
+00:01:49.760 --> 00:01:51.500
+Removing the clipping constraints
+
+32
+00:01:51.500 --> 00:01:53.440
+allows these projection algorithms
+
+33
+00:01:53.440 --> 00:01:56.980
+to extend beyond the bounds of the map or edge of the page.
+
+34
+00:02:00.200 --> 00:02:02.940
+Mapping projections can be applied to any image
+
+35
+00:02:02.940 --> 00:02:05.240
+by dragging it into the main window.
+
+36
+00:02:07.340 --> 00:02:10.400
+The color palette consists of 12 colors defined by
+
+37
+00:02:10.400 --> 00:02:15.980
+the Telecommunications Industry Association's TIA-598-C
+
+38
+00:02:15.980 --> 00:02:19.580
+Optical Fiber Cable Color Coding chart.
+
+39
+00:02:19.720 --> 00:02:21.760
+Cutting through the black outer layer
+
+40
+00:02:21.760 --> 00:02:23.560
+of a fiber optic internet cable
+
+41
+00:02:23.620 --> 00:02:26.660
+reveals 12 specifically colored inner cables.
+
+42
+00:02:27.100 --> 00:02:29.380
+And inside of each of those colored cables
+
+43
+00:02:29.380 --> 00:02:31.380
+is the repeated 12 colored cables,
+
+44
+00:02:31.480 --> 00:02:33.680
+all containing a single strand of glass
+
+45
+00:02:33.680 --> 00:02:35.680
+thinner than a human hair.
+
+46
+00:02:37.760 --> 00:02:40.920
+Through a combination of the outer color and inner color,
+
+47
+00:02:40.920 --> 00:02:43.720
+each of the 144 fiber optic strands
+
+48
+00:02:43.720 --> 00:02:45.720
+is assigned a specific number.
+
+49
+00:02:47.760 --> 00:02:50.020
+And just as flags have a relationship
+
+50
+00:02:50.020 --> 00:02:52.960
+to maps and ideology, so do networks.
+
+51
+00:02:53.560 --> 00:02:56.140
+Our current network of buried glass strands
+
+52
+00:02:56.140 --> 00:02:57.840
+did not descend from the cloud,
+
+53
+00:02:57.880 --> 00:02:59.700
+but rather has a history dating back
+
+54
+00:02:59.700 --> 00:03:02.220
+at least as far as the “Empire Girdle,”
+
+55
+00:03:02.260 --> 00:03:04.760
+otherwise known as the “All Red Line.”
+
+56
+00:03:05.640 --> 00:03:08.280
+This was the name given to the first telegraph network
+
+57
+00:03:08.280 --> 00:03:10.120
+to circumnavigate the globe,
+
+58
+00:03:10.120 --> 00:03:12.420
+which landed only in areas shaded in red
+
+59
+00:03:12.420 --> 00:03:15.680
+on maps depicting the British empire.
+
+60
+00:03:20.120 --> 00:03:22.320
+Cartographers have developed different systems
+
+61
+00:03:22.320 --> 00:03:23.860
+for communicating the relationship
+
+62
+00:03:23.860 --> 00:03:26.460
+between map projections and distortion.
+
+63
+00:03:28.920 --> 00:03:32.020
+The graticule, or grid lines of parallels and meridians,
+
+64
+00:03:32.020 --> 00:03:34.920
+are almost as old as the concept of the spherical earth,
+
+65
+00:03:34.920 --> 00:03:39.340
+and are detailed in Ptolemy's Geography circa 150 AD.
+
+66
+00:03:41.000 --> 00:03:44.580
+Tissot Indicatrices (or ellipses of distortion)
+
+67
+00:03:44.580 --> 00:03:46.900
+were developed by the French mathematician
+
+68
+00:03:46.900 --> 00:03:50.140
+Nicolas Auguste Tisso in 1859
+
+69
+00:03:50.140 --> 00:03:51.840
+to illustrate and characterize
+
+70
+00:03:51.840 --> 00:03:54.260
+distortions due to map projection.
+
+71
+00:03:55.100 --> 00:03:58.000
+In 1910, Edward Ayearst Reeves,
+
+72
+00:03:58.000 --> 00:03:59.140
+the map curator of the
+
+73
+00:03:59.140 --> 00:04:01.640
+Royal Geographical Society in London,
+
+74
+00:04:01.680 --> 00:04:04.900
+taught courses in “surveying and practical astronomy
+
+75
+00:04:04.900 --> 00:04:09.600
+for explorers, missionaries, army officers and colonial officials”.
+
+76
+00:04:10.380 --> 00:04:14.240
+In his lectures, he began using the profile of a human face
+
+77
+00:04:14.240 --> 00:04:17.280
+rather than the continent outlines, stating that there are
+
+78
+00:04:17.280 --> 00:04:19.800
+"those of us who can more readily appreciate
+
+79
+00:04:19.800 --> 00:04:22.140
+what the shape of the average man's head is
+
+80
+00:04:22.140 --> 00:04:23.700
+than they can the general form
+
+81
+00:04:23.700 --> 00:04:25.700
+of the land masses of the earth."
+
+82
+00:04:27.120 --> 00:04:30.140
+The idea gained momentum, possibly due to the fact
+
+83
+00:04:30.140 --> 00:04:32.140
+that human brains are evolutionarily
+
+84
+00:04:32.140 --> 00:04:34.740
+hardwired to recognize faces.
+
+85
+00:04:36.180 --> 00:04:38.900
+While Reeves employed a single profile of a face
+
+86
+00:04:38.900 --> 00:04:41.040
+that stretched nearly from pole to pole,
+
+87
+00:04:41.040 --> 00:04:43.680
+in 1946 the Russian cartographer,
+
+88
+00:04:43.680 --> 00:04:45.340
+Andrej Vojcechovic Gedymin,
+
+89
+00:04:45.340 --> 00:04:47.220
+inscribed the face twice,
+
+90
+00:04:47.220 --> 00:04:48.800
+once in the southern hemisphere
+
+91
+00:04:48.800 --> 00:04:50.800
+and once in the northern.
+
+92
+00:04:52.060 --> 00:04:54.820
+This technique for visualizing mapping distortions
+
+93
+00:04:54.820 --> 00:04:58.400
+has continued popularity in contemporary cartographic circles
+
+94
+00:04:58.400 --> 00:05:02.000
+and has been extended to software based implementations.
+
+95
+00:05:06.040 --> 00:05:09.060
+In addition to its educational uses,
+
+96
+00:05:09.060 --> 00:05:12.480
+there is perhaps also something poetic in Reeves' gesture,
+
+97
+00:05:12.480 --> 00:05:14.160
+in the implied suggestion that
+
+98
+00:05:14.160 --> 00:05:16.240
+in order to see how the world bends
+
+99
+00:05:16.240 --> 00:05:18.480
+we must first see ourselves.
+
+100
+00:05:20.040 --> 00:05:22.420
+However, if we look to these profiles,
+
+101
+00:05:22.420 --> 00:05:24.720
+“ourselves” is defined quite narrowly,
+
+102
+00:05:24.720 --> 00:05:27.560
+and this lens with which we use to look for distortions
+
+103
+00:05:27.560 --> 00:05:29.800
+is itself distorted with bias.
+
+104
+00:05:32.940 --> 00:05:35.420
+“Worlds in Figures” allows us to create our own
+
+105
+00:05:35.420 --> 00:05:37.640
+personalized geo-coded profiles
+
+106
+00:05:37.640 --> 00:05:39.880
+of the ones we know the most intimately.
+
+107
+00:05:39.880 --> 00:05:41.620
+The ones for which we will notice even
+
+108
+00:05:41.620 --> 00:05:44.120
+the slightest bend in any curve.
+
+109
+00:05:48.380 --> 00:05:51.820
+Just as maps are more like narratives than they are like rulers,
+
+110
+00:05:51.820 --> 00:05:53.240
+so is the software we make,
+
+111
+00:05:53.240 --> 00:05:55.980
+and the software we use on a daily basis.
+
+112
+00:05:56.160 --> 00:05:57.680
+These systems are narratives
+
+113
+00:05:57.680 --> 00:06:00.820
+similarly bent, intentionally and unintentionally
+
+114
+00:06:00.820 --> 00:06:03.000
+by the histories and biases of those
+
+115
+00:06:03.000 --> 00:06:06.340
+with the power to define which way is up.
+
