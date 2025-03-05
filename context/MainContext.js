@@ -55,7 +55,8 @@ const INITIAL_STORAGE_STATE = {
   },
 
   animateOptions: {
-    imagesPerArchive: 250
+    imagesPerArchive: 250,
+    exportAsZip: false
   }
 
   // layers: { ...defaultLayers  }

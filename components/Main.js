@@ -197,7 +197,14 @@ class Main extends React.PureComponent {
       for (let isDone = false; !isDone; isDone) {
         isDone = true
         this.renderMap(this._exportCanvas, this._exportBufferCanvas, true, projAttr)
-        await zip.addImage(filenameIndex, this._exportCanvas, this._svg)
+
+        if (animateOptions.exportAsZip) {
+          await zip.addImage(filenameIndex, this._exportCanvas, this._svg)
+        } else {
+          createAndDownloadImage(`${filenameIndex}.png`, this._exportCanvas)
+          createAndDownloadSvg(`${filenameIndex}.svg`, this._svg)
+        }
+
 
         this.setState({ renderingCurrentFrame: filenameIndex + 1 })
 
@@ -212,6 +219,10 @@ class Main extends React.PureComponent {
 
         await sleep(0.05)
         filenameIndex++
+        if (!animateOptions.exportAsZip) {
+          continue
+        }
+
         if (filenameIndex % animateOptions.imagesPerArchive == 0) {
           await zip.complete(`anim-${zipName.root}-part-${zipName.index}`)
           zip = new Zipper()
@@ -219,7 +230,9 @@ class Main extends React.PureComponent {
         }
       }
 
-      await zip.complete(`anim-${zipName.root}-part-${zipName.index}`)
+      if (animateOptions.exportAsZip) {
+        await zip.complete(`anim-${zipName.root}-part-${zipName.index}`)
+      }      
 
       this.setState({ renderingModalOpen: false })
     }

@@ -88,6 +88,10 @@ class ControlPanel extends React.Component {
         }
       })
     }
+    onExportZipUpdate = optionName => event => {
+      const { updateStateObject } = this.props
+      updateStateObject('animateOptions', { [optionName]: event.target.checked })
+    }
     onCanvasWidthUpdate = (event) => {
       if (event.target.value === this.state.canvasDisplayWidth) return
       const isLocked = this.props.canvasAttributes.canvasRatioLocked
@@ -195,7 +199,7 @@ class ControlPanel extends React.Component {
       })      
     }
     render() {
-      const { projectionAttributes, renderOptions, downloadOptions, layers } = this.props              
+      const { projectionAttributes, renderOptions, downloadOptions, layers, animateOptions } = this.props              
       const { scale, rotateX, rotateY, rotateZ, translateX, translateY, projection } = projectionAttributes
       const { clipToEarthBounds, tileVectors } = renderOptions
       const { animationOptions, addLayerModalOpen, canvasAttributes } = this.state
@@ -409,7 +413,10 @@ class ControlPanel extends React.Component {
               </FormGroup>
 
             </div>
-
+            <FormGroup row>
+              <FormControlLabel control={<Checkbox color="primary" checked={animateOptions.exportAsZip} onChange={this.onExportZipUpdate('exportAsZip')} />} label="Save as ZIP"/>
+            </FormGroup>
+            
             <div className="animate-button">
               <a href="#" ref={(r) => {this._downloadButton = r}} onClick={this.onAnimateClick}>
                 <Button variant="outlined">
@@ -470,6 +477,7 @@ export default withMainContext((context, props) => ({
     projectionAttributes: context.projectionAttributes,
     renderOptions: context.renderOptions,
     downloadOptions: context.downloadOptions,
+    animateOptions: context.animateOptions,
     layers: context.layers,
 
     // Actions
