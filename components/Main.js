@@ -186,7 +186,16 @@ class Main extends React.PureComponent {
         renderingTotalFrames: totalSteps
       })
 
+      let allZips = []
       let zip = new Zipper()
+      allZips.push(zip)
+      zip.useWorker('/static/download-worker.js')
+      zip.onProgress((percentage, current, total, status) => {
+        console.log(`Archiving (${status}): ${percentage}% (${current} / ${total})`)
+      })
+      zip.onComplete(() => {
+        console.log("Archive complete")
+      })      
       let filenameIndex = 0
       
       const zipName = {
@@ -225,7 +234,16 @@ class Main extends React.PureComponent {
 
         if (filenameIndex % animateOptions.imagesPerArchive == 0) {
           await zip.complete(`anim-${zipName.root}-part-${zipName.index}`)
+          
           zip = new Zipper()
+          zip.useWorker('/static/download-worker.js')
+          zip.onProgress((percentage, current, total, status) => {
+            console.log(`Archiving (${status}): ${percentage}% (${current} / ${total})`)
+          })
+          zip.onComplete(() => {
+            console.log("Archive complete")
+          })    
+          allZips.push(zip)
           zipName.index++
         }
       }
